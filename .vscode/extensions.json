@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "vitest.explorer",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense",
+    "yzhang.markdown-all-in-one",
+    "redhat.vscode-yaml"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-json-languageservice",
+    "hookyqr.beautify"
+  ]
+}
