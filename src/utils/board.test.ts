@@ -43,12 +43,14 @@ describe('parseBoardString', () => {
   });
 
   it('throws error for invalid length', () => {
-    expect(() => parseBoardString('123')).toThrow('Invalid board string length');
+    expect(() => parseBoardString('123')).toThrow(
+      'Invalid board string length'
+    );
     expect(() => parseBoardString('')).toThrow('Invalid board string length');
   });
 
   it('throws error for invalid characters', () => {
-    const invalidPuzzle = 'X' + SAMPLE_PUZZLE.substring(1);
+    const invalidPuzzle = `X${SAMPLE_PUZZLE.substring(1)}`;
     expect(() => parseBoardString(invalidPuzzle)).toThrow('Invalid character');
   });
 
@@ -286,7 +288,9 @@ describe('countFilledCells', () => {
     const filled = countFilledCells(board);
 
     // Count non-zeros in puzzle
-    const expectedFilled = SAMPLE_PUZZLE.split('').filter(c => c !== '0').length;
+    const expectedFilled = SAMPLE_PUZZLE.split('').filter(
+      c => c !== '0'
+    ).length;
     expect(filled).toBe(expectedFilled);
   });
 });

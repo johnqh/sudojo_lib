@@ -5,7 +5,7 @@
  * while preserving Sudoku validity.
  */
 
-import { SudokuCell, rowOf, columnOf } from '../types/sudoku';
+import { columnOf, rowOf, type SudokuCell } from '../types/sudoku';
 
 // =============================================================================
 // Scrambler Protocol
@@ -47,25 +47,19 @@ export const Scrambler: ScramblerProtocol = {
   scramble9(symmetrical: boolean): number[] {
     const random = new SeededRandom(Math.floor(Date.now() / 1000));
 
-    const blocks: number[][] = [
-      scramble3(symmetrical, random),
-      scramble3(symmetrical, random),
-    ];
-
-    if (symmetrical) {
-      // For symmetrical mode, third block mirrors first
-      blocks.push(blocks[0]);
-    } else {
-      blocks.push(scramble3(symmetrical, random));
-    }
+    const block0 = scramble3(symmetrical, random);
+    const block1 = scramble3(symmetrical, random);
+    const block2 = symmetrical ? block0 : scramble3(symmetrical, random);
+    const blocks: number[][] = [block0, block1, block2];
 
     const board = scramble3(symmetrical, random);
     const result: number[] = [];
 
     for (let i = 0; i < 3; i++) {
-      const target = board[i];
+      const target = board[i] ?? 0;
+      const block = blocks[i] ?? [0, 1, 2];
       for (let j = 0; j < 3; j++) {
-        result.push(target * 3 + blocks[i][j]);
+        result.push(target * 3 + (block[j] ?? 0));
       }
     }
 
@@ -94,7 +88,7 @@ function scramble3(symmetrical: boolean, random: SeededRandom): number[] {
     // Generate 3 random values and sort to get permutation
     const values = [random.nextInt(), random.nextInt(), random.nextInt()];
     const sorted = [...values].sort((a, b) => a - b);
-    return sorted.map((v) => values.indexOf(v));
+    return sorted.map(v => values.indexOf(v));
   }
 }
 
@@ -133,7 +127,7 @@ export function scrambleBoard(
   const reverseDigitMapping = new Map<number, number>();
   for (let i = 0; i < 9; i++) {
     const original = i + 1;
-    const scrambled = numbers[i] + 1;
+    const scrambled = (numbers[i] ?? i) + 1;
     digitMapping.set(original, scrambled);
     reverseDigitMapping.set(scrambled, original);
   }
@@ -141,9 +135,12 @@ export function scrambleBoard(
   const scrambledCells = Array.from({ length: 81 }, (_, index) => {
     const x = columnOf(index);
     const y = rowOf(index);
-    const scrambledY = rows[y];
-    const scrambledX = columns[x];
+    const scrambledY = rows[y] ?? y;
+    const scrambledX = columns[x] ?? x;
     const existing = cells[scrambledY * 9 + scrambledX];
+    if (!existing) {
+      throw new Error(`Missing cell at index ${scrambledY * 9 + scrambledX}`);
+    }
 
     return {
       index,
@@ -170,15 +167,21 @@ export function scrambleBoard(
 function mapDigit(digit: number | null, lookup: number[]): number | null {
   if (digit === null || digit === 0) return null;
   // digit is 1-based, lookup is 0-indexed
-  return lookup[digit - 1] + 1;
+  const mapped = lookup[digit - 1];
+  return mapped !== undefined ? mapped + 1 : digit;
 }
 
 /**
  * Map pencilmarks array using the lookup array
+ * Matches Kotlin: map(digits: Array<Int>?, lookup: Array<Int>?): Array<Int>?
  */
-function mapPencilmarks(pencilmarks: number[], lookup: number[]): number[] {
+function mapPencilmarks(
+  pencilmarks: number[] | null,
+  lookup: number[]
+): number[] | null {
+  if (pencilmarks === null) return null;
   return pencilmarks
-    .map((digit) => mapDigit(digit, lookup))
+    .map(digit => mapDigit(digit, lookup))
     .filter((d): d is number => d !== null)
     .sort((a, b) => a - b);
 }
@@ -208,6 +211,9 @@ export function parsePuzzleString(
 
   return Array.from({ length: 81 }, (_, index) => {
     const givenChar = puzzle[index];
+    if (givenChar === undefined) {
+      throw new Error(`Missing puzzle character at index ${index}`);
+    }
     const givenDigit = parseDigit(givenChar);
 
     const solutionChar = solution?.[index];
@@ -218,7 +224,7 @@ export function parsePuzzleString(
       solution: solutionDigit,
       given: givenDigit,
       input: null,
-      pencilmarks: [],
+      pencilmarks: null,
     };
   });
 }
@@ -237,26 +243,37 @@ function parseDigit(char: string): number | null {
  * Convert cells to puzzle string
  */
 export function cellsToPuzzleString(cells: SudokuCell[]): string {
-  return cells.map((cell) => cell.given?.toString() ?? '0').join('');
+  return cells.map(cell => cell.given?.toString() ?? '0').join('');
 }
 
 /**
  * Convert cells to current state string (given + input)
  */
 export function cellsToStateString(cells: SudokuCell[]): string {
-  return cells.map((cell) => (cell.given ?? cell.input)?.toString() ?? '0').join('');
+  return cells
+    .map(cell => (cell.given ?? cell.input)?.toString() ?? '0')
+    .join('');
 }
 
 /**
  * Convert cells to input-only string
  */
 export function cellsToInputString(cells: SudokuCell[]): string {
-  return cells.map((cell) => cell.input?.toString() ?? '0').join('');
+  return cells.map(cell => cell.input?.toString() ?? '0').join('');
 }
 
 /**
  * Convert cells to pencilmarks string (comma-separated)
+ * Matches Kotlin: pencilmarksParam - returns empty string for null pencilmarks
  */
 export function cellsToPencilmarksString(cells: SudokuCell[]): string {
-  return cells.map((cell) => cell.pencilmarks.join('')).join(',');
+  return cells
+    .map(cell => {
+      if (cell.pencilmarks !== null) {
+        return cell.pencilmarks.join('');
+      } else {
+        return '';
+      }
+    })
+    .join(',');
 }

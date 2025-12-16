@@ -10,7 +10,12 @@
 
 import type { ScrambleConfig, ScrambleResult } from '../types';
 import { DEFAULT_SCRAMBLE_CONFIG } from '../types';
-import { BLOCK_SIZE, BOARD_SIZE, parseBoardString, stringifyBoard } from './board';
+import {
+  BLOCK_SIZE,
+  BOARD_SIZE,
+  parseBoardString,
+  stringifyBoard,
+} from './board';
 
 /**
  * Fisher-Yates shuffle algorithm for arrays
@@ -47,7 +52,9 @@ function createDigitMapping(): Map<number, number> {
  * @param mapping - Original digit mapping
  * @returns Reverse mapping (scrambled -> original)
  */
-function reverseDigitMapping(mapping: Map<number, number>): Map<number, number> {
+function reverseDigitMapping(
+  mapping: Map<number, number>
+): Map<number, number> {
   const reverse = new Map<number, number>();
   for (const [original, scrambled] of mapping) {
     reverse.set(scrambled, original);
@@ -61,142 +68,16 @@ function reverseDigitMapping(mapping: Map<number, number>): Map<number, number> 
  * @param mapping - Digit mapping
  * @returns New board with mapped digits
  */
-function applyDigitMapping(board: number[][], mapping: Map<number, number>): number[][] {
+function applyDigitMapping(
+  board: number[][],
+  mapping: Map<number, number>
+): number[][] {
   return board.map(row =>
     row.map(value => {
       if (value === 0) return 0;
       return mapping.get(value) ?? value;
     })
   );
-}
-
-/**
- * Swaps two rows within a board
- * @param board - Board to modify
- * @param row1 - First row index
- * @param row2 - Second row index
- */
-function swapRows(board: number[][], row1: number, row2: number): void {
-  const temp = board[row1];
-  board[row1] = board[row2] as number[];
-  board[row2] = temp as number[];
-}
-
-/**
- * Swaps two columns within a board
- * @param board - Board to modify
- * @param col1 - First column index
- * @param col2 - Second column index
- */
-function swapColumns(board: number[][], col1: number, col2: number): void {
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    const boardRow = board[row];
-    if (boardRow) {
-      const temp = boardRow[col1];
-      boardRow[col1] = boardRow[col2] as number;
-      boardRow[col2] = temp as number;
-    }
-  }
-}
-
-/**
- * Scrambles rows within each block of 3 rows
- * @param board - Board to modify
- */
-function scrambleRowsWithinBlocks(board: number[][]): void {
-  for (let blockRow = 0; blockRow < BLOCK_SIZE; blockRow++) {
-    const startRow = blockRow * BLOCK_SIZE;
-    const indices = shuffleArray([0, 1, 2]);
-
-    // Create a copy of the rows in this block
-    const rowsCopy = [
-      [...(board[startRow] ?? [])],
-      [...(board[startRow + 1] ?? [])],
-      [...(board[startRow + 2] ?? [])],
-    ];
-
-    // Apply the shuffled order
-    for (let i = 0; i < BLOCK_SIZE; i++) {
-      board[startRow + i] = rowsCopy[indices[i] as number] as number[];
-    }
-  }
-}
-
-/**
- * Scrambles columns within each block of 3 columns
- * @param board - Board to modify
- */
-function scrambleColumnsWithinBlocks(board: number[][]): void {
-  for (let blockCol = 0; blockCol < BLOCK_SIZE; blockCol++) {
-    const startCol = blockCol * BLOCK_SIZE;
-    const indices = shuffleArray([0, 1, 2]);
-
-    // For each row, shuffle the columns in this block
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      const boardRow = board[row];
-      if (boardRow) {
-        const colsCopy = [
-          boardRow[startCol],
-          boardRow[startCol + 1],
-          boardRow[startCol + 2],
-        ];
-
-        for (let i = 0; i < BLOCK_SIZE; i++) {
-          boardRow[startCol + i] = colsCopy[indices[i] as number] as number;
-        }
-      }
-    }
-  }
-}
-
-/**
- * Scrambles entire row blocks (groups of 3 rows)
- * @param board - Board to modify
- */
-function scrambleRowBlocks(board: number[][]): void {
-  const blockOrder = shuffleArray([0, 1, 2]);
-
-  // Create a copy of all rows
-  const allRows = board.map(row => [...row]);
-
-  // Apply the shuffled block order
-  for (let newBlockIndex = 0; newBlockIndex < BLOCK_SIZE; newBlockIndex++) {
-    const oldBlockIndex = blockOrder[newBlockIndex] as number;
-    for (let i = 0; i < BLOCK_SIZE; i++) {
-      board[newBlockIndex * BLOCK_SIZE + i] =
-        allRows[oldBlockIndex * BLOCK_SIZE + i] as number[];
-    }
-  }
-}
-
-/**
- * Scrambles entire column blocks (groups of 3 columns)
- * @param board - Board to modify
- */
-function scrambleColumnBlocks(board: number[][]): void {
-  const blockOrder = shuffleArray([0, 1, 2]);
-
-  // Create a copy of all columns
-  const allCols: number[][] = [];
-  for (let col = 0; col < BOARD_SIZE; col++) {
-    allCols.push(board.map(row => row[col] ?? 0));
-  }
-
-  // Apply the shuffled block order
-  for (let newBlockIndex = 0; newBlockIndex < BLOCK_SIZE; newBlockIndex++) {
-    const oldBlockIndex = blockOrder[newBlockIndex] as number;
-    for (let i = 0; i < BLOCK_SIZE; i++) {
-      const oldCol = oldBlockIndex * BLOCK_SIZE + i;
-      const newCol = newBlockIndex * BLOCK_SIZE + i;
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        const boardRow = board[row];
-        const colValue = allCols[oldCol];
-        if (boardRow && colValue) {
-          boardRow[newCol] = colValue[row] ?? 0;
-        }
-      }
-    }
-  }
 }
 
 /**
@@ -217,20 +98,6 @@ function rotateBoard90(board: number[][]): number[][] {
 }
 
 /**
- * Rotates the board by a random multiple of 90 degrees
- * @param board - Board to rotate
- * @returns New rotated board
- */
-function rotateRandomly(board: number[][]): number[][] {
-  const rotations = Math.floor(Math.random() * 4);
-  let result = board;
-  for (let i = 0; i < rotations; i++) {
-    result = rotateBoard90(result);
-  }
-  return result;
-}
-
-/**
  * Mirrors the board horizontally (left-right)
  * @param board - Board to mirror
  * @returns New mirrored board
@@ -246,25 +113,6 @@ function mirrorHorizontally(board: number[][]): number[][] {
  */
 function mirrorVertically(board: number[][]): number[][] {
   return [...board].reverse().map(row => [...row]);
-}
-
-/**
- * Applies a random mirror transformation
- * @param board - Board to mirror
- * @returns New mirrored board (or same if no mirror applied)
- */
-function mirrorRandomly(board: number[][]): number[][] {
-  const mirrorType = Math.floor(Math.random() * 4);
-  switch (mirrorType) {
-    case 1:
-      return mirrorHorizontally(board);
-    case 2:
-      return mirrorVertically(board);
-    case 3:
-      return mirrorVertically(mirrorHorizontally(board));
-    default:
-      return board.map(row => [...row]);
-  }
 }
 
 /**

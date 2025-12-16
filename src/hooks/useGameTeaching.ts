@@ -5,8 +5,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { NetworkClient } from '@sudobility/types';
 import {
-  createSudojoSolverClient,
   type ClientConfig,
+  createSudojoSolverClient,
   type HintStep,
   type SolveResponse,
 } from '@sudobility/sudojo_solver_client';
@@ -52,20 +52,32 @@ function convertHintStep(step: HintStep): GameHint {
     title: step.title,
     text: step.text,
     cells:
-      step.cells?.map(cell => ({
-        row: cell.row,
-        column: cell.column,
-        color: cell.color,
-        action: {
-          select: cell.actions.select ? parseInt(cell.actions.select, 10) : undefined,
-          addPencilmarks: cell.actions.add
-            ? cell.actions.add.split('').map(d => parseInt(d, 10))
-            : undefined,
-          removePencilmarks: cell.actions.remove
-            ? cell.actions.remove.split('').map(d => parseInt(d, 10))
-            : undefined,
-        },
-      })) ?? [],
+      step.cells?.map(cell => {
+        const action: {
+          select?: number;
+          addPencilmarks?: number[];
+          removePencilmarks?: number[];
+        } = {};
+        if (cell.actions.select) {
+          action.select = parseInt(cell.actions.select, 10);
+        }
+        if (cell.actions.add) {
+          action.addPencilmarks = cell.actions.add
+            .split('')
+            .map(d => parseInt(d, 10));
+        }
+        if (cell.actions.remove) {
+          action.removePencilmarks = cell.actions.remove
+            .split('')
+            .map(d => parseInt(d, 10));
+        }
+        return {
+          row: cell.row,
+          column: cell.column,
+          color: cell.color,
+          ...(Object.keys(action).length > 0 ? { action } : {}),
+        };
+      }) ?? [],
     areas:
       step.areas?.map(area => ({
         type: area.type,
@@ -127,7 +139,9 @@ function convertHintStep(step: HintStep): GameHint {
  * }
  * ```
  */
-export function useGameTeaching(options: UseGameTeachingOptions): UseGameTeachingResult {
+export function useGameTeaching(
+  options: UseGameTeachingOptions
+): UseGameTeachingResult {
   const { networkClient, config } = options;
 
   const [teachingState, setTeachingState] = useState<TeachingState>({
@@ -160,16 +174,27 @@ export function useGameTeaching(options: UseGameTeachingOptions): UseGameTeachin
       }));
 
       try {
-        const response: SolveResponse = await solverClient.solve({
+        const solveOptions: {
+          original: string;
+          user: string;
+          autoPencilmarks?: boolean;
+          pencilmarks?: string;
+        } = {
           original: originalPuzzle,
           user: userBoard,
-          autoPencilmarks: hintOptions?.autoPencilmarks,
-          pencilmarks: hintOptions?.pencilmarks,
-        });
+        };
+        if (hintOptions?.autoPencilmarks !== undefined) {
+          solveOptions.autoPencilmarks = hintOptions.autoPencilmarks;
+        }
+        if (hintOptions?.pencilmarks !== undefined) {
+          solveOptions.pencilmarks = hintOptions.pencilmarks;
+        }
+        const response: SolveResponse = await solverClient.solve(solveOptions);
 
         if (!response.success || !response.data?.hints) {
           const errorMessage =
-            response.error?.message ?? 'No hints available for the current state';
+            response.error?.message ??
+            'No hints available for the current state';
           setTeachingState(prev => ({
             ...prev,
             isLoading: false,
@@ -210,7 +235,8 @@ export function useGameTeaching(options: UseGameTeachingOptions): UseGameTeachin
           error: null,
         });
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to get hint';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to get hint';
         setTeachingState(prev => ({
           ...prev,
           isLoading: false,

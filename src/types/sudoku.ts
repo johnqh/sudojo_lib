@@ -10,6 +10,7 @@
 
 /**
  * A single cell in the Sudoku board (indexed 0-80)
+ * Matches Kotlin: Cell(index, solution, given, input, pencilmarks)
  */
 export interface SudokuCell {
   /** Cell index (0-80) */
@@ -20,8 +21,8 @@ export interface SudokuCell {
   given: number | null;
   /** User-entered value (1-9, or null if empty) */
   input: number | null;
-  /** Pencil marks (candidate digits 1-9) */
-  pencilmarks: number[];
+  /** Pencil marks (candidate digits 1-9, or null) - matches Kotlin Array<Int>? */
+  pencilmarks: number[] | null;
 }
 
 /**
@@ -177,7 +178,7 @@ export function createEmptyCell(index: number): SudokuCell {
     solution: null,
     given: null,
     input: null,
-    pencilmarks: [],
+    pencilmarks: null,
   };
 }
 

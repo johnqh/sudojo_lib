@@ -6,9 +6,9 @@ import { useMemo } from 'react';
 import type { Technique } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
+  type SudojoConfig,
   useSudojoTechnique,
   useSudojoTechniques,
-  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 
 export interface UseTechniquesOptions {
@@ -66,7 +66,9 @@ export interface UseTechniquesResult {
  * }
  * ```
  */
-export function useTechniques(options: UseTechniquesOptions): UseTechniquesResult {
+export function useTechniques(
+  options: UseTechniquesOptions
+): UseTechniquesResult {
   const { networkClient, config, levelUuid, enabled = true } = options;
 
   const queryParams = useMemo(() => {
@@ -74,12 +76,12 @@ export function useTechniques(options: UseTechniquesOptions): UseTechniquesResul
     return { level_uuid: levelUuid };
   }, [levelUuid]);
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useSudojoTechniques(networkClient, config, queryParams, { enabled });
+  const { data, isLoading, error, refetch } = useSudojoTechniques(
+    networkClient,
+    config,
+    queryParams,
+    { enabled }
+  );
 
   const techniques = useMemo(() => {
     if (!data?.success || !data.data) return [];
@@ -116,7 +118,9 @@ export function useTechniques(options: UseTechniquesOptions): UseTechniquesResul
     techniques,
     isLoading,
     error: error ?? null,
-    refetch: () => { refetch(); },
+    refetch: () => {
+      refetch();
+    },
     getTechniqueByUuid,
     sortedTechniques,
     techniquesByLevel,
@@ -154,14 +158,14 @@ export interface UseTechniqueResult {
 export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
   const { networkClient, config, techniqueUuid, enabled = true } = options;
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useSudojoTechnique(networkClient, config, techniqueUuid, {
-    enabled: enabled && !!techniqueUuid,
-  });
+  const { data, isLoading, error, refetch } = useSudojoTechnique(
+    networkClient,
+    config,
+    techniqueUuid,
+    {
+      enabled: enabled && !!techniqueUuid,
+    }
+  );
 
   const technique = useMemo(() => {
     if (!data?.success || !data.data) return null;
@@ -172,6 +176,8 @@ export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
     technique,
     isLoading,
     error: error ?? null,
-    refetch: () => { refetch(); },
+    refetch: () => {
+      refetch();
+    },
   };
 }

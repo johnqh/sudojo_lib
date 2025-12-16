@@ -15,33 +15,27 @@
 
 import { useCallback, useMemo, useReducer } from 'react';
 import {
-  SudokuCell,
-  SudokuBoard,
-  SudokuPlay,
-  SudokuPlaySettings,
-  SudokuAppSettings,
-  PlayingSource,
-  DEFAULT_PLAY_SETTINGS,
-  DEFAULT_APP_SETTINGS,
-  createEmptyBoard,
-  rowOf,
-  columnOf,
   blockOf,
-  getRowIndices,
-  getColumnIndices,
-  getBlockIndices,
   cellHasError,
+  columnOf,
+  DEFAULT_APP_SETTINGS,
+  DEFAULT_PLAY_SETTINGS,
+  PlayingSource,
+  rowOf,
+  SudokuAppSettings,
+  SudokuBoard,
+  SudokuCell,
+  SudokuPlay,
 } from '../types/sudoku';
 import {
-  Scrambler,
-  NonScrambler,
-  ScramblerProtocol,
-  scrambleBoard,
-  parsePuzzleString,
-  cellsToStateString,
   cellsToInputString,
-  cellsToPuzzleString,
   cellsToPencilmarksString,
+  cellsToStateString,
+  NonScrambler,
+  parsePuzzleString,
+  scrambleBoard,
+  Scrambler,
+  ScramblerProtocol,
 } from '../utils/sudokuScrambler';
 
 // =============================================================================
@@ -101,7 +95,9 @@ type SudokuAction =
 // Initial State
 // =============================================================================
 
-function createInitialState(appSettings?: Partial<SudokuAppSettings>): SudokuState {
+function createInitialState(
+  appSettings?: Partial<SudokuAppSettings>
+): SudokuState {
   return {
     play: null,
     originalPuzzle: '',
@@ -123,7 +119,15 @@ function createInitialState(appSettings?: Partial<SudokuAppSettings>): SudokuSta
 function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
   switch (action.type) {
     case 'LOAD_BOARD': {
-      const { puzzle, solution, scramble, symmetrical, source, levelUuid, boardUuid } = action;
+      const {
+        puzzle,
+        solution,
+        scramble,
+        symmetrical,
+        source,
+        levelUuid,
+        boardUuid,
+      } = action;
 
       // Parse puzzle and solution into cells
       const cells = parsePuzzleString(puzzle, solution);
@@ -133,7 +137,7 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
       const scrambleResult = scrambleBoard(scrambler, cells, symmetrical);
 
       // Check if puzzle is already complete (all cells are clues, or all inputs match solution)
-      const isComplete = scrambleResult.cells.every((cell) => {
+      const isComplete = scrambleResult.cells.every(cell => {
         if (cell.given !== null) return true; // Clue cells are always correct
         // Non-clue cells need input to match solution
         return cell.input !== null && cell.input === cell.solution;
@@ -208,13 +212,15 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
       const { value } = action;
 
       // Handle pencil marking mode
+      // Matches Kotlin: if (cell.given == null && value != null)
       if (settings.pencilmarking) {
         if (value === null) return state; // Can't erase in pencil mode with null
 
-        // Toggle pencilmark
-        const newPencilmarks = cell.pencilmarks.includes(value)
-          ? cell.pencilmarks.filter((p) => p !== value)
-          : [...cell.pencilmarks, value].sort((a, b) => a - b);
+        // Toggle pencilmark - matches Kotlin exactly
+        const currentPencilmarks = cell.pencilmarks ?? [];
+        const newPencilmarks = currentPencilmarks.includes(value)
+          ? currentPencilmarks.filter(p => p !== value)
+          : [...currentPencilmarks, value].sort((a, b) => a - b);
 
         const newCell: SudokuCell = {
           ...cell,
@@ -249,10 +255,11 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
 
         if (i === selectedIndex) {
           // Update the selected cell
+          // Matches Kotlin: pencilmarks = if (value != null) null else cell.pencilmarks
           const modified: SudokuCell = {
             ...c,
             input: value,
-            pencilmarks: value !== null ? [] : c.pencilmarks, // Clear pencilmarks when setting value
+            pencilmarks: value !== null ? null : c.pencilmarks,
           };
 
           // Check completion
@@ -263,6 +270,7 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
         }
 
         // Remove pencilmark from related cells
+        // Matches Kotlin: cell.pencilmarks?.filter { it != value }?.toTypedArray()
         if (value !== null) {
           const cellRow = rowOf(i);
           const cellColumn = columnOf(i);
@@ -271,7 +279,7 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
           if (cellRow === row || cellColumn === column || cellBlock === block) {
             const modified: SudokuCell = {
               ...c,
-              pencilmarks: c.pencilmarks.filter((p) => p !== value),
+              pencilmarks: c.pencilmarks?.filter(p => p !== value) ?? null,
             };
             // Check completion
             if (modified.input !== modified.solution) {
@@ -349,7 +357,6 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
     }
 
     case 'ERASE': {
-      // Erase is equivalent to input(null) in normal mode
       if (!state.play) return state;
       const { selectedIndex, board, settings } = state.play;
       if (selectedIndex === null) return state;
@@ -360,7 +367,7 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
 
       // In pencil mode, clear pencilmarks
       if (settings.pencilmarking) {
-        if (cell.pencilmarks.length === 0) return state;
+        if (!cell.pencilmarks || cell.pencilmarks.length === 0) return state;
 
         const newCell: SudokuCell = {
           ...cell,
@@ -408,22 +415,29 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
     }
 
     case 'AUTO_PENCILMARKS': {
+      // Matches Kotlin: fun autoPencilmarks()
       if (!state.play) return state;
       const { board } = state.play;
       if (board.completed) return state;
 
       // Calculate potentials for each row, column, and block
-      const rowPotentials = Array.from({ length: 9 }, () => new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]));
-      const colPotentials = Array.from({ length: 9 }, () => new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]));
-      const blockPotentials = Array.from({ length: 9 }, () => new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]));
+      // Matches Kotlin: Array(9) { CellPotentials((1..9).toMutableSet()) }
+      const rowPotentials: Map<number, Set<number>> = new Map();
+      const colPotentials: Map<number, Set<number>> = new Map();
+      const blockPotentials: Map<number, Set<number>> = new Map();
+      for (let i = 0; i < 9; i++) {
+        rowPotentials.set(i, new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]));
+        colPotentials.set(i, new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]));
+        blockPotentials.set(i, new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]));
+      }
 
       // Remove values that are already placed
       board.cells.forEach((cell, index) => {
         const value = cell.given ?? cell.input;
         if (value !== null) {
-          rowPotentials[rowOf(index)].delete(value);
-          colPotentials[columnOf(index)].delete(value);
-          blockPotentials[blockOf(index)].delete(value);
+          rowPotentials.get(rowOf(index))?.delete(value);
+          colPotentials.get(columnOf(index))?.delete(value);
+          blockPotentials.get(blockOf(index))?.delete(value);
         }
       });
 
@@ -431,17 +445,17 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
       const newCells = board.cells.map((cell, index) => {
         const value = cell.given ?? cell.input;
         if (value !== null) {
-          // Cell has a value, clear pencilmarks
-          return { ...cell, pencilmarks: [] };
+          // Cell has a value - matches Kotlin: pencilmarks = null
+          return { ...cell, pencilmarks: null };
         }
 
         // Intersect row, column, and block potentials
-        const row = rowPotentials[rowOf(index)];
-        const col = colPotentials[columnOf(index)];
-        const block = blockPotentials[blockOf(index)];
+        const row = rowPotentials.get(rowOf(index))!;
+        const col = colPotentials.get(columnOf(index))!;
+        const block = blockPotentials.get(blockOf(index))!;
 
         const pencilmarks = Array.from(row)
-          .filter((v) => col.has(v) && block.has(v))
+          .filter(v => col.has(v) && block.has(v))
           .sort((a, b) => a - b);
 
         return { ...cell, pencilmarks };
@@ -471,7 +485,10 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
       if (!state.play) return state;
 
       // Reset to initial board state (keep original puzzle but clear all inputs)
-      const cells = parsePuzzleString(state.originalPuzzle, state.originalSolution);
+      const cells = parsePuzzleString(
+        state.originalPuzzle,
+        state.originalSolution
+      );
       const scrambler: ScramblerProtocol = NonScrambler; // Don't re-scramble on reset
 
       // Re-apply the same scrambling
@@ -644,7 +661,10 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
   // Computed values
   const board = state.play?.board ?? null;
   const selectedIndex = state.play?.selectedIndex ?? null;
-  const selectedCell = selectedIndex !== null && board ? board.cells[selectedIndex] : null;
+  const selectedCell =
+    selectedIndex !== null && board
+      ? (board.cells[selectedIndex] ?? null)
+      : null;
   const isPencilMode = state.play?.settings.pencilmarking ?? false;
   const isCompleted = board?.completed ?? false;
   const canUndo = state.history.length > 0;
@@ -658,10 +678,10 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
 
   const progress = useMemo(() => {
     if (!board) return 0;
-    const totalEmpty = board.cells.filter((c) => c.given === null).length;
+    const totalEmpty = board.cells.filter(c => c.given === null).length;
     if (totalEmpty === 0) return 100;
     const filled = board.cells.filter(
-      (c) => c.given === null && c.input !== null
+      c => c.given === null && c.input !== null
     ).length;
     return Math.round((filled / totalEmpty) * 100);
   }, [board]);
@@ -669,6 +689,7 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
   const sameValueCells = useMemo(() => {
     if (!board || selectedIndex === null) return [];
     const selectedCell = board.cells[selectedIndex];
+    if (!selectedCell) return [];
     const value = selectedCell.given ?? selectedCell.input;
     if (value === null) return [];
     return board.cells.filter((c, i) => {
@@ -682,7 +703,7 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
     const row = rowOf(selectedIndex);
     const col = columnOf(selectedIndex);
     const block = blockOf(selectedIndex);
-    return board.cells.filter((c, i) => {
+    return board.cells.filter((_, i) => {
       if (i === selectedIndex) return false;
       return rowOf(i) === row || columnOf(i) === col || blockOf(i) === block;
     });
@@ -701,16 +722,21 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
         boardUuid?: string;
       }
     ) => {
-      dispatch({
+      const action: SudokuAction = {
         type: 'LOAD_BOARD',
         puzzle,
         solution,
         scramble: options?.scramble ?? true,
         symmetrical: options?.symmetrical ?? false,
         source: options?.source ?? 'LEVEL',
-        levelUuid: options?.levelUuid,
-        boardUuid: options?.boardUuid,
-      });
+      };
+      if (options?.levelUuid !== undefined) {
+        (action as { levelUuid?: string }).levelUuid = options.levelUuid;
+      }
+      if (options?.boardUuid !== undefined) {
+        (action as { boardUuid?: string }).boardUuid = options.boardUuid;
+      }
+      dispatch(action);
     },
     []
   );

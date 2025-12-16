@@ -162,10 +162,7 @@ export type {
   Technique,
 } from '@sudobility/sudojo_types';
 
-export type {
-  SudojoConfig,
-  SudojoAuth,
-} from '@sudobility/sudojo_client';
+export type { SudojoConfig, SudojoAuth } from '@sudobility/sudojo_client';
 
 export type {
   ClientConfig as SolverConfig,

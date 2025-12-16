@@ -49,7 +49,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.state.status).toBe('playing');
@@ -62,7 +64,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: true });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: true,
+        });
       });
 
       expect(result.current.state.status).toBe('playing');
@@ -76,7 +80,9 @@ describe('useGame', () => {
 
       // Load first board and make some moves
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         // Cell (0,2) is empty in puzzle 530070000...
         result.current.selectCell(0, 2);
         result.current.setValue(4);
@@ -86,7 +92,9 @@ describe('useGame', () => {
 
       // Load new board
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.state.undoStack.length).toBe(0);
@@ -100,7 +108,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(4, 4);
       });
 
@@ -112,7 +122,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(4, 4);
       });
 
@@ -128,7 +140,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(4, 4);
         result.current.deselectCell();
       });
@@ -143,7 +157,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         // Cell (0,2) is empty in puzzle 530070000...
         result.current.selectCell(0, 2);
         result.current.setValue(4);
@@ -156,7 +172,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         // Cell (0, 1) is a clue with value 3 (puzzle: 530070000...)
         result.current.selectCell(0, 1);
         result.current.setValue(9);
@@ -169,7 +187,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
       });
@@ -182,7 +202,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.undo();
@@ -201,7 +223,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(9); // Wrong value (correct is 4)
       });
@@ -214,7 +238,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.togglePencilmark(1);
         result.current.togglePencilmark(2);
@@ -228,11 +254,13 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       // Create a puzzle with only one empty cell
-      const almostComplete = SAMPLE_SOLUTION.substring(0, 2) + '0' + SAMPLE_SOLUTION.substring(3);
+      const almostComplete = `${SAMPLE_SOLUTION.substring(0, 2)}0${SAMPLE_SOLUTION.substring(3)}`;
       const correctValue = parseInt(SAMPLE_SOLUTION[2] ?? '0', 10);
 
       act(() => {
-        result.current.loadBoard(almostComplete, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(almostComplete, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(correctValue);
       });
@@ -247,7 +275,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.clearValue();
@@ -260,7 +290,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.clearValue();
@@ -275,7 +307,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.togglePencilmark(1);
       });
@@ -287,20 +321,26 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.togglePencilmark(1);
         result.current.togglePencilmark(1);
       });
 
-      expect(result.current.state.board[0]?.[2]?.pencilmarks.has(1)).toBe(false);
+      expect(result.current.state.board[0]?.[2]?.pencilmarks.has(1)).toBe(
+        false
+      );
     });
 
     it('does not add pencilmarks to cells with values', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.togglePencilmark(1);
@@ -313,7 +353,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setPencilmarks([1, 2, 3]);
       });
@@ -327,7 +369,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setPencilmarks([1, 2, 3]);
         result.current.clearPencilmarks();
@@ -342,7 +386,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.undo();
@@ -357,7 +403,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.undo();
@@ -373,13 +421,17 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.togglePencilmark(1);
         result.current.undo();
       });
 
-      expect(result.current.state.board[0]?.[2]?.pencilmarks.has(1)).toBe(false);
+      expect(result.current.state.board[0]?.[2]?.pencilmarks.has(1)).toBe(
+        false
+      );
     });
   });
 
@@ -388,7 +440,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.pause();
       });
 
@@ -400,7 +454,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.pause();
         result.current.resume();
       });
@@ -412,7 +468,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(4);
         result.current.reset();
@@ -428,7 +486,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.tick(10);
       });
 
@@ -451,7 +511,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0, 2);
         result.current.setValue(9); // Wrong
       });
@@ -471,7 +533,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame({ maxMistakes: 2 }));
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       // Find two empty cells and set wrong values
@@ -500,7 +564,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.getBoardString()).toBe(SAMPLE_PUZZLE);
@@ -510,7 +576,9 @@ describe('useGame', () => {
       const { result } = renderHook(() => useGame());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.getOriginalPuzzle()).toBe(SAMPLE_PUZZLE);

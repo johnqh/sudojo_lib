@@ -6,9 +6,9 @@ import { useMemo } from 'react';
 import type { Learning } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
+  type SudojoConfig,
   useSudojoLearning,
   useSudojoLearningItem,
-  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 
 export interface UseLearningOptions {
@@ -75,7 +75,13 @@ export interface UseLearningResult {
  * ```
  */
 export function useLearning(options: UseLearningOptions): UseLearningResult {
-  const { networkClient, config, techniqueUuid, languageCode, enabled = true } = options;
+  const {
+    networkClient,
+    config,
+    techniqueUuid,
+    languageCode,
+    enabled = true,
+  } = options;
 
   const queryParams = useMemo(() => {
     // Only return params if at least one filter is provided
@@ -86,12 +92,12 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
     };
   }, [techniqueUuid, languageCode]);
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useSudojoLearning(networkClient, config, queryParams, { enabled });
+  const { data, isLoading, error, refetch } = useSudojoLearning(
+    networkClient,
+    config,
+    queryParams,
+    { enabled }
+  );
 
   const learningMaterials = useMemo(() => {
     if (!data?.success || !data.data) return [];
@@ -139,7 +145,9 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
     learningMaterials,
     isLoading,
     error: error ?? null,
-    refetch: () => { refetch(); },
+    refetch: () => {
+      refetch();
+    },
     getLearningByUuid,
     sortedLearning,
     learningByTechnique,
@@ -175,17 +183,19 @@ export interface UseLearningItemResult {
  * @param options - Hook options
  * @returns Learning item data
  */
-export function useLearningItem(options: UseLearningItemOptions): UseLearningItemResult {
+export function useLearningItem(
+  options: UseLearningItemOptions
+): UseLearningItemResult {
   const { networkClient, config, learningUuid, enabled = true } = options;
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useSudojoLearningItem(networkClient, config, learningUuid, {
-    enabled: enabled && !!learningUuid,
-  });
+  const { data, isLoading, error, refetch } = useSudojoLearningItem(
+    networkClient,
+    config,
+    learningUuid,
+    {
+      enabled: enabled && !!learningUuid,
+    }
+  );
 
   const learningItem = useMemo(() => {
     if (!data?.success || !data.data) return null;
@@ -196,6 +206,8 @@ export function useLearningItem(options: UseLearningItemOptions): UseLearningIte
     learningItem,
     isLoading,
     error: error ?? null,
-    refetch: () => { refetch(); },
+    refetch: () => {
+      refetch();
+    },
   };
 }

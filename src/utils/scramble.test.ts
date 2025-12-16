@@ -100,7 +100,9 @@ describe('scrambleBoard', () => {
     const result = scrambleBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION);
 
     const originalClues = SAMPLE_PUZZLE.split('').filter(c => c !== '0').length;
-    const scrambledClues = result.puzzle.split('').filter(c => c !== '0').length;
+    const scrambledClues = result.puzzle
+      .split('')
+      .filter(c => c !== '0').length;
 
     expect(scrambledClues).toBe(originalClues);
   });
@@ -133,16 +135,7 @@ describe('scrambleBoard', () => {
       mirror: false,
     });
 
-    // Digit mapping should not be identity
-    let hasNonIdentityMapping = false;
-    for (const [original, scrambled] of result.digitMapping) {
-      if (original !== scrambled) {
-        hasNonIdentityMapping = true;
-        break;
-      }
-    }
-
-    // With only digit scrambling, there's a small chance of identity mapping
+    // Digit mapping check - note that there's a small chance of identity mapping
     // but structure should be preserved
     const originalBoard = parseBoardString(SAMPLE_PUZZLE);
     const scrambledBoard = parseBoardString(result.puzzle);

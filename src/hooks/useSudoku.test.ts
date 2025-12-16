@@ -5,7 +5,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useSudoku } from './useSudoku';
-import { rowOf, columnOf, blockOf } from '../types/sudoku';
+import { blockOf, columnOf, rowOf } from '../types/sudoku';
 
 // Valid Sudoku puzzle and solution for testing
 const SAMPLE_PUZZLE =
@@ -47,7 +47,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.play).not.toBe(null);
@@ -60,7 +62,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       // First cell (index 0) has given=5
@@ -76,7 +80,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: true });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: true,
+        });
       });
 
       expect(result.current.board).not.toBe(null);
@@ -89,7 +95,9 @@ describe('useSudoku', () => {
 
       // Load first board and make a move
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -98,7 +106,9 @@ describe('useSudoku', () => {
 
       // Load new board
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.canUndo).toBe(false);
@@ -111,7 +121,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(40); // Center cell
       });
 
@@ -124,7 +136,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCellAt(4, 4); // Row 4, Column 4 = index 40
       });
 
@@ -135,7 +149,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(40);
         result.current.deselectCell();
       });
@@ -148,7 +164,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(40); // Center cell (4, 4)
       });
 
@@ -160,7 +178,7 @@ describe('useSudoku', () => {
       const selectedCol = columnOf(40);
       const selectedBlock = blockOf(40);
 
-      result.current.relatedCells.forEach((cell) => {
+      result.current.relatedCells.forEach(cell => {
         const isRelated =
           rowOf(cell.index) === selectedRow ||
           columnOf(cell.index) === selectedCol ||
@@ -175,7 +193,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         // Cell 2 is empty in puzzle (given=null, solution=4)
         result.current.selectCell(2);
         result.current.input(4);
@@ -188,7 +208,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         // Cell 0 is a clue with given=5
         result.current.selectCell(0);
         result.current.input(9);
@@ -202,7 +224,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -214,7 +238,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.canUndo).toBe(false);
@@ -231,7 +257,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         // First add some pencilmarks to related cells
         result.current.togglePencilMode();
         result.current.selectCell(3); // Same row as cell 2
@@ -258,7 +286,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.isPencilMode).toBe(false);
@@ -280,7 +310,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.setPencilMode(true);
       });
 
@@ -291,7 +323,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.togglePencilMode();
         result.current.selectCell(2);
         result.current.input(4);
@@ -305,7 +339,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.togglePencilMode();
         result.current.selectCell(2);
         result.current.input(4); // Add 4
@@ -325,7 +361,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.togglePencilMode();
         result.current.selectCell(2);
         result.current.input(1);
@@ -350,7 +388,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -369,7 +409,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.togglePencilMode();
         result.current.selectCell(2);
         result.current.input(1);
@@ -396,7 +438,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -414,7 +458,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -447,7 +493,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2); // Solution is 4
         result.current.input(9); // Wrong value
       });
@@ -463,7 +511,9 @@ describe('useSudoku', () => {
       );
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(9); // Wrong value
       });
@@ -479,7 +529,9 @@ describe('useSudoku', () => {
 
       // Use solution as puzzle so all cells are pre-filled
       act(() => {
-        result.current.loadBoard(SAMPLE_SOLUTION, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_SOLUTION, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       // All cells are clues, so game is already complete
@@ -490,10 +542,12 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       // Create a puzzle with one empty cell
-      const puzzleWithOneEmpty = SAMPLE_SOLUTION.substring(0, 80) + '0';
+      const puzzleWithOneEmpty = `${SAMPLE_SOLUTION.substring(0, 80)}0`;
 
       act(() => {
-        result.current.loadBoard(puzzleWithOneEmpty, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(puzzleWithOneEmpty, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(80);
         result.current.input(1); // Wrong value (solution is 9)
       });
@@ -507,22 +561,28 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.autoPencilmarks();
       });
 
       // Cell 2 is empty, should have pencilmarks
-      expect(result.current.board!.cells[2].pencilmarks.length).toBeGreaterThan(0);
+      expect(
+        result.current.board!.cells[2].pencilmarks?.length
+      ).toBeGreaterThan(0);
 
-      // Clue cells should not have pencilmarks
-      expect(result.current.board!.cells[0].pencilmarks.length).toBe(0);
+      // Clue cells should not have pencilmarks (null for cells with values)
+      expect(result.current.board!.cells[0].pencilmarks).toBeNull();
     });
 
     it('pencilmarks respect Sudoku constraints', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.autoPencilmarks();
       });
 
@@ -530,11 +590,9 @@ describe('useSudoku', () => {
       // that are already in its row, column, or block
       const cell2 = result.current.board!.cells[2];
       const row0Values = [5, 3, 7]; // From puzzle row 0: 530070000
-      const col2Values: number[] = [];
-      const block0Values = [5, 3, 6, 9, 8]; // From top-left 3x3
 
       // Pencilmarks should not contain any of these values
-      row0Values.forEach((v) => {
+      row0Values.forEach(v => {
         expect(cell2.pencilmarks).not.toContain(v);
       });
     });
@@ -545,7 +603,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.progress).toBe(0);
@@ -555,7 +615,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -567,7 +629,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_SOLUTION, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_SOLUTION, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.progress).toBe(100);
@@ -579,7 +643,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.getBoardString()).toBe(SAMPLE_PUZZLE);
@@ -589,7 +655,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
       });
 
       expect(result.current.getOriginalPuzzle()).toBe(SAMPLE_PUZZLE);
@@ -599,7 +667,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -639,7 +709,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2);
         result.current.input(4);
       });
@@ -660,13 +732,15 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(0); // Cell with given=5
       });
 
       // Should find other cells with value 5
       expect(result.current.sameValueCells.length).toBeGreaterThan(0);
-      result.current.sameValueCells.forEach((cell) => {
+      result.current.sameValueCells.forEach(cell => {
         expect(cell.given ?? cell.input).toBe(5);
       });
     });
@@ -675,7 +749,9 @@ describe('useSudoku', () => {
       const { result } = renderHook(() => useSudoku());
 
       act(() => {
-        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, { scramble: false });
+        result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+          scramble: false,
+        });
         result.current.selectCell(2); // Empty cell
       });
 

@@ -35,7 +35,10 @@ export type { UseGameOptions, UseGameResult } from './useGame';
 
 // Teaching hooks
 export { useGameTeaching } from './useGameTeaching';
-export type { UseGameTeachingOptions, UseGameTeachingResult } from './useGameTeaching';
+export type {
+  UseGameTeachingOptions,
+  UseGameTeachingResult,
+} from './useGameTeaching';
 
 // Sudoku hooks (ported from renderable)
 export { useSudoku } from './useSudoku';

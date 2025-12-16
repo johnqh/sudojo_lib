@@ -43,7 +43,10 @@ export {
 } from './validation';
 
 // Sudoku scrambler utilities (for useSudoku hook - ported from renderable)
-export type { ScramblerProtocol, ScrambleResult as SudokuScrambleResult } from './sudokuScrambler';
+export type {
+  ScramblerProtocol,
+  ScrambleResult as SudokuScrambleResult,
+} from './sudokuScrambler';
 export {
   Scrambler,
   NonScrambler,

@@ -6,9 +6,9 @@ import { useMemo } from 'react';
 import type { Level } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
+  type SudojoConfig,
   useSudojoLevel,
   useSudojoLevels,
-  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 
 export interface UseLevelsOptions {
@@ -70,12 +70,11 @@ export interface UseLevelsResult {
 export function useLevels(options: UseLevelsOptions): UseLevelsResult {
   const { networkClient, config, enabled = true } = options;
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useSudojoLevels(networkClient, config, { enabled });
+  const { data, isLoading, error, refetch } = useSudojoLevels(
+    networkClient,
+    config,
+    { enabled }
+  );
 
   const levels = useMemo(() => {
     if (!data?.success || !data.data) return [];
@@ -108,7 +107,9 @@ export function useLevels(options: UseLevelsOptions): UseLevelsResult {
     levels,
     isLoading,
     error: error ?? null,
-    refetch: () => { refetch(); },
+    refetch: () => {
+      refetch();
+    },
     getLevelByUuid,
     getLevelByIndex,
     sortedLevels,
@@ -148,14 +149,14 @@ export interface UseLevelResult {
 export function useLevel(options: UseLevelOptions): UseLevelResult {
   const { networkClient, config, levelUuid, enabled = true } = options;
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useSudojoLevel(networkClient, config, levelUuid, {
-    enabled: enabled && !!levelUuid,
-  });
+  const { data, isLoading, error, refetch } = useSudojoLevel(
+    networkClient,
+    config,
+    levelUuid,
+    {
+      enabled: enabled && !!levelUuid,
+    }
+  );
 
   const level = useMemo(() => {
     if (!data?.success || !data.data) return null;
@@ -166,6 +167,8 @@ export function useLevel(options: UseLevelOptions): UseLevelResult {
     level,
     isLoading,
     error: error ?? null,
-    refetch: () => { refetch(); },
+    refetch: () => {
+      refetch();
+    },
   };
 }

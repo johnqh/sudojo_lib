@@ -29,6 +29,9 @@ export function parseBoardString(boardString: string): number[][] {
     for (let col = 0; col < BOARD_SIZE; col++) {
       const index = row * BOARD_SIZE + col;
       const char = boardString[index];
+      if (char === undefined) {
+        throw new Error(`Missing character at position ${index}`);
+      }
       const value = char === '.' ? 0 : parseInt(char, 10);
       if (isNaN(value) || value < 0 || value > 9) {
         throw new Error(`Invalid character at position ${index}: '${char}'`);
@@ -47,7 +50,9 @@ export function parseBoardString(boardString: string): number[][] {
  */
 export function stringifyBoard(board: number[][]): string {
   if (board.length !== BOARD_SIZE) {
-    throw new Error(`Invalid board rows: expected ${BOARD_SIZE}, got ${board.length}`);
+    throw new Error(
+      `Invalid board rows: expected ${BOARD_SIZE}, got ${board.length}`
+    );
   }
 
   let result = '';
@@ -76,7 +81,8 @@ export function stringifyBoard(board: number[][]): string {
  */
 export function createGameBoard(puzzle: string, solution: string): GameBoard {
   const puzzleArray = parseBoardString(puzzle);
-  const solutionArray = parseBoardString(solution);
+  // Validate solution string (will throw if invalid)
+  parseBoardString(solution);
 
   const board: GameBoard = [];
   for (let row = 0; row < BOARD_SIZE; row++) {
@@ -155,7 +161,9 @@ export function getBlockIndex(row: number, col: number): number {
  * @param row - Row index (0-8)
  * @returns Array of {row, column} positions
  */
-export function getRowCells(row: number): Array<{ row: number; column: number }> {
+export function getRowCells(
+  row: number
+): Array<{ row: number; column: number }> {
   const cells: Array<{ row: number; column: number }> = [];
   for (let col = 0; col < BOARD_SIZE; col++) {
     cells.push({ row, column: col });
@@ -168,7 +176,9 @@ export function getRowCells(row: number): Array<{ row: number; column: number }>
  * @param col - Column index (0-8)
  * @returns Array of {row, column} positions
  */
-export function getColumnCells(col: number): Array<{ row: number; column: number }> {
+export function getColumnCells(
+  col: number
+): Array<{ row: number; column: number }> {
   const cells: Array<{ row: number; column: number }> = [];
   for (let row = 0; row < BOARD_SIZE; row++) {
     cells.push({ row, column: col });
@@ -300,7 +310,9 @@ export function cloneBoard(board: GameBoard): GameBoard {
  * @param board - GameBoard
  * @returns Array of {row, column} positions
  */
-export function getEmptyCells(board: GameBoard): Array<{ row: number; column: number }> {
+export function getEmptyCells(
+  board: GameBoard
+): Array<{ row: number; column: number }> {
   const emptyCells: Array<{ row: number; column: number }> = [];
   for (let row = 0; row < BOARD_SIZE; row++) {
     for (let col = 0; col < BOARD_SIZE; col++) {

@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { createGameBoard, cloneBoard } from './board';
+import { createGameBoard } from './board';
 import {
   autoRemovePencilmarks,
   clearHighlights,

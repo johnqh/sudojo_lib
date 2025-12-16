@@ -2,7 +2,7 @@
  * Game validation utilities for checking mistakes, completion, and game state
  */
 
-import type { CellState, GameBoard, GameState } from '../types';
+import type { GameBoard, GameState } from '../types';
 import { BOARD_SIZE, parseBoardString } from './board';
 
 /**
@@ -193,7 +193,10 @@ export function updateCellHighlights(
         const selectedBlockCol = Math.floor(selectedCol / 3);
         const cellBlockRow = Math.floor(rowIndex / 3);
         const cellBlockCol = Math.floor(colIndex / 3);
-        if (cellBlockRow === selectedBlockRow && cellBlockCol === selectedBlockCol) {
+        if (
+          cellBlockRow === selectedBlockRow &&
+          cellBlockCol === selectedBlockCol
+        ) {
           isHighlighted = true;
         }
       }

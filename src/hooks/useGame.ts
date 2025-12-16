@@ -4,12 +4,10 @@
 
 import { useCallback, useMemo, useReducer } from 'react';
 import type {
-  CellPosition,
   GameBoard,
   GameMove,
   GameSettings,
   GameState,
-  GameStatus,
   ScrambleConfig,
 } from '../types';
 import { DEFAULT_GAME_SETTINGS, DEFAULT_SCRAMBLE_CONFIG } from '../types';
@@ -34,7 +32,15 @@ import {
 // ============================================================================
 
 type GameAction =
-  | { type: 'LOAD_BOARD'; puzzle: string; solution: string; scramble: boolean; scrambleConfig?: ScrambleConfig; boardUuid?: string; levelUuid?: string }
+  | {
+      type: 'LOAD_BOARD';
+      puzzle: string;
+      solution: string;
+      scramble: boolean;
+      scrambleConfig?: ScrambleConfig;
+      boardUuid?: string;
+      levelUuid?: string;
+    }
   | { type: 'SELECT_CELL'; row: number; column: number }
   | { type: 'DESELECT_CELL' }
   | { type: 'SET_VALUE'; value: number }
@@ -104,15 +110,29 @@ const createInitialState = (): GameState => ({
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'LOAD_BOARD': {
-      const { puzzle, solution, scramble, scrambleConfig, boardUuid, levelUuid } = action;
+      const {
+        puzzle,
+        solution,
+        scramble,
+        scrambleConfig,
+        boardUuid,
+        levelUuid,
+      } = action;
 
       // Apply scrambling if requested
       const scrambleResult = scramble
-        ? scrambleBoard(puzzle, solution, scrambleConfig ?? DEFAULT_SCRAMBLE_CONFIG)
+        ? scrambleBoard(
+            puzzle,
+            solution,
+            scrambleConfig ?? DEFAULT_SCRAMBLE_CONFIG
+          )
         : noScramble(puzzle, solution);
 
       // Create the game board from scrambled puzzle
-      const board = createGameBoard(scrambleResult.puzzle, scrambleResult.solution);
+      const board = createGameBoard(
+        scrambleResult.puzzle,
+        scrambleResult.solution
+      );
 
       return {
         ...createInitialState(),
@@ -169,7 +189,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (value < 1 || value > 9) return state;
 
       // Check if this is a mistake
-      const isCorrect = isValueCorrect(state.scrambledSolution, row, column, value);
+      const isCorrect = isValueCorrect(
+        state.scrambledSolution,
+        row,
+        column,
+        value
+      );
       const isMistake = !isCorrect && state.settings.showErrors;
 
       // Create move for undo
@@ -209,7 +234,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       // Check for completion
       const complete = isGameComplete(newBoard, state.scrambledSolution);
       const newMistakeCount = state.mistakeCount + (isMistake ? 1 : 0);
-      const gameOver = state.maxMistakes > 0 && newMistakeCount >= state.maxMistakes;
+      const gameOver =
+        state.maxMistakes > 0 && newMistakeCount >= state.maxMistakes;
 
       return {
         ...state,
@@ -314,7 +340,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const cell = state.board[row]?.[column];
       if (!cell || cell.isClue || cell.value !== null) return state;
 
-      const newPencilmarks = new Set(action.values.filter(v => v >= 1 && v <= 9));
+      const newPencilmarks = new Set(
+        action.values.filter(v => v >= 1 && v <= 9)
+      );
 
       // Create move for undo
       const move: GameMove = {
@@ -376,7 +404,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'UNDO': {
-      if (state.undoStack.length === 0 || state.status !== 'playing') return state;
+      if (state.undoStack.length === 0 || state.status !== 'playing')
+        return state;
 
       const move = state.undoStack[state.undoStack.length - 1];
       if (!move) return state;
@@ -391,7 +420,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
       // Update errors based on settings
-      newBoard = updateCellErrors(newBoard, state.scrambledSolution, state.settings.showErrors);
+      newBoard = updateCellErrors(
+        newBoard,
+        state.scrambledSolution,
+        state.settings.showErrors
+      );
 
       // Update highlights if there's a selected cell
       if (state.selectedCell) {
@@ -413,7 +446,8 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'REDO': {
-      if (state.redoStack.length === 0 || state.status !== 'playing') return state;
+      if (state.redoStack.length === 0 || state.status !== 'playing')
+        return state;
 
       const move = state.redoStack[state.redoStack.length - 1];
       if (!move) return state;
@@ -427,7 +461,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
       // Update errors based on settings
-      newBoard = updateCellErrors(newBoard, state.scrambledSolution, state.settings.showErrors);
+      newBoard = updateCellErrors(
+        newBoard,
+        state.scrambledSolution,
+        state.settings.showErrors
+      );
 
       // Update highlights if there's a selected cell
       if (state.selectedCell) {
@@ -496,7 +534,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'RESET': {
       if (!state.scrambledPuzzle) return state;
 
-      const newBoard = createGameBoard(state.scrambledPuzzle, state.scrambledSolution);
+      const newBoard = createGameBoard(
+        state.scrambledPuzzle,
+        state.scrambledSolution
+      );
 
       return {
         ...state,
@@ -555,7 +596,12 @@ export interface UseGameResult {
   loadBoard: (
     puzzle: string,
     solution: string,
-    options?: { scramble?: boolean; scrambleConfig?: ScrambleConfig; boardUuid?: string; levelUuid?: string }
+    options?: {
+      scramble?: boolean;
+      scrambleConfig?: ScrambleConfig;
+      boardUuid?: string;
+      levelUuid?: string;
+    }
   ) => void;
   /** Select a cell */
   selectCell: (row: number, column: number) => void;
@@ -650,7 +696,10 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
     [state.status]
   );
 
-  const isComplete = useMemo(() => state.status === 'completed', [state.status]);
+  const isComplete = useMemo(
+    () => state.status === 'completed',
+    [state.status]
+  );
 
   const isFailed = useMemo(() => state.status === 'failed', [state.status]);
 
@@ -669,17 +718,30 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
     (
       puzzle: string,
       solution: string,
-      opts?: { scramble?: boolean; scrambleConfig?: ScrambleConfig; boardUuid?: string; levelUuid?: string }
+      opts?: {
+        scramble?: boolean;
+        scrambleConfig?: ScrambleConfig;
+        boardUuid?: string;
+        levelUuid?: string;
+      }
     ) => {
-      dispatch({
+      const action: GameAction = {
         type: 'LOAD_BOARD',
         puzzle,
         solution,
         scramble: opts?.scramble ?? true,
-        scrambleConfig: opts?.scrambleConfig,
-        boardUuid: opts?.boardUuid,
-        levelUuid: opts?.levelUuid,
-      });
+      };
+      if (opts?.scrambleConfig !== undefined) {
+        (action as { scrambleConfig?: ScrambleConfig }).scrambleConfig =
+          opts.scrambleConfig;
+      }
+      if (opts?.boardUuid !== undefined) {
+        (action as { boardUuid?: string }).boardUuid = opts.boardUuid;
+      }
+      if (opts?.levelUuid !== undefined) {
+        (action as { levelUuid?: string }).levelUuid = opts.levelUuid;
+      }
+      dispatch(action);
     },
     []
   );

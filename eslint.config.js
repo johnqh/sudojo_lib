@@ -13,7 +13,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2020,
         sourceType: 'module',
-        project: './tsconfig.json',
+        project: './tsconfig.eslint.json',
         ecmaFeatures: { jsx: true },
       },
       globals: {
@@ -23,6 +23,8 @@ export default [
         window: 'readonly',
         document: 'readonly',
         fetch: 'readonly',
+        global: 'readonly',
+        globalThis: 'readonly',
       },
     },
     plugins: {
