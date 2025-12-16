@@ -89,7 +89,13 @@ type SudokuAction =
   | { type: 'ERASE' }
   | { type: 'AUTO_PENCILMARKS' }
   | { type: 'UPDATE_APP_SETTINGS'; settings: Partial<SudokuAppSettings> }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | {
+      type: 'APPLY_HINT_DATA';
+      userInput: string;
+      pencilmarks: string | null;
+      autoPencilmarks: boolean;
+    };
 
 // =============================================================================
 // Initial State
@@ -519,6 +525,79 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
       };
     }
 
+    case 'APPLY_HINT_DATA': {
+      // Matches Kotlin HintInteractor.apply() - applies board data from hint API response
+      if (!state.play) return state;
+      const { board } = state.play;
+
+      const { userInput, pencilmarks, autoPencilmarks } = action;
+
+      // Parse pencilmarks string (comma-separated, 81 entries)
+      // Each entry is a string of digits (e.g., "123" for pencilmarks 1,2,3)
+      const pencilmarksArray: (number[] | null)[] = pencilmarks
+        ? pencilmarks.split(',').map(entry => {
+            if (!entry || entry === '') return null;
+            return entry
+              .split('')
+              .map(d => parseInt(d, 10))
+              .filter(n => !isNaN(n) && n > 0);
+          })
+        : Array(81).fill(null);
+
+      // Apply user input and pencilmarks to each cell
+      let isComplete = true;
+      const newCells = board.cells.map((cell, index) => {
+        // Get input value from userInput string (0 means no input)
+        const inputChar = userInput.charAt(index);
+        const inputValue =
+          inputChar >= '1' && inputChar <= '9' ? parseInt(inputChar, 10) : null;
+
+        // Get pencilmarks for this cell
+        const cellPencilmarks = pencilmarksArray[index];
+
+        // Check completion - matches Kotlin: if (cell.given == null && cell.solution != cell.input)
+        if (cell.given === null && inputValue !== cell.solution) {
+          isComplete = false;
+        }
+
+        // If cell has a given value, don't modify it
+        if (cell.given !== null) {
+          return cell;
+        }
+
+        // Apply input and pencilmarks - matches Kotlin: input = if (input != 0) input else null
+        return {
+          ...cell,
+          input: inputValue,
+          pencilmarks:
+            cellPencilmarks && cellPencilmarks.length > 0
+              ? cellPencilmarks
+              : null,
+        };
+      });
+
+      const newBoard: SudokuBoard = {
+        ...board,
+        cells: newCells,
+        completed: isComplete,
+      };
+
+      const newPlay: SudokuPlay = {
+        ...state.play,
+        board: newBoard,
+        settings: {
+          ...state.play.settings,
+          autoPencilmarks,
+        },
+      };
+
+      return {
+        ...state,
+        history: [...state.history, state.play],
+        play: newPlay,
+      };
+    }
+
     default:
       return state;
   }
@@ -603,6 +682,12 @@ export interface UseSudokuResult {
   updateSettings: (settings: Partial<SudokuAppSettings>) => void;
   /** Reset the game to initial state */
   reset: () => void;
+  /** Apply hint data from solver API response */
+  applyHintData: (
+    userInput: string,
+    pencilmarks: string | null,
+    autoPencilmarks: boolean
+  ) => void;
 
   // Utility functions
   /** Get board state as string */
@@ -785,6 +870,22 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
     dispatch({ type: 'RESET' });
   }, []);
 
+  const applyHintData = useCallback(
+    (
+      userInput: string,
+      pencilmarks: string | null,
+      autoPencilmarks: boolean
+    ) => {
+      dispatch({
+        type: 'APPLY_HINT_DATA',
+        userInput,
+        pencilmarks,
+        autoPencilmarks,
+      });
+    },
+    []
+  );
+
   // Utility functions
   const getBoardString = useCallback(() => {
     if (!board) return '';
@@ -838,6 +939,7 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
     autoPencilmarks,
     updateSettings,
     reset,
+    applyHintData,
 
     // Utilities
     getBoardString,
