@@ -57,3 +57,15 @@ export {
   cellsToInputString,
   cellsToPencilmarksString,
 } from './sudokuScrambler';
+
+// Sudoku presenter (for rendering - matches Kotlin renderable)
+export type { PresentBoardOptions } from './sudokuPresenter';
+export {
+  presentBoard,
+  calculateCellHints,
+  themeColorToCSS,
+  getColorPalette,
+  getCellsWithDigit,
+  getSelectedDigit,
+  computeSelectedDigitCells,
+} from './sudokuPresenter';

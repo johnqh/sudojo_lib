@@ -55,6 +55,19 @@ export {
   getRelatedIndices,
 } from './types';
 
+// Display types (for rendering - matches Kotlin renderable)
+export type {
+  HintArea,
+  HintCell,
+  HintCellActions,
+  DisplayHintStep,
+  CellDisplayState,
+  PencilmarkDisplayState,
+  UIColorPalette,
+} from './types';
+
+export { ThemeColor, SudokuColor, UIColorLight, UIColorDark } from './types';
+
 // Legacy Utilities (useGame hook)
 export {
   // Board utilities
@@ -104,6 +117,18 @@ export {
   cellsToStateString,
   cellsToInputString,
   cellsToPencilmarksString,
+} from './utils';
+
+// Presenter utilities (for rendering - matches Kotlin renderable)
+export type { PresentBoardOptions } from './utils';
+export {
+  presentBoard,
+  calculateCellHints,
+  themeColorToCSS,
+  getColorPalette,
+  getCellsWithDigit,
+  getSelectedDigit,
+  computeSelectedDigitCells,
 } from './utils';
 
 // Hooks

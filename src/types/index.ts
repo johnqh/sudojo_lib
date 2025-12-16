@@ -46,3 +46,16 @@ export {
   getBlockIndices,
   getRelatedIndices,
 } from './sudoku';
+
+// Display types (for rendering - matches Kotlin renderable)
+export type {
+  HintArea,
+  HintCell,
+  HintCellActions,
+  HintStep as DisplayHintStep,
+  CellDisplayState,
+  PencilmarkDisplayState,
+  UIColorPalette,
+} from './display';
+
+export { ThemeColor, SudokuColor, UIColorLight, UIColorDark } from './display';
