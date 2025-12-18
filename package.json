@@ -5,7 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist/**/*"],
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:watch": "tsc --watch",
@@ -45,7 +47,6 @@
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.7.1",
     "@types/react": "^19.2.2",
-    "react": "^19.2.0",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
     "@vitest/coverage-v8": "^4.0.4",
@@ -55,6 +56,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "happy-dom": "^20.0.0",
     "prettier": "^3.6.2",
+    "react": "^19.2.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vitest": "^4.0.4"
