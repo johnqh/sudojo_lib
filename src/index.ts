@@ -68,6 +68,22 @@ export type {
 
 export { ThemeColor, SudokuColor, UIColorLight, UIColorDark } from './types';
 
+// Progress Types (for user progress tracking)
+export type { CompletedPuzzle, GameStats, UserProgress } from './types';
+export { DEFAULT_PROGRESS, PROGRESS_STORAGE_KEY } from './types';
+
+// Settings Types (for app settings)
+export type { DigitDisplay, AppSettings } from './types';
+export { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from './types';
+
+// Subscription Types (for subscription management)
+export type { Product, Subscription } from './types';
+export { DEFAULT_SUBSCRIPTION } from './types';
+
+// Game Persistence Types (for saving/loading game state)
+export type { SavedGameState, GamePersistenceKey } from './types';
+export { GAME_STORAGE_PREFIX, getGameStorageKey } from './types';
+
 // Legacy Utilities (useGame hook)
 export {
   // Board utilities
@@ -131,6 +147,53 @@ export {
   computeSelectedDigitCells,
 } from './utils';
 
+// Time Utilities
+export { formatTime, parseTime } from './utils';
+
+// Progress Utilities
+export {
+  calculateStats,
+  calculateStreak,
+  isPuzzleCompleted,
+  getCompletedLevelIds,
+  getCompletedDailyDates,
+} from './utils';
+
+// Auth Utilities
+export {
+  getFirebaseErrorMessage,
+  getFirebaseErrorCode,
+  formatFirebaseError,
+} from './utils';
+
+// Theme Utilities
+export type { ThemePreference, ResolvedTheme } from './utils';
+export {
+  THEME_STORAGE_KEY,
+  getSystemTheme,
+  resolveTheme,
+  isValidThemePreference,
+} from './utils';
+
+// Subscription Utilities
+export {
+  convertPackageToProduct,
+  parseCustomerInfo,
+  getPeriodDisplayName,
+  isBestValuePlan,
+  getRevenueCatErrorMessage,
+} from './utils';
+
+// Technique Utilities
+export {
+  getTechniqueIconUrl,
+  TECHNIQUE_TO_HELP_FILE,
+  HELP_FILE_TO_TECHNIQUE,
+  getHelpFileUrl,
+  getTechniqueFromHelpFile,
+  extractBodyContent,
+} from './utils';
+
 // Hooks
 export {
   // Levels
@@ -148,6 +211,18 @@ export {
   useSudoku,
   // Teaching
   useGameTeaching,
+  // Game fetching (with auth/subscription handling)
+  useLevelGame,
+  useDailyGame,
+  // Game timer
+  useGameTimer,
+  // Game persistence
+  useGamePersistence,
+  useAutoSave,
+  // Local storage
+  useLocalStorage,
+  // Hint
+  useHint,
 } from './hooks';
 
 export type {
@@ -175,6 +250,22 @@ export type {
   // Teaching
   UseGameTeachingOptions,
   UseGameTeachingResult,
+  // Game fetching (with auth/subscription handling)
+  UseLevelGameOptions,
+  UseLevelGameResult,
+  UseDailyGameOptions,
+  UseDailyGameResult,
+  GameFetchStatus,
+  // Game timer
+  UseGameTimerOptions,
+  UseGameTimerResult,
+  // Game persistence
+  UseGamePersistenceOptions,
+  UseGamePersistenceResult,
+  // Hint
+  UseHintOptions,
+  UseHintResult,
+  HintBoardData,
 } from './hooks';
 
 // Re-export types from dependencies for convenience

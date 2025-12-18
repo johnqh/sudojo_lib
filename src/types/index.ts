@@ -59,3 +59,19 @@ export type {
 } from './display';
 
 export { ThemeColor, SudokuColor, UIColorLight, UIColorDark } from './display';
+
+// Progress types (for user progress tracking)
+export type { CompletedPuzzle, GameStats, UserProgress } from './progress';
+export { DEFAULT_PROGRESS, PROGRESS_STORAGE_KEY } from './progress';
+
+// Settings types (for app settings)
+export type { DigitDisplay, AppSettings } from './settings';
+export { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from './settings';
+
+// Subscription types (for subscription management)
+export type { Product, Subscription } from './subscription';
+export { DEFAULT_SUBSCRIPTION } from './subscription';
+
+// Game persistence types (for saving/loading game state)
+export type { SavedGameState, GamePersistenceKey } from './gamePersistence';
+export { GAME_STORAGE_PREFIX, getGameStorageKey } from './gamePersistence';

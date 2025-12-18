@@ -43,3 +43,32 @@ export type {
 // Sudoku hooks (ported from renderable)
 export { useSudoku } from './useSudoku';
 export type { UseSudokuOptions, UseSudokuResult } from './useSudoku';
+
+// Game fetching hooks (with auth/subscription handling)
+export { useLevelGame } from './useLevelGame';
+export type {
+  UseLevelGameOptions,
+  UseLevelGameResult,
+  GameFetchStatus,
+} from './useLevelGame';
+
+export { useDailyGame } from './useDailyGame';
+export type { UseDailyGameOptions, UseDailyGameResult } from './useDailyGame';
+
+// Game timer hook
+export { useGameTimer } from './useGameTimer';
+export type { UseGameTimerOptions, UseGameTimerResult } from './useGameTimer';
+
+// Game persistence hooks
+export { useGamePersistence, useAutoSave } from './useGamePersistence';
+export type {
+  UseGamePersistenceOptions,
+  UseGamePersistenceResult,
+} from './useGamePersistence';
+
+// Local storage hook
+export { useLocalStorage } from './useLocalStorage';
+
+// Hint hook
+export { useHint } from './useHint';
+export type { UseHintOptions, UseHintResult, HintBoardData } from './useHint';

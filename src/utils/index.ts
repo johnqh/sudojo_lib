@@ -69,3 +69,50 @@ export {
   getSelectedDigit,
   computeSelectedDigitCells,
 } from './sudokuPresenter';
+
+// Time utilities
+export { formatTime, parseTime } from './time';
+
+// Progress utilities
+export {
+  calculateStats,
+  calculateStreak,
+  isPuzzleCompleted,
+  getCompletedLevelIds,
+  getCompletedDailyDates,
+} from './progress';
+
+// Auth utilities
+export {
+  getFirebaseErrorMessage,
+  getFirebaseErrorCode,
+  formatFirebaseError,
+} from './auth';
+
+// Theme utilities
+export type { ThemePreference, ResolvedTheme } from './theme';
+export {
+  THEME_STORAGE_KEY,
+  getSystemTheme,
+  resolveTheme,
+  isValidThemePreference,
+} from './theme';
+
+// Subscription utilities
+export {
+  convertPackageToProduct,
+  parseCustomerInfo,
+  getPeriodDisplayName,
+  isBestValuePlan,
+  getRevenueCatErrorMessage,
+} from './subscription';
+
+// Technique utilities
+export {
+  getTechniqueIconUrl,
+  TECHNIQUE_TO_HELP_FILE,
+  HELP_FILE_TO_TECHNIQUE,
+  getHelpFileUrl,
+  getTechniqueFromHelpFile,
+  extractBodyContent,
+} from './technique';

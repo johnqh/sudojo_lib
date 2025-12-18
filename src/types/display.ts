@@ -163,43 +163,43 @@ export interface UIColorPalette {
 }
 
 /**
- * Light mode color palette
+ * Light mode color palette - matches sudojo-web UIColorLight
  */
 export const UIColorLight: UIColorPalette = {
   systemBackground: '#FFFFFF',
-  secondarySystemBackground: '#F2F2F7',
-  tertiarySystemBackground: '#FFFFFF',
-  label: '#000000',
+  secondarySystemBackground: '#F2F2F7FF',
+  tertiarySystemBackground: '#FFFFFFFF',
+  label: '#000000FF',
   secondaryLabel: '#3C3C4399',
   tertiaryLabel: '#3C3C434D',
   quaternaryLabel: '#3C3C432E',
-  systemBlue: '#007AFF',
-  systemGreen: '#34C759',
-  systemOrange: '#FF9500',
-  systemPurple: '#AF52DE',
-  systemRed: '#FF3B30',
-  systemYellow: '#FFCC00',
-  systemGray: '#8E8E93',
-  clear: 'transparent',
+  systemBlue: '#007AFFFF',
+  systemGreen: '#34C759FF',
+  systemOrange: '#FF9500FF',
+  systemPurple: '#AF52DEFF',
+  systemRed: '#FF3B30FF',
+  systemYellow: '#FFCC00FF',
+  systemGray: '#8E8E93FF',
+  clear: '#00000000',
 };
 
 /**
- * Dark mode color palette
+ * Dark mode color palette - matches sudojo-web UIColorDark
  */
 export const UIColorDark: UIColorPalette = {
-  systemBackground: '#000000',
-  secondarySystemBackground: '#1C1C1E',
-  tertiarySystemBackground: '#2C2C2E',
-  label: '#FFFFFF',
+  systemBackground: '#000000FF',
+  secondarySystemBackground: '#1C1C1EFF',
+  tertiarySystemBackground: '#2C2C2EFF',
+  label: '#FFFFFFFF',
   secondaryLabel: '#EBEBF599',
   tertiaryLabel: '#EBEBF54D',
   quaternaryLabel: '#EBEBF52E',
-  systemBlue: '#0A84FF',
-  systemGreen: '#30D158',
-  systemOrange: '#FF9F0A',
-  systemPurple: '#BF5AF2',
-  systemRed: '#FF453A',
-  systemYellow: '#FFD60A',
-  systemGray: '#8E8E93',
-  clear: 'transparent',
+  systemBlue: '#0A84FFFF',
+  systemGreen: '#30D158FF',
+  systemOrange: '#FF9F0AFF',
+  systemPurple: '#BF5AF2FF',
+  systemRed: '#FF453AFF',
+  systemYellow: '#FFD60AFF',
+  systemGray: '#8E8E93FF',
+  clear: '#00000000',
 };

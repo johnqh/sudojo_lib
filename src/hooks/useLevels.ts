@@ -6,16 +6,22 @@ import { useMemo } from 'react';
 import type { Level } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
+  type SudojoAuth,
   type SudojoConfig,
   useSudojoLevel,
   useSudojoLevels,
 } from '@sudobility/sudojo_client';
+
+/** Default empty auth for public endpoints */
+const DEFAULT_AUTH: SudojoAuth = { accessToken: '' };
 
 export interface UseLevelsOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
   /** Sudojo API configuration */
   config: SudojoConfig;
+  /** Auth credentials (optional for public data) */
+  auth?: SudojoAuth;
   /** Whether to enable the query */
   enabled?: boolean;
 }
@@ -68,11 +74,17 @@ export interface UseLevelsResult {
  * ```
  */
 export function useLevels(options: UseLevelsOptions): UseLevelsResult {
-  const { networkClient, config, enabled = true } = options;
+  const {
+    networkClient,
+    config,
+    auth = DEFAULT_AUTH,
+    enabled = true,
+  } = options;
 
   const { data, isLoading, error, refetch } = useSudojoLevels(
     networkClient,
     config,
+    auth,
     { enabled }
   );
 
@@ -123,6 +135,8 @@ export interface UseLevelOptions {
   networkClient: NetworkClient;
   /** Sudojo API configuration */
   config: SudojoConfig;
+  /** Auth credentials (optional for public data) */
+  auth?: SudojoAuth;
   /** Level UUID to fetch */
   levelUuid: string;
   /** Whether to enable the query */
@@ -147,11 +161,18 @@ export interface UseLevelResult {
  * @returns Level data
  */
 export function useLevel(options: UseLevelOptions): UseLevelResult {
-  const { networkClient, config, levelUuid, enabled = true } = options;
+  const {
+    networkClient,
+    config,
+    auth = DEFAULT_AUTH,
+    levelUuid,
+    enabled = true,
+  } = options;
 
   const { data, isLoading, error, refetch } = useSudojoLevel(
     networkClient,
     config,
+    auth,
     levelUuid,
     {
       enabled: enabled && !!levelUuid,

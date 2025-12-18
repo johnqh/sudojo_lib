@@ -6,16 +6,22 @@ import { useMemo } from 'react';
 import type { Technique } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
+  type SudojoAuth,
   type SudojoConfig,
   useSudojoTechnique,
   useSudojoTechniques,
 } from '@sudobility/sudojo_client';
+
+/** Default empty auth for public endpoints */
+const DEFAULT_AUTH: SudojoAuth = { accessToken: '' };
 
 export interface UseTechniquesOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
   /** Sudojo API configuration */
   config: SudojoConfig;
+  /** Auth credentials (optional for public data) */
+  auth?: SudojoAuth;
   /** Optional level UUID to filter techniques */
   levelUuid?: string;
   /** Whether to enable the query */
@@ -69,7 +75,13 @@ export interface UseTechniquesResult {
 export function useTechniques(
   options: UseTechniquesOptions
 ): UseTechniquesResult {
-  const { networkClient, config, levelUuid, enabled = true } = options;
+  const {
+    networkClient,
+    config,
+    auth = DEFAULT_AUTH,
+    levelUuid,
+    enabled = true,
+  } = options;
 
   const queryParams = useMemo(() => {
     if (!levelUuid) return undefined;
@@ -79,6 +91,7 @@ export function useTechniques(
   const { data, isLoading, error, refetch } = useSudojoTechniques(
     networkClient,
     config,
+    auth,
     queryParams,
     { enabled }
   );
@@ -132,6 +145,8 @@ export interface UseTechniqueOptions {
   networkClient: NetworkClient;
   /** Sudojo API configuration */
   config: SudojoConfig;
+  /** Auth credentials (optional for public data) */
+  auth?: SudojoAuth;
   /** Technique UUID to fetch */
   techniqueUuid: string;
   /** Whether to enable the query */
@@ -156,11 +171,18 @@ export interface UseTechniqueResult {
  * @returns Technique data
  */
 export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
-  const { networkClient, config, techniqueUuid, enabled = true } = options;
+  const {
+    networkClient,
+    config,
+    auth = DEFAULT_AUTH,
+    techniqueUuid,
+    enabled = true,
+  } = options;
 
   const { data, isLoading, error, refetch } = useSudojoTechnique(
     networkClient,
     config,
+    auth,
     techniqueUuid,
     {
       enabled: enabled && !!techniqueUuid,
