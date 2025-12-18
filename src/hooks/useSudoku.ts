@@ -353,7 +353,8 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
       if (state.history.length === 0) return state;
 
       const newHistory = [...state.history];
-      const previousPlay = newHistory.pop()!;
+      const previousPlay = newHistory.pop();
+      if (!previousPlay) return state;
 
       return {
         ...state,
@@ -456,9 +457,9 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
         }
 
         // Intersect row, column, and block potentials
-        const row = rowPotentials.get(rowOf(index))!;
-        const col = colPotentials.get(columnOf(index))!;
-        const block = blockPotentials.get(blockOf(index))!;
+        const row = rowPotentials.get(rowOf(index)) ?? new Set<number>();
+        const col = colPotentials.get(columnOf(index)) ?? new Set<number>();
+        const block = blockPotentials.get(blockOf(index)) ?? new Set<number>();
 
         const pencilmarks = Array.from(row)
           .filter(v => col.has(v) && block.has(v))
