@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_lib",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Business logic library for Sudojo app",
   "type": "module",
   "main": "dist/index.js",
@@ -41,7 +41,7 @@
     "@sudobility/di": "^1.5.5",
     "@sudobility/sudojo_client": "^0.0.3",
     "@sudobility/sudojo_solver_client": "^1.0.0",
-    "@sudobility/sudojo_types": "^1.1.0",
+    "@sudobility/sudojo_types": "^1.1.1",
     "@sudobility/types": "^1.9.31",
     "@tanstack/react-query": "^5.90.11",
     "@testing-library/react": "^16.3.0",
@@ -57,6 +57,7 @@
     "happy-dom": "^20.0.0",
     "prettier": "^3.6.2",
     "react": "^19.2.0",
+    "react-dom": "^19.2.3",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vitest": "^4.0.4"
@@ -65,7 +66,7 @@
     "@sudobility/di": "^1.5.5",
     "@sudobility/sudojo_client": "^0.0.3",
     "@sudobility/sudojo_solver_client": "^1.0.0",
-    "@sudobility/sudojo_types": "^1.1.0",
+    "@sudobility/sudojo_types": "^1.1.1",
     "@sudobility/types": "^1.9.31",
     "@tanstack/react-query": ">=5.0.0",
     "react": ">=18.0.0"
