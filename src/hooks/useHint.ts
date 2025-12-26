@@ -10,14 +10,13 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { createSudojoSolverClient } from '@sudobility/sudojo_solver_client';
-import type {
-  Board,
-  ClientConfig,
-  HintsPayload,
-  HintStep,
-  SolveResponse,
-} from '@sudobility/sudojo_solver_client';
+import {
+  type ClientConfig,
+  createSudojoSolverClient,
+  type SolverBoard,
+  type SolveResponse,
+  type SolverHintStep,
+} from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
 
 /** Board data returned when applying a hint */
@@ -47,9 +46,9 @@ export interface UseHintOptions {
 
 export interface UseHintResult {
   /** Current hint step being displayed */
-  hint: HintStep | null;
+  hint: SolverHintStep | null;
   /** All hint steps (for showing progress like "Step 1 of 3") */
-  hints: HintsPayload | null;
+  hints: SolverHintStep[] | null;
   /** Current step index (0-based) */
   stepIndex: number;
   /** Total number of steps */
@@ -122,7 +121,7 @@ export function useHint({
   pencilmarks,
   autoPencilmarks = false,
 }: UseHintOptions): UseHintResult {
-  const [hints, setHints] = useState<HintsPayload | null>(null);
+  const [hints, setHints] = useState<SolverHintStep[] | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,11 +130,11 @@ export function useHint({
   const lastPuzzleStateRef = useRef<string>('');
 
   // Store board data from API response for applying hint
-  const boardDataRef = useRef<Board | null>(null);
+  const boardDataRef = useRef<SolverBoard | null>(null);
 
   // Compute current hint step
-  const hint = hints?.steps?.[stepIndex] ?? null;
-  const totalSteps = hints?.steps?.length ?? 0;
+  const hint = hints?.[stepIndex] ?? null;
+  const totalSteps = hints?.length ?? 0;
   const hasNextStep = stepIndex < totalSteps - 1;
   const hasPreviousStep = stepIndex > 0;
   // Can apply when on last step and have board data
@@ -159,15 +158,15 @@ export function useHint({
       };
       const response: SolveResponse = await client.solve(solveOptions);
 
-      if (response.success && response.data?.hints?.steps?.length) {
+      if (response.success && response.data?.hints?.length) {
         setHints(response.data.hints);
         setStepIndex(0);
         // Store board data for applying hint later
-        boardDataRef.current = response.data.board?.board ?? null;
+        boardDataRef.current = response.data.board ?? null;
         // Track the puzzle state we fetched for
         lastPuzzleStateRef.current = `${puzzle}|${userInput}|${pencilmarks ?? ''}`;
       } else if (response.error) {
-        setError(response.error.message);
+        setError(response.error);
         setHints(null);
         boardDataRef.current = null;
       } else {

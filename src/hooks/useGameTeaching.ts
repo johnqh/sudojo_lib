@@ -7,9 +7,9 @@ import type { NetworkClient } from '@sudobility/types';
 import {
   type ClientConfig,
   createSudojoSolverClient,
-  type HintStep,
   type SolveResponse,
-} from '@sudobility/sudojo_solver_client';
+  type SolverHintStep,
+} from '@sudobility/sudojo_client';
 import type { GameHint, TeachingState } from '../types';
 
 export interface UseGameTeachingOptions {
@@ -45,9 +45,9 @@ export interface UseGameTeachingResult {
 }
 
 /**
- * Converts a solver HintStep to our GameHint format
+ * Converts a solver SolverHintStep to our GameHint format
  */
-function convertHintStep(step: HintStep): GameHint {
+function convertHintStep(step: SolverHintStep): GameHint {
   return {
     title: step.title,
     text: step.text,
@@ -191,10 +191,9 @@ export function useGameTeaching(
         }
         const response: SolveResponse = await solverClient.solve(solveOptions);
 
-        if (!response.success || !response.data?.hints) {
+        if (!response.success || !response.data?.hints?.length) {
           const errorMessage =
-            response.error?.message ??
-            'No hints available for the current state';
+            response.error ?? 'No hints available for the current state';
           setTeachingState(prev => ({
             ...prev,
             isLoading: false,
@@ -209,7 +208,7 @@ export function useGameTeaching(
         }
 
         const hints = response.data.hints;
-        const convertedSteps = hints.steps.map(convertHintStep);
+        const convertedSteps = hints.map(convertHintStep);
 
         if (convertedSteps.length === 0) {
           setTeachingState(prev => ({

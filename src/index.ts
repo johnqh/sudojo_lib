@@ -279,10 +279,3 @@ export type {
 } from '@sudobility/sudojo_types';
 
 export type { SudojoConfig, SudojoAuth } from '@sudobility/sudojo_client';
-
-export type {
-  ClientConfig as SolverConfig,
-  HintStep,
-  SolveOptions,
-  SolveResponse,
-} from '@sudobility/sudojo_solver_client';
