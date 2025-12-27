@@ -170,8 +170,8 @@ export function useHint({
       if (response.success && response.data?.hints?.steps?.length) {
         setHints(response.data.hints.steps);
         setStepIndex(0);
-        // Store board data for applying hint later
-        boardDataRef.current = response.data.board ?? null;
+        // Store board data for applying hint later (board is nested inside board wrapper)
+        boardDataRef.current = response.data.board?.board ?? null;
         // Track the puzzle state we fetched for
         lastPuzzleStateRef.current = `${puzzle}|${userInput}|${pencilmarks ?? ''}`;
       } else if (response.error) {
