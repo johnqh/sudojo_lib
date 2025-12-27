@@ -167,8 +167,8 @@ export function useHint({
         solveOptions
       );
 
-      if (response.success && response.data?.hints?.length) {
-        setHints(response.data.hints);
+      if (response.success && response.data?.hints?.steps?.length) {
+        setHints(response.data.hints.steps);
         setStepIndex(0);
         // Store board data for applying hint later
         boardDataRef.current = response.data.board ?? null;

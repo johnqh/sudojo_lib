@@ -199,7 +199,7 @@ export function useGameTeaching(
           solveOptions
         );
 
-        if (!response.success || !response.data?.hints?.length) {
+        if (!response.success || !response.data?.hints?.steps?.length) {
           const errorMessage =
             response.error ?? 'No hints available for the current state';
           setTeachingState(prev => ({
@@ -215,8 +215,8 @@ export function useGameTeaching(
           return;
         }
 
-        const hints = response.data.hints;
-        const convertedSteps = hints.map(convertHintStep);
+        const hintSteps = response.data.hints.steps;
+        const convertedSteps = hintSteps.map(convertHintStep);
 
         if (convertedSteps.length === 0) {
           setTeachingState(prev => ({
