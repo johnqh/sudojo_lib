@@ -240,7 +240,8 @@ export function useHint({
   // Apply the hint to the board - returns board data and clears hint
   const applyHint = useCallback((): HintBoardData | null => {
     const board = boardDataRef.current;
-    if (!board?.user) {
+    // Check for null/undefined board or user, but allow empty string user
+    if (!board || board.user === null || board.user === undefined) {
       return null;
     }
 
