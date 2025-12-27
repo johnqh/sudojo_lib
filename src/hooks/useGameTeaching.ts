@@ -5,18 +5,22 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { NetworkClient } from '@sudobility/types';
 import {
-  type ClientConfig,
-  createSudojoSolverClient,
-  type SolveResponse,
+  type BaseResponse,
+  createSudojoClient,
+  type SolveData,
   type SolverHintStep,
+  type SudojoAuth,
+  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 import type { GameHint, TeachingState } from '../types';
 
 export interface UseGameTeachingOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Solver API configuration */
-  config: ClientConfig;
+  /** Sudojo API configuration */
+  config: SudojoConfig;
+  /** Authentication for API calls */
+  auth: SudojoAuth;
 }
 
 export interface UseGameTeachingResult {
@@ -99,7 +103,8 @@ function convertHintStep(step: SolverHintStep): GameHint {
  *   const game = useGame();
  *   const { teachingState, getHint, applyHint } = useGameTeaching({
  *     networkClient,
- *     config: { baseUrl: 'https://solver.sudojo.com' },
+ *     config: { baseUrl: 'https://api.sudojo.com' },
+ *     auth: { accessToken: 'user-access-token' },
  *   });
  *
  *   const handleGetHint = async () => {
@@ -142,7 +147,7 @@ function convertHintStep(step: SolverHintStep): GameHint {
 export function useGameTeaching(
   options: UseGameTeachingOptions
 ): UseGameTeachingResult {
-  const { networkClient, config } = options;
+  const { networkClient, config, auth } = options;
 
   const [teachingState, setTeachingState] = useState<TeachingState>({
     isActive: false,
@@ -156,9 +161,9 @@ export function useGameTeaching(
   // Store all hint steps for multi-step hints
   const [allSteps, setAllSteps] = useState<GameHint[]>([]);
 
-  // Create solver client
-  const solverClient = useMemo(() => {
-    return createSudojoSolverClient(networkClient, config);
+  // Create Sudojo client
+  const client = useMemo(() => {
+    return createSudojoClient(networkClient, config);
   }, [networkClient, config]);
 
   const getHint = useCallback(
@@ -189,7 +194,10 @@ export function useGameTeaching(
         if (hintOptions?.pencilmarks !== undefined) {
           solveOptions.pencilmarks = hintOptions.pencilmarks;
         }
-        const response: SolveResponse = await solverClient.solve(solveOptions);
+        const response: BaseResponse<SolveData> = await client.solverSolve(
+          auth,
+          solveOptions
+        );
 
         if (!response.success || !response.data?.hints?.length) {
           const errorMessage =
@@ -248,7 +256,7 @@ export function useGameTeaching(
         setAllSteps([]);
       }
     },
-    [solverClient]
+    [client, auth]
   );
 
   const applyHint = useCallback((): GameHint | null => {

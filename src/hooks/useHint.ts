@@ -11,11 +11,13 @@
 
 import { useCallback, useRef, useState } from 'react';
 import {
-  type ClientConfig,
-  createSudojoSolverClient,
+  type BaseResponse,
+  createSudojoClient,
+  type SolveData,
   type SolverBoard,
-  type SolveResponse,
   type SolverHintStep,
+  type SudojoAuth,
+  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
 
@@ -32,8 +34,10 @@ export interface HintBoardData {
 export interface UseHintOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Solver client configuration */
-  config: ClientConfig;
+  /** Sudojo API configuration */
+  config: SudojoConfig;
+  /** Authentication for API calls */
+  auth: SudojoAuth;
   /** Original puzzle string (81 chars) */
   puzzle: string;
   /** Current user input string (81 chars) */
@@ -91,7 +95,8 @@ export interface UseHintResult {
  * ```tsx
  * const { hint, isLoading, getHint, nextStep, clearHint, applyHint } = useHint({
  *   networkClient,
- *   config,
+ *   config: { baseUrl: 'https://api.sudojo.com' },
+ *   auth: { accessToken: 'user-access-token' },
  *   puzzle: originalPuzzle,
  *   userInput: currentInput,
  *   pencilmarks: currentPencilmarks,
@@ -116,6 +121,7 @@ export interface UseHintResult {
 export function useHint({
   networkClient,
   config,
+  auth,
   puzzle,
   userInput,
   pencilmarks,
@@ -149,14 +155,17 @@ export function useHint({
     setError(null);
 
     try {
-      const client = createSudojoSolverClient(networkClient, config);
+      const client = createSudojoClient(networkClient, config);
       const solveOptions = {
         original: puzzle,
         user: userInput,
         autoPencilmarks,
         ...(pencilmarks !== undefined && { pencilmarks }),
       };
-      const response: SolveResponse = await client.solve(solveOptions);
+      const response: BaseResponse<SolveData> = await client.solverSolve(
+        auth,
+        solveOptions
+      );
 
       if (response.success && response.data?.hints?.length) {
         setHints(response.data.hints);
@@ -181,7 +190,15 @@ export function useHint({
     } finally {
       setIsLoading(false);
     }
-  }, [networkClient, config, puzzle, userInput, pencilmarks, autoPencilmarks]);
+  }, [
+    networkClient,
+    config,
+    auth,
+    puzzle,
+    userInput,
+    pencilmarks,
+    autoPencilmarks,
+  ]);
 
   // Get hint: fetch if no hints or puzzle changed, otherwise advance
   const getHint = useCallback(async () => {
