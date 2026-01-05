@@ -266,6 +266,7 @@ export type {
   UseHintOptions,
   UseHintResult,
   HintBoardData,
+  HintReceivedData,
 } from './hooks';
 
 // Re-export types from dependencies for convenience

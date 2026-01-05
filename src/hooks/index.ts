@@ -71,4 +71,4 @@ export { useLocalStorage } from './useLocalStorage';
 
 // Hint hook
 export { useHint } from './useHint';
-export type { UseHintOptions, UseHintResult, HintBoardData } from './useHint';
+export type { UseHintOptions, UseHintResult, HintBoardData, HintReceivedData } from './useHint';

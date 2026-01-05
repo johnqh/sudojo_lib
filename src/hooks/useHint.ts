@@ -31,6 +31,16 @@ export interface HintBoardData {
   autoPencilmarks: boolean;
 }
 
+/** Data passed to onHintReceived callback */
+export interface HintReceivedData {
+  /** The first hint step */
+  hint: SolverHintStep;
+  /** All hint steps */
+  hints: SolverHintStep[];
+  /** Board data that will be applied */
+  boardData: HintBoardData;
+}
+
 export interface UseHintOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
@@ -46,6 +56,12 @@ export interface UseHintOptions {
   pencilmarks?: string;
   /** Whether auto-pencilmarks were generated */
   autoPencilmarks?: boolean;
+  /**
+   * Callback fired when hints are received from the API.
+   * Use this to intercept hints for logging, saving examples, etc.
+   * Called before state is updated.
+   */
+  onHintReceived?: (data: HintReceivedData) => void;
 }
 
 export interface UseHintResult {
@@ -126,6 +142,7 @@ export function useHint({
   userInput,
   pencilmarks,
   autoPencilmarks = false,
+  onHintReceived,
 }: UseHintOptions): UseHintResult {
   const [hints, setHints] = useState<SolverHintStep[] | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -168,10 +185,26 @@ export function useHint({
       );
 
       if (response.success && response.data?.hints?.steps?.length) {
-        setHints(response.data.hints.steps);
+        const hintSteps = response.data.hints.steps;
+        const board = response.data.board?.board ?? null;
+
+        // Call onHintReceived callback if provided (for interception/logging)
+        if (onHintReceived && hintSteps[0] && board?.user !== null && board?.user !== undefined) {
+          onHintReceived({
+            hint: hintSteps[0],
+            hints: hintSteps,
+            boardData: {
+              user: board.user,
+              pencilmarks: board.pencilmarks?.pencilmarks ?? null,
+              autoPencilmarks: board.pencilmarks?.auto ?? false,
+            },
+          });
+        }
+
+        setHints(hintSteps);
         setStepIndex(0);
         // Store board data for applying hint later (board is nested inside board wrapper)
-        boardDataRef.current = response.data.board?.board ?? null;
+        boardDataRef.current = board;
         // Track the puzzle state we fetched for
         lastPuzzleStateRef.current = `${puzzle}|${userInput}|${pencilmarks ?? ''}`;
       } else if (response.error) {
@@ -198,6 +231,7 @@ export function useHint({
     userInput,
     pencilmarks,
     autoPencilmarks,
+    onHintReceived,
   ]);
 
   // Get hint: fetch if no hints or puzzle changed, otherwise advance
