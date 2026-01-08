@@ -82,13 +82,6 @@ export {
   getCompletedDailyDates,
 } from './progress';
 
-// Auth utilities
-export {
-  getFirebaseErrorMessage,
-  getFirebaseErrorCode,
-  formatFirebaseError,
-} from './auth';
-
 // Theme utilities
 export type { ThemePreference, ResolvedTheme } from './theme';
 export {

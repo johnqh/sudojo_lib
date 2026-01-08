@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_lib",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Business logic library for Sudojo app",
   "type": "module",
   "main": "dist/index.js",

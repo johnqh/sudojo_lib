@@ -159,13 +159,6 @@ export {
   getCompletedDailyDates,
 } from './utils';
 
-// Auth Utilities
-export {
-  getFirebaseErrorMessage,
-  getFirebaseErrorCode,
-  formatFirebaseError,
-} from './utils';
-
 // Theme Utilities
 export type { ThemePreference, ResolvedTheme } from './utils';
 export {
