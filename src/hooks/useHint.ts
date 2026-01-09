@@ -189,7 +189,12 @@ export function useHint({
         const board = response.data.board?.board ?? null;
 
         // Call onHintReceived callback if provided (for interception/logging)
-        if (onHintReceived && hintSteps[0] && board?.user !== null && board?.user !== undefined) {
+        if (
+          onHintReceived &&
+          hintSteps[0] &&
+          board?.user !== null &&
+          board?.user !== undefined
+        ) {
           onHintReceived({
             hint: hintSteps[0],
             hints: hintSteps,
