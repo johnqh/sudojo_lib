@@ -55,7 +55,14 @@ type GameAction =
   | { type: 'RESUME' }
   | { type: 'RESET' }
   | { type: 'TICK'; seconds: number }
-  | { type: 'SET_HINT_MODE'; enabled: boolean };
+  | { type: 'SET_HINT_MODE'; enabled: boolean }
+  // Enter mode actions
+  | { type: 'START_ENTERING' }
+  | { type: 'SET_GIVEN_VALUE'; value: number }
+  | { type: 'CLEAR_GIVEN_VALUE' }
+  | { type: 'FINISH_ENTERING'; puzzle: string; solution: string }
+  | { type: 'SET_ERROR'; message: string }
+  | { type: 'CLEAR_ERROR' };
 
 // ============================================================================
 // Initial State
@@ -101,6 +108,8 @@ const createInitialState = (): GameState => ({
   hintMode: false,
   boardUuid: null,
   levelUuid: null,
+  entering: false,
+  errorMessage: null,
 });
 
 // ============================================================================
@@ -404,7 +413,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'UNDO': {
-      if (state.undoStack.length === 0 || state.status !== 'playing')
+      if (
+        state.undoStack.length === 0 ||
+        (state.status !== 'playing' && state.status !== 'entering')
+      )
         return state;
 
       const move = state.undoStack[state.undoStack.length - 1];
@@ -417,14 +429,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         cell.value = move.previousValue;
         cell.pencilmarks = new Set(move.previousPencilmarks);
         cell.isError = false; // Clear error on undo
+        // In entering mode, update isClue based on whether cell has value
+        if (state.status === 'entering') {
+          cell.isClue = move.previousValue !== null;
+        }
       }
 
-      // Update errors based on settings
-      newBoard = updateCellErrors(
-        newBoard,
-        state.scrambledSolution,
-        state.settings.showErrors
-      );
+      // Update errors based on settings (only in playing mode)
+      if (state.status === 'playing') {
+        newBoard = updateCellErrors(
+          newBoard,
+          state.scrambledSolution,
+          state.settings.showErrors
+        );
+      }
 
       // Update highlights if there's a selected cell
       if (state.selectedCell) {
@@ -446,7 +464,10 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'REDO': {
-      if (state.redoStack.length === 0 || state.status !== 'playing')
+      if (
+        state.redoStack.length === 0 ||
+        (state.status !== 'playing' && state.status !== 'entering')
+      )
         return state;
 
       const move = state.redoStack[state.redoStack.length - 1];
@@ -458,14 +479,20 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       if (cell) {
         cell.value = move.newValue;
         cell.pencilmarks = new Set(move.newPencilmarks);
+        // In entering mode, update isClue based on whether cell has value
+        if (state.status === 'entering') {
+          cell.isClue = move.newValue !== null;
+        }
       }
 
-      // Update errors based on settings
-      newBoard = updateCellErrors(
-        newBoard,
-        state.scrambledSolution,
-        state.settings.showErrors
-      );
+      // Update errors based on settings (only in playing mode)
+      if (state.status === 'playing') {
+        newBoard = updateCellErrors(
+          newBoard,
+          state.scrambledSolution,
+          state.settings.showErrors
+        );
+      }
 
       // Update highlights if there's a selected cell
       if (state.selectedCell) {
@@ -561,6 +588,154 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, hintMode: action.enabled };
     }
 
+    // ========================================================================
+    // Enter Mode Actions
+    // ========================================================================
+
+    case 'START_ENTERING': {
+      // Create empty board for entering mode
+      const emptyBoard = createEmptyBoard();
+      return {
+        ...createInitialState(),
+        settings: state.settings,
+        maxMistakes: state.maxMistakes,
+        board: emptyBoard,
+        status: 'entering',
+        entering: true,
+        errorMessage: null,
+      };
+    }
+
+    case 'SET_GIVEN_VALUE': {
+      if (!state.selectedCell || state.status !== 'entering') return state;
+
+      const { row, column } = state.selectedCell;
+      const cell = state.board[row]?.[column];
+      if (!cell) return state;
+
+      const { value } = action;
+      if (value < 1 || value > 9) return state;
+
+      // Create move for undo (reuse existing move structure)
+      const move: GameMove = {
+        row,
+        column,
+        previousValue: cell.value,
+        newValue: value,
+        previousPencilmarks: new Set(cell.pencilmarks),
+        newPencilmarks: new Set(),
+        type: 'value',
+      };
+
+      // Clone and update board - in enter mode, values become "clues"
+      let newBoard = cloneBoard(state.board);
+      const newCell = newBoard[row]?.[column];
+      if (newCell) {
+        newCell.value = value;
+        newCell.isClue = true; // Mark as given/clue
+        newCell.pencilmarks = new Set();
+        newCell.isError = false;
+      }
+
+      // Update highlights
+      newBoard = updateCellHighlights(
+        newBoard,
+        row,
+        column,
+        state.settings.highlightRelatedCells,
+        state.settings.highlightSameNumbers
+      );
+
+      return {
+        ...state,
+        board: newBoard,
+        undoStack: [...state.undoStack, move],
+        redoStack: [],
+        errorMessage: null,
+      };
+    }
+
+    case 'CLEAR_GIVEN_VALUE': {
+      if (!state.selectedCell || state.status !== 'entering') return state;
+
+      const { row, column } = state.selectedCell;
+      const cell = state.board[row]?.[column];
+      if (!cell || cell.value === null) return state;
+
+      // Create move for undo
+      const move: GameMove = {
+        row,
+        column,
+        previousValue: cell.value,
+        newValue: null,
+        previousPencilmarks: new Set(cell.pencilmarks),
+        newPencilmarks: new Set(),
+        type: 'value',
+      };
+
+      // Clone and update board
+      let newBoard = cloneBoard(state.board);
+      const newCell = newBoard[row]?.[column];
+      if (newCell) {
+        newCell.value = null;
+        newCell.isClue = false;
+        newCell.isError = false;
+      }
+
+      // Update highlights
+      newBoard = updateCellHighlights(
+        newBoard,
+        row,
+        column,
+        state.settings.highlightRelatedCells,
+        state.settings.highlightSameNumbers
+      );
+
+      return {
+        ...state,
+        board: newBoard,
+        undoStack: [...state.undoStack, move],
+        redoStack: [],
+        errorMessage: null,
+      };
+    }
+
+    case 'FINISH_ENTERING': {
+      if (state.status !== 'entering') return state;
+
+      const { puzzle, solution } = action;
+
+      // Create board from validated puzzle and solution
+      const board = createGameBoard(puzzle, solution);
+
+      return {
+        ...state,
+        board,
+        originalPuzzle: puzzle,
+        solution,
+        scrambledPuzzle: puzzle,
+        scrambledSolution: solution,
+        digitMapping: new Map(),
+        undoStack: [],
+        redoStack: [],
+        selectedCell: null,
+        status: 'playing',
+        entering: false,
+        mistakeCount: 0,
+        elapsedTime: 0,
+        hintMode: false,
+        errorMessage: null,
+      };
+    }
+
+    case 'SET_ERROR': {
+      return { ...state, errorMessage: action.message };
+    }
+
+    case 'CLEAR_ERROR': {
+      return { ...state, errorMessage: null };
+    }
+
     default:
       return state;
   }
@@ -586,6 +761,8 @@ export interface UseGameResult {
   isComplete: boolean;
   /** Whether the game failed (too many mistakes) */
   isFailed: boolean;
+  /** Whether in entering mode */
+  isEntering: boolean;
   /** Can undo */
   canUndo: boolean;
   /** Can redo */
@@ -633,6 +810,22 @@ export interface UseGameResult {
   tick: (seconds: number) => void;
   /** Set hint mode */
   setHintMode: (enabled: boolean) => void;
+
+  // Enter mode actions
+  /** Start entering mode with empty board */
+  startEntering: () => void;
+  /** Set a given value in enter mode (marks cell as clue) */
+  setGivenValue: (value: number) => void;
+  /** Clear a given value in enter mode */
+  clearGivenValue: () => void;
+  /** Finish entering and transition to playing mode */
+  finishEntering: (puzzle: string, solution: string) => void;
+  /** Set an error message */
+  setError: (message: string) => void;
+  /** Clear the error message */
+  clearError: () => void;
+  /** Get the entered puzzle string (81 chars) */
+  getEnteredPuzzle: () => string;
 
   // Computed values for solver integration
   /** Get current board state as string (for solver API) */
@@ -703,13 +896,22 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
 
   const isFailed = useMemo(() => state.status === 'failed', [state.status]);
 
+  const isEntering = useMemo(
+    () => state.status === 'entering',
+    [state.status]
+  );
+
   const canUndo = useMemo(
-    () => state.undoStack.length > 0 && state.status === 'playing',
+    () =>
+      state.undoStack.length > 0 &&
+      (state.status === 'playing' || state.status === 'entering'),
     [state.undoStack.length, state.status]
   );
 
   const canRedo = useMemo(
-    () => state.redoStack.length > 0 && state.status === 'playing',
+    () =>
+      state.redoStack.length > 0 &&
+      (state.status === 'playing' || state.status === 'entering'),
     [state.redoStack.length, state.status]
   );
 
@@ -806,6 +1008,45 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
     dispatch({ type: 'SET_HINT_MODE', enabled });
   }, []);
 
+  // Enter mode actions
+  const startEntering = useCallback(() => {
+    dispatch({ type: 'START_ENTERING' });
+  }, []);
+
+  const setGivenValue = useCallback((value: number) => {
+    dispatch({ type: 'SET_GIVEN_VALUE', value });
+  }, []);
+
+  const clearGivenValue = useCallback(() => {
+    dispatch({ type: 'CLEAR_GIVEN_VALUE' });
+  }, []);
+
+  const finishEntering = useCallback((puzzle: string, solution: string) => {
+    dispatch({ type: 'FINISH_ENTERING', puzzle, solution });
+  }, []);
+
+  const setError = useCallback((message: string) => {
+    dispatch({ type: 'SET_ERROR', message });
+  }, []);
+
+  const clearError = useCallback(() => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  }, []);
+
+  // Get entered puzzle string (for validation API)
+  const getEnteredPuzzle = useCallback(() => {
+    // Convert board to 81-char puzzle string
+    // Empty cells are '0', filled cells are their digit
+    let puzzle = '';
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        const cell = state.board[row]?.[col];
+        puzzle += cell?.value ?? 0;
+      }
+    }
+    return puzzle;
+  }, [state.board]);
+
   // Computed values for solver integration
   const getBoardString = useCallback(() => {
     return getBoardStateString(state.board);
@@ -824,6 +1065,7 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
     isActive,
     isComplete,
     isFailed,
+    isEntering,
     canUndo,
     canRedo,
     loadBoard,
@@ -842,6 +1084,15 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
     reset,
     tick,
     setHintMode,
+    // Enter mode
+    startEntering,
+    setGivenValue,
+    clearGivenValue,
+    finishEntering,
+    setError,
+    clearError,
+    getEnteredPuzzle,
+    // Solver integration
     getBoardString,
     getPencilmarksString: getPencilmarksStringValue,
     getOriginalPuzzle,

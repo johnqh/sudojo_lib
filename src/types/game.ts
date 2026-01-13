@@ -81,7 +81,13 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
 /**
  * Game status
  */
-export type GameStatus = 'idle' | 'playing' | 'paused' | 'completed' | 'failed';
+export type GameStatus =
+  | 'idle'
+  | 'entering'
+  | 'playing'
+  | 'paused'
+  | 'completed'
+  | 'failed';
 
 /**
  * The complete game state
@@ -121,6 +127,10 @@ export interface GameState {
   boardUuid: string | null;
   /** Level UUID (if associated with a level) */
   levelUuid: string | null;
+  /** Whether in board entering mode (entering original puzzle) */
+  entering: boolean;
+  /** Error message (e.g., validation error during enter mode) */
+  errorMessage: string | null;
 }
 
 /**
