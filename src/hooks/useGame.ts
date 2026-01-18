@@ -896,10 +896,7 @@ export function useGame(options: UseGameOptions = {}): UseGameResult {
 
   const isFailed = useMemo(() => state.status === 'failed', [state.status]);
 
-  const isEntering = useMemo(
-    () => state.status === 'entering',
-    [state.status]
-  );
+  const isEntering = useMemo(() => state.status === 'entering', [state.status]);
 
   const canUndo = useMemo(
     () =>
