@@ -271,4 +271,3 @@ export type {
   Level,
   Technique,
 } from '@sudobility/sudojo_types';
-

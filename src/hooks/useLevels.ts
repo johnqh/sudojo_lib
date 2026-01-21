@@ -5,10 +5,7 @@
 import { useMemo } from 'react';
 import type { Level } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
-import {
-  useSudojoLevel,
-  useSudojoLevels,
-} from '@sudobility/sudojo_client';
+import { useSudojoLevel, useSudojoLevels } from '@sudobility/sudojo_client';
 
 export interface UseLevelsOptions {
   /** Network client for API calls */
@@ -69,12 +66,7 @@ export interface UseLevelsResult {
  * ```
  */
 export function useLevels(options: UseLevelsOptions): UseLevelsResult {
-  const {
-    networkClient,
-    baseUrl,
-    token = '',
-    enabled = true,
-  } = options;
+  const { networkClient, baseUrl, token = '', enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useSudojoLevels(
     networkClient,
