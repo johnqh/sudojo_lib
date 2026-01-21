@@ -6,22 +6,17 @@ import { useMemo } from 'react';
 import type { Learning } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
-  type SudojoAuth,
-  type SudojoConfig,
   useSudojoLearning,
   useSudojoLearningItem,
 } from '@sudobility/sudojo_client';
 
-/** Default empty auth for public endpoints */
-const DEFAULT_AUTH: SudojoAuth = { accessToken: '' };
-
 export interface UseLearningOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Auth credentials (optional for public data) */
-  auth?: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication (optional for public data) */
+  token?: string;
   /** Optional technique UUID to filter learning materials */
   techniqueUuid?: string;
   /** Optional language code to filter learning materials */
@@ -60,7 +55,7 @@ export interface UseLearningResult {
  * function LearningContent({ techniqueUuid }: { techniqueUuid: string }) {
  *   const { learningMaterials, isLoading, sortedLearning } = useLearning({
  *     networkClient,
- *     config: { baseUrl: 'https://api.sudojo.com' },
+ *     baseUrl: 'https://api.sudojo.com',
  *     techniqueUuid,
  *     languageCode: 'en',
  *   });
@@ -83,8 +78,8 @@ export interface UseLearningResult {
 export function useLearning(options: UseLearningOptions): UseLearningResult {
   const {
     networkClient,
-    config,
-    auth = DEFAULT_AUTH,
+    baseUrl,
+    token = '',
     techniqueUuid,
     languageCode,
     enabled = true,
@@ -101,8 +96,8 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
 
   const { data, isLoading, error, refetch } = useSudojoLearning(
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     queryParams,
     { enabled }
   );
@@ -166,10 +161,10 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
 export interface UseLearningItemOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Auth credentials (optional for public data) */
-  auth?: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication (optional for public data) */
+  token?: string;
   /** Learning item UUID to fetch */
   learningUuid: string;
   /** Whether to enable the query */
@@ -198,16 +193,16 @@ export function useLearningItem(
 ): UseLearningItemResult {
   const {
     networkClient,
-    config,
-    auth = DEFAULT_AUTH,
+    baseUrl,
+    token = '',
     learningUuid,
     enabled = true,
   } = options;
 
   const { data, isLoading, error, refetch } = useSudojoLearningItem(
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     learningUuid,
     {
       enabled: enabled && !!learningUuid,

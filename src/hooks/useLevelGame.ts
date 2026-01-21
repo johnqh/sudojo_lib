@@ -6,11 +6,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Board } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
-import {
-  type SudojoAuth,
-  type SudojoConfig,
-  useSudojoRandomBoard,
-} from '@sudobility/sudojo_client';
+import { useSudojoRandomBoard } from '@sudobility/sudojo_client';
 import { useQueryClient } from '@tanstack/react-query';
 
 /** Game fetch status indicating what screen to show */
@@ -77,10 +73,10 @@ function isSubscriptionRequired(
 export interface UseLevelGameOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Auth credentials with access token */
-  auth: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication */
+  token: string;
   /** Level UUID to fetch game for */
   levelId: string;
   /** Whether subscription is currently active */
@@ -136,8 +132,8 @@ export interface UseLevelGameResult {
 export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
   const {
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     levelId,
     subscriptionActive = false,
     enabled = true,
@@ -147,7 +143,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
 
   // Track previous state to detect changes
   const prevStateRef = useRef({
-    authToken: auth.accessToken,
+    authToken: token,
     subscriptionActive,
   });
 
@@ -155,8 +151,8 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
 
   const { data, isLoading, error, refetch } = useSudojoRandomBoard(
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     queryParams,
     { enabled: enabled && !!levelId }
   );
@@ -185,7 +181,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
   // Auto-refresh when auth token or subscription status changes
   useEffect(() => {
     const prev = prevStateRef.current;
-    const authChanged = prev.authToken !== auth.accessToken;
+    const authChanged = prev.authToken !== token;
     const subscriptionChanged = !prev.subscriptionActive && subscriptionActive;
 
     if (authChanged || subscriptionChanged) {
@@ -196,8 +192,8 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     }
 
     // Update ref for next comparison
-    prevStateRef.current = { authToken: auth.accessToken, subscriptionActive };
-  }, [auth.accessToken, subscriptionActive, queryClient, refetch]);
+    prevStateRef.current = { authToken: token, subscriptionActive };
+  }, [token, subscriptionActive, queryClient, refetch]);
 
   const nextPuzzle = useMemo(() => {
     return () => {

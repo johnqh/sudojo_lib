@@ -16,8 +16,6 @@ import {
   type SolveData,
   type SolverBoard,
   type SolverHintStep,
-  type SudojoAuth,
-  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
 
@@ -44,10 +42,10 @@ export interface HintReceivedData {
 export interface UseHintOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Authentication for API calls */
-  auth: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication */
+  token: string;
   /** Original puzzle string (81 chars) */
   puzzle: string;
   /** Current user input string (81 chars) */
@@ -111,8 +109,8 @@ export interface UseHintResult {
  * ```tsx
  * const { hint, isLoading, getHint, nextStep, clearHint, applyHint } = useHint({
  *   networkClient,
- *   config: { baseUrl: 'https://api.sudojo.com' },
- *   auth: { accessToken: 'user-access-token' },
+ *   baseUrl: 'https://api.sudojo.com',
+ *   token: 'user-access-token',
  *   puzzle: originalPuzzle,
  *   userInput: currentInput,
  *   pencilmarks: currentPencilmarks,
@@ -136,8 +134,8 @@ export interface UseHintResult {
  */
 export function useHint({
   networkClient,
-  config,
-  auth,
+  baseUrl,
+  token,
   puzzle,
   userInput,
   pencilmarks,
@@ -172,7 +170,7 @@ export function useHint({
     setError(null);
 
     try {
-      const client = createSudojoClient(networkClient, config);
+      const client = createSudojoClient(networkClient, baseUrl);
       const solveOptions = {
         original: puzzle,
         user: userInput,
@@ -180,7 +178,7 @@ export function useHint({
         ...(pencilmarks !== undefined && { pencilmarks }),
       };
       const response: BaseResponse<SolveData> = await client.solverSolve(
-        auth,
+        token,
         solveOptions
       );
 
@@ -230,8 +228,8 @@ export function useHint({
     }
   }, [
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     puzzle,
     userInput,
     pencilmarks,

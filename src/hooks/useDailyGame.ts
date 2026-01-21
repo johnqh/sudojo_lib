@@ -6,11 +6,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Daily } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
-import {
-  type SudojoAuth,
-  type SudojoConfig,
-  useSudojoTodayDaily,
-} from '@sudobility/sudojo_client';
+import { useSudojoTodayDaily } from '@sudobility/sudojo_client';
 import type { GameFetchStatus } from './useLevelGame';
 
 /** Extended API response with action field from Sudojo API */
@@ -69,10 +65,10 @@ function isSubscriptionRequired(
 export interface UseDailyGameOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Auth credentials with access token */
-  auth: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication */
+  token: string;
   /** Whether subscription is currently active */
   subscriptionActive?: boolean;
   /** Whether to enable the query */
@@ -125,15 +121,15 @@ export interface UseDailyGameResult {
 export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
   const {
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     subscriptionActive = false,
     enabled: _enabled = true,
   } = options;
 
   // Track previous state to detect changes
   const prevStateRef = useRef({
-    authToken: auth.accessToken,
+    authToken: token,
     subscriptionActive,
   });
 
@@ -141,8 +137,8 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
   // We handle enabled by conditionally using the data
   const { data, isLoading, error, refetch } = useSudojoTodayDaily(
     networkClient,
-    config,
-    auth
+    baseUrl,
+    token
   );
 
   // Determine status based on response
@@ -173,7 +169,7 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
   // Auto-refresh when auth token or subscription status changes
   useEffect(() => {
     const prev = prevStateRef.current;
-    const authChanged = prev.authToken !== auth.accessToken;
+    const authChanged = prev.authToken !== token;
     const subscriptionChanged = !prev.subscriptionActive && subscriptionActive;
 
     if (authChanged || subscriptionChanged) {
@@ -181,8 +177,8 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
     }
 
     // Update ref for next comparison
-    prevStateRef.current = { authToken: auth.accessToken, subscriptionActive };
-  }, [auth.accessToken, subscriptionActive, refetch]);
+    prevStateRef.current = { authToken: token, subscriptionActive };
+  }, [token, subscriptionActive, refetch]);
 
   return {
     daily,

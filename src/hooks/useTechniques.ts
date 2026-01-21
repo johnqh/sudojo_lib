@@ -6,22 +6,17 @@ import { useMemo } from 'react';
 import type { Technique } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import {
-  type SudojoAuth,
-  type SudojoConfig,
   useSudojoTechnique,
   useSudojoTechniques,
 } from '@sudobility/sudojo_client';
 
-/** Default empty auth for public endpoints */
-const DEFAULT_AUTH: SudojoAuth = { accessToken: '' };
-
 export interface UseTechniquesOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Auth credentials (optional for public data) */
-  auth?: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication (optional for public data) */
+  token?: string;
   /** Optional level UUID to filter techniques */
   levelUuid?: string;
   /** Whether to enable the query */
@@ -56,7 +51,7 @@ export interface UseTechniquesResult {
  * function TechniqueList({ levelUuid }: { levelUuid: string }) {
  *   const { techniques, isLoading, sortedTechniques } = useTechniques({
  *     networkClient,
- *     config: { baseUrl: 'https://api.sudojo.com' },
+ *     baseUrl: 'https://api.sudojo.com',
  *     levelUuid,
  *   });
  *
@@ -77,8 +72,8 @@ export function useTechniques(
 ): UseTechniquesResult {
   const {
     networkClient,
-    config,
-    auth = DEFAULT_AUTH,
+    baseUrl,
+    token = '',
     levelUuid,
     enabled = true,
   } = options;
@@ -90,8 +85,8 @@ export function useTechniques(
 
   const { data, isLoading, error, refetch } = useSudojoTechniques(
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     queryParams,
     { enabled }
   );
@@ -143,10 +138,10 @@ export function useTechniques(
 export interface UseTechniqueOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Auth credentials (optional for public data) */
-  auth?: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication (optional for public data) */
+  token?: string;
   /** Technique UUID to fetch */
   techniqueUuid: string;
   /** Whether to enable the query */
@@ -173,16 +168,16 @@ export interface UseTechniqueResult {
 export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
   const {
     networkClient,
-    config,
-    auth = DEFAULT_AUTH,
+    baseUrl,
+    token = '',
     techniqueUuid,
     enabled = true,
   } = options;
 
   const { data, isLoading, error, refetch } = useSudojoTechnique(
     networkClient,
-    config,
-    auth,
+    baseUrl,
+    token,
     techniqueUuid,
     {
       enabled: enabled && !!techniqueUuid,

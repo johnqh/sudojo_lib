@@ -9,18 +9,16 @@ import {
   createSudojoClient,
   type SolveData,
   type SolverHintStep,
-  type SudojoAuth,
-  type SudojoConfig,
 } from '@sudobility/sudojo_client';
 import type { GameHint, TeachingState } from '../types';
 
 export interface UseGameTeachingOptions {
   /** Network client for API calls */
   networkClient: NetworkClient;
-  /** Sudojo API configuration */
-  config: SudojoConfig;
-  /** Authentication for API calls */
-  auth: SudojoAuth;
+  /** Base URL for the Sudojo API */
+  baseUrl: string;
+  /** Access token for authentication */
+  token: string;
 }
 
 export interface UseGameTeachingResult {
@@ -103,8 +101,8 @@ function convertHintStep(step: SolverHintStep): GameHint {
  *   const game = useGame();
  *   const { teachingState, getHint, applyHint } = useGameTeaching({
  *     networkClient,
- *     config: { baseUrl: 'https://api.sudojo.com' },
- *     auth: { accessToken: 'user-access-token' },
+ *     baseUrl: 'https://api.sudojo.com',
+ *     token: 'user-access-token',
  *   });
  *
  *   const handleGetHint = async () => {
@@ -147,7 +145,7 @@ function convertHintStep(step: SolverHintStep): GameHint {
 export function useGameTeaching(
   options: UseGameTeachingOptions
 ): UseGameTeachingResult {
-  const { networkClient, config, auth } = options;
+  const { networkClient, baseUrl, token } = options;
 
   const [teachingState, setTeachingState] = useState<TeachingState>({
     isActive: false,
@@ -163,8 +161,8 @@ export function useGameTeaching(
 
   // Create Sudojo client
   const client = useMemo(() => {
-    return createSudojoClient(networkClient, config);
-  }, [networkClient, config]);
+    return createSudojoClient(networkClient, baseUrl);
+  }, [networkClient, baseUrl]);
 
   const getHint = useCallback(
     async (
@@ -195,7 +193,7 @@ export function useGameTeaching(
           solveOptions.pencilmarks = hintOptions.pencilmarks;
         }
         const response: BaseResponse<SolveData> = await client.solverSolve(
-          auth,
+          token,
           solveOptions
         );
 
@@ -256,7 +254,7 @@ export function useGameTeaching(
         setAllSteps([]);
       }
     },
-    [client, auth]
+    [client, token]
   );
 
   const applyHint = useCallback((): GameHint | null => {
