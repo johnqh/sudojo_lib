@@ -76,4 +76,5 @@ export type {
   UseHintResult,
   HintBoardData,
   HintReceivedData,
+  HintAccessError,
 } from './useHint';

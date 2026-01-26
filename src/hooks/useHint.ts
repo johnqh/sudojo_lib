@@ -13,6 +13,9 @@ import { useCallback, useRef, useState } from 'react';
 import {
   type BaseResponse,
   createSudojoClient,
+  HintAccessDeniedError,
+  type HintAccessUserState,
+  type HintEntitlement,
   type SolveData,
   type SolverBoard,
   type SolverHintStep,
@@ -37,6 +40,16 @@ export interface HintReceivedData {
   hints: SolverHintStep[];
   /** Board data that will be applied */
   boardData: HintBoardData;
+}
+
+/** Access denied error info when hint level exceeds subscription tier */
+export interface HintAccessError {
+  /** The difficulty level of the requested hint */
+  hintLevel: number;
+  /** The entitlement required to access this hint level */
+  requiredEntitlement: HintEntitlement;
+  /** The user's current state */
+  userState: HintAccessUserState;
 }
 
 export interface UseHintOptions {
@@ -75,6 +88,8 @@ export interface UseHintResult {
   isLoading: boolean;
   /** Error message if hint request failed */
   error: string | null;
+  /** Access denied error info when hint level exceeds subscription tier */
+  accessError: HintAccessError | null;
   /** Request hints or advance to next step */
   getHint: () => Promise<void>;
   /** Go to next hint step */
@@ -146,6 +161,7 @@ export function useHint({
   const [stepIndex, setStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accessError, setAccessError] = useState<HintAccessError | null>(null);
 
   // Track puzzle state to detect when we need to re-fetch
   const lastPuzzleStateRef = useRef<string>('');
@@ -168,6 +184,7 @@ export function useHint({
   const fetchHints = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setAccessError(null);
 
     try {
       const client = createSudojoClient(networkClient, baseUrl);
@@ -220,7 +237,17 @@ export function useHint({
         boardDataRef.current = null;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to get hint');
+      // Handle hint access denied error (402)
+      if (HintAccessDeniedError.isHintAccessDeniedError(err)) {
+        setAccessError({
+          hintLevel: err.hintLevel,
+          requiredEntitlement: err.requiredEntitlement,
+          userState: err.userState,
+        });
+        setError(null);
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to get hint');
+      }
       setHints(null);
       boardDataRef.current = null;
     } finally {
@@ -270,6 +297,7 @@ export function useHint({
     setHints(null);
     setStepIndex(0);
     setError(null);
+    setAccessError(null);
     lastPuzzleStateRef.current = '';
     boardDataRef.current = null;
   }, []);
@@ -305,6 +333,7 @@ export function useHint({
     totalSteps,
     isLoading,
     error,
+    accessError,
     getHint,
     nextStep,
     previousStep,

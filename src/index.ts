@@ -260,6 +260,7 @@ export type {
   UseHintResult,
   HintBoardData,
   HintReceivedData,
+  HintAccessError,
 } from './hooks';
 
 // Re-export types from dependencies for convenience
