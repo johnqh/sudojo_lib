@@ -188,9 +188,9 @@ export function useHint({
 
     // Debug: Log the values being sent to the solver
     console.log('[useHint] fetchHints called with:', {
-      puzzle: puzzle.substring(0, 20) + '...',
+      puzzle: `${puzzle.substring(0, 20)}...`,
       puzzleLength: puzzle.length,
-      userInput: userInput.substring(0, 20) + '...',
+      userInput: `${userInput.substring(0, 20)}...`,
       userInputLength: userInput.length,
       hasPencilmarks: pencilmarks !== undefined,
       autoPencilmarks,
