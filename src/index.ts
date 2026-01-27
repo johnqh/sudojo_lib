@@ -84,6 +84,9 @@ export { DEFAULT_SUBSCRIPTION } from './types';
 export type { SavedGameState, GamePersistenceKey } from './types';
 export { GAME_STORAGE_PREFIX, getGameStorageKey } from './types';
 
+// Current Game Types (for current game feature)
+export type { GameSource, CurrentGameMeta, CurrentGame } from './types';
+
 // Legacy Utilities (useGame hook)
 export {
   // Board utilities
@@ -216,6 +219,8 @@ export {
   useLocalStorage,
   // Hint
   useHint,
+  // Game play (current game management)
+  useGamePlay,
 } from './hooks';
 
 export type {
@@ -261,7 +266,14 @@ export type {
   HintBoardData,
   HintReceivedData,
   HintAccessError,
+  // Game play (current game management)
+  UseGamePlayOptions,
+  UseGamePlayResult,
 } from './hooks';
+
+// Stores
+export { useGamePlayStore } from './stores/gamePlayStore';
+export type { GamePlayState } from './stores/gamePlayStore';
 
 // Re-export types from dependencies for convenience
 export type {

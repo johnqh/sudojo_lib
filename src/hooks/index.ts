@@ -78,3 +78,7 @@ export type {
   HintReceivedData,
   HintAccessError,
 } from './useHint';
+
+// Game play hook (current game management)
+export { useGamePlay } from './useGamePlay';
+export type { UseGamePlayOptions, UseGamePlayResult } from './useGamePlay';

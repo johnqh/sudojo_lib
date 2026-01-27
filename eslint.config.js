@@ -25,6 +25,8 @@ export default [
         fetch: 'readonly',
         global: 'readonly',
         globalThis: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     plugins: {

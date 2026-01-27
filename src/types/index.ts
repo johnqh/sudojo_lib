@@ -75,3 +75,6 @@ export { DEFAULT_SUBSCRIPTION } from './subscription';
 // Game persistence types (for saving/loading game state)
 export type { SavedGameState, GamePersistenceKey } from './gamePersistence';
 export { GAME_STORAGE_PREFIX, getGameStorageKey } from './gamePersistence';
+
+// Current game types (for current game feature)
+export type { GameSource, CurrentGameMeta, CurrentGame } from './currentGame';
