@@ -31,7 +31,7 @@ export const TECHNIQUE_TO_HELP_FILE: Record<string, string> = {
   'Locked Candidates': 'Locked_Candidates.html',
   'Naked Triple': 'Naked_Triple.html',
   'Hidden Triple': 'Hidden_Triple.html',
-  'Naked Quad': 'Nakded_Quad.html', // Note: typo in original file name
+  'Naked Quad': 'Naked_Quad.html',
   'Hidden Quad': 'Hidden_Quad.html',
   'X-Wing': 'X-Wing.html',
   Swordfish: 'Swordfish.html',
