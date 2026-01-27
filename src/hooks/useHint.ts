@@ -186,6 +186,18 @@ export function useHint({
     setError(null);
     setAccessError(null);
 
+    // Debug: Log the values being sent to the solver
+    console.log('[useHint] fetchHints called with:', {
+      puzzle: puzzle.substring(0, 20) + '...',
+      puzzleLength: puzzle.length,
+      userInput: userInput.substring(0, 20) + '...',
+      userInputLength: userInput.length,
+      hasPencilmarks: pencilmarks !== undefined,
+      autoPencilmarks,
+      hasToken: !!token,
+      baseUrl,
+    });
+
     try {
       const client = createSudojoClient(networkClient, baseUrl);
       const solveOptions = {
@@ -194,10 +206,18 @@ export function useHint({
         autoPencilmarks,
         ...(pencilmarks !== undefined && { pencilmarks }),
       };
+      console.log('[useHint] Calling solverSolve...');
       const response: BaseResponse<SolveData> = await client.solverSolve(
         token,
         solveOptions
       );
+      console.log('[useHint] solverSolve response:', {
+        success: response.success,
+        hasData: !!response.data,
+        hasHints: !!response.data?.hints,
+        hintCount: response.data?.hints?.steps?.length,
+        error: response.error,
+      });
 
       if (response.success && response.data?.hints?.steps?.length) {
         const hintSteps = response.data.hints.steps;
@@ -237,6 +257,14 @@ export function useHint({
         boardDataRef.current = null;
       }
     } catch (err) {
+      // Debug: Log the error details
+      console.error('[useHint] Error in fetchHints:', {
+        errorType: err?.constructor?.name,
+        errorMessage: err instanceof Error ? err.message : String(err),
+        isHintAccessDenied: HintAccessDeniedError.isHintAccessDeniedError(err),
+        fullError: err,
+      });
+
       // Handle hint access denied error (402)
       if (HintAccessDeniedError.isHintAccessDeniedError(err)) {
         setAccessError({
