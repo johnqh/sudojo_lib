@@ -15,8 +15,8 @@ export {
 
 // Import for local use
 import {
-  BOARD_SIZE,
   BLOCK_SIZE,
+  BOARD_SIZE,
   parseBoardString,
 } from '@sudobility/sudojo_types';
 

@@ -6,7 +6,4 @@
  */
 
 // Re-export scramble functions from sudojo_types
-export {
-  scrambleBoard,
-  noScramble,
-} from '@sudobility/sudojo_types';
+export { scrambleBoard, noScramble } from '@sudobility/sudojo_types';
