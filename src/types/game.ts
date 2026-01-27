@@ -141,52 +141,13 @@ export interface CellPosition {
   column: number;
 }
 
-/**
- * Scramble configuration
- */
-export interface ScrambleConfig {
-  /** Whether to scramble rows within blocks */
-  scrambleRows: boolean;
-  /** Whether to scramble columns within blocks */
-  scrambleColumns: boolean;
-  /** Whether to scramble row blocks (groups of 3 rows) */
-  scrambleRowBlocks: boolean;
-  /** Whether to scramble column blocks (groups of 3 columns) */
-  scrambleColumnBlocks: boolean;
-  /** Whether to scramble digit mapping (1-9 -> 1-9) */
-  scrambleDigits: boolean;
-  /** Whether to rotate the board (0, 90, 180, 270 degrees) */
-  rotate: boolean;
-  /** Whether to mirror the board */
-  mirror: boolean;
-}
+// Re-export scramble types from sudojo_types for backwards compatibility
+export type {
+  ScrambleConfig,
+  ScrambleResult,
+} from '@sudobility/sudojo_types';
 
-/**
- * Default scramble configuration (all enabled)
- */
-export const DEFAULT_SCRAMBLE_CONFIG: ScrambleConfig = {
-  scrambleRows: true,
-  scrambleColumns: true,
-  scrambleRowBlocks: true,
-  scrambleColumnBlocks: true,
-  scrambleDigits: true,
-  rotate: true,
-  mirror: true,
-};
-
-/**
- * Result of scrambling a board
- */
-export interface ScrambleResult {
-  /** The scrambled puzzle string */
-  puzzle: string;
-  /** The scrambled solution string */
-  solution: string;
-  /** The digit mapping used (original -> scrambled) */
-  digitMapping: Map<number, number>;
-  /** The reverse digit mapping (scrambled -> original) */
-  reverseDigitMapping: Map<number, number>;
-}
+export { DEFAULT_SCRAMBLE_CONFIG } from '@sudobility/sudojo_types';
 
 /**
  * Hint information from the solver

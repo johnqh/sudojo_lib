@@ -4,74 +4,21 @@
 
 import type { CellState, GameBoard } from '../types';
 
-/**
- * Board size constants
- */
-export const BOARD_SIZE = 9;
-export const BLOCK_SIZE = 3;
-export const TOTAL_CELLS = BOARD_SIZE * BOARD_SIZE;
+// Re-export board constants and basic utilities from sudojo_types
+export {
+  BOARD_SIZE,
+  BLOCK_SIZE,
+  TOTAL_CELLS,
+  parseBoardString,
+  stringifyBoard,
+} from '@sudobility/sudojo_types';
 
-/**
- * Parses an 81-character board string into a 2D array of numbers
- * @param boardString - 81-character string where '0' or '.' represents empty cells
- * @returns 9x9 array of numbers (0 = empty, 1-9 = filled)
- */
-export function parseBoardString(boardString: string): number[][] {
-  if (boardString.length !== TOTAL_CELLS) {
-    throw new Error(
-      `Invalid board string length: expected ${TOTAL_CELLS}, got ${boardString.length}`
-    );
-  }
-
-  const board: number[][] = [];
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    const rowArray: number[] = [];
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      const index = row * BOARD_SIZE + col;
-      const char = boardString[index];
-      if (char === undefined) {
-        throw new Error(`Missing character at position ${index}`);
-      }
-      const value = char === '.' ? 0 : parseInt(char, 10);
-      if (isNaN(value) || value < 0 || value > 9) {
-        throw new Error(`Invalid character at position ${index}: '${char}'`);
-      }
-      rowArray.push(value);
-    }
-    board.push(rowArray);
-  }
-  return board;
-}
-
-/**
- * Converts a 2D number array back to an 81-character string
- * @param board - 9x9 array of numbers
- * @returns 81-character string
- */
-export function stringifyBoard(board: number[][]): string {
-  if (board.length !== BOARD_SIZE) {
-    throw new Error(
-      `Invalid board rows: expected ${BOARD_SIZE}, got ${board.length}`
-    );
-  }
-
-  let result = '';
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    if (board[row]?.length !== BOARD_SIZE) {
-      throw new Error(
-        `Invalid row ${row} length: expected ${BOARD_SIZE}, got ${board[row]?.length}`
-      );
-    }
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      const value = board[row]?.[col];
-      if (value === undefined || value < 0 || value > 9) {
-        throw new Error(`Invalid value at (${row}, ${col}): ${value}`);
-      }
-      result += value.toString();
-    }
-  }
-  return result;
-}
+// Import for local use
+import {
+  BOARD_SIZE,
+  BLOCK_SIZE,
+  parseBoardString,
+} from '@sudobility/sudojo_types';
 
 /**
  * Creates an initial GameBoard from puzzle and solution strings
