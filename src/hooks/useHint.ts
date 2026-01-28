@@ -193,10 +193,7 @@ export function useHint({
 
   // Helper to process a successful hint response
   const processHintResponse = useCallback(
-    (
-      response: BaseResponse<SolveData>,
-      isTarget: boolean
-    ): boolean => {
+    (response: BaseResponse<SolveData>, isTarget: boolean): boolean => {
       if (response.success && response.data?.hints?.steps?.length) {
         const hintSteps = response.data.hints.steps;
         const board = response.data.board?.board ?? null;
@@ -258,7 +255,9 @@ export function useHint({
 
       // Phase 1: If techniqueFilter is set, first try to find that specific technique
       if (techniqueFilter !== undefined) {
-        console.log(`[useHint] Phase 1: Trying with techniqueFilter=${techniqueFilter}`);
+        console.log(
+          `[useHint] Phase 1: Trying with techniqueFilter=${techniqueFilter}`
+        );
         const filteredOptions = {
           original: puzzle,
           user: userInput,
@@ -267,7 +266,10 @@ export function useHint({
           techniques: techniqueFilter.toString(),
         };
 
-        const filteredResponse = await client.solverSolve(token, filteredOptions);
+        const filteredResponse = await client.solverSolve(
+          token,
+          filteredOptions
+        );
         console.log('[useHint] Filtered response:', {
           success: filteredResponse.success,
           hasData: !!filteredResponse.data,
@@ -283,7 +285,9 @@ export function useHint({
         }
 
         // No hints for target technique, fall through to Phase 2
-        console.log('[useHint] Phase 2: Target technique not found, trying without filter');
+        console.log(
+          '[useHint] Phase 2: Target technique not found, trying without filter'
+        );
       }
 
       // Phase 2: Regular (unfiltered) call to get next available hint
