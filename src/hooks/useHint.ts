@@ -68,6 +68,13 @@ export interface UseHintOptions {
   /** Whether auto-pencilmarks were generated */
   autoPencilmarks?: boolean;
   /**
+   * Optional technique number to filter for.
+   * When set, will first try to find hints for this specific technique.
+   * If no hints found for the target technique, will retry without filter
+   * to get the next available hint (allowing puzzle progression).
+   */
+  techniqueFilter?: number;
+  /**
    * Callback fired when hints are received from the API.
    * Use this to intercept hints for logging, saving examples, etc.
    * Called before state is updated.
@@ -106,6 +113,8 @@ export interface UseHintResult {
   hasPreviousStep: boolean;
   /** Whether the hint can be applied (on last step) */
   canApply: boolean;
+  /** Whether the current hint matches the techniqueFilter (if one was set) */
+  isTargetTechnique: boolean;
 }
 
 /**
@@ -155,6 +164,7 @@ export function useHint({
   userInput,
   pencilmarks,
   autoPencilmarks = false,
+  techniqueFilter,
   onHintReceived,
 }: UseHintOptions): UseHintResult {
   const [hints, setHints] = useState<SolverHintStep[] | null>(null);
@@ -162,6 +172,7 @@ export function useHint({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accessError, setAccessError] = useState<HintAccessError | null>(null);
+  const [isTargetTechnique, setIsTargetTechnique] = useState(false);
 
   // Track puzzle state to detect when we need to re-fetch
   const lastPuzzleStateRef = useRef<string>('');
@@ -180,45 +191,12 @@ export function useHint({
     stepIndex === totalSteps - 1 &&
     boardDataRef.current !== null;
 
-  // Fetch hints from API
-  const fetchHints = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    setAccessError(null);
-
-    // Debug: Log the values being sent to the solver
-    console.log('[useHint] fetchHints called with:', {
-      puzzle: `${puzzle.substring(0, 20)}...`,
-      puzzleLength: puzzle.length,
-      userInput: `${userInput.substring(0, 20)}...`,
-      userInputLength: userInput.length,
-      hasPencilmarks: pencilmarks !== undefined,
-      autoPencilmarks,
-      hasToken: !!token,
-      baseUrl,
-    });
-
-    try {
-      const client = createSudojoClient(networkClient, baseUrl);
-      const solveOptions = {
-        original: puzzle,
-        user: userInput,
-        autoPencilmarks,
-        ...(pencilmarks !== undefined && { pencilmarks }),
-      };
-      console.log('[useHint] Calling solverSolve...');
-      const response: BaseResponse<SolveData> = await client.solverSolve(
-        token,
-        solveOptions
-      );
-      console.log('[useHint] solverSolve response:', {
-        success: response.success,
-        hasData: !!response.data,
-        hasHints: !!response.data?.hints,
-        hintCount: response.data?.hints?.steps?.length,
-        error: response.error,
-      });
-
+  // Helper to process a successful hint response
+  const processHintResponse = useCallback(
+    (
+      response: BaseResponse<SolveData>,
+      isTarget: boolean
+    ): boolean => {
       if (response.success && response.data?.hints?.steps?.length) {
         const hintSteps = response.data.hints.steps;
         const board = response.data.board?.board ?? null;
@@ -243,10 +221,93 @@ export function useHint({
 
         setHints(hintSteps);
         setStepIndex(0);
+        setIsTargetTechnique(isTarget);
         // Store board data for applying hint later (board is nested inside board wrapper)
         boardDataRef.current = board;
         // Track the puzzle state we fetched for
         lastPuzzleStateRef.current = `${puzzle}|${userInput}|${pencilmarks ?? ''}`;
+        return true;
+      }
+      return false;
+    },
+    [onHintReceived, puzzle, userInput, pencilmarks]
+  );
+
+  // Fetch hints from API
+  const fetchHints = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setAccessError(null);
+    setIsTargetTechnique(false);
+
+    // Debug: Log the values being sent to the solver
+    console.log('[useHint] fetchHints called with:', {
+      puzzle: `${puzzle.substring(0, 20)}...`,
+      puzzleLength: puzzle.length,
+      userInput: `${userInput.substring(0, 20)}...`,
+      userInputLength: userInput.length,
+      hasPencilmarks: pencilmarks !== undefined,
+      autoPencilmarks,
+      techniqueFilter,
+      hasToken: !!token,
+      baseUrl,
+    });
+
+    try {
+      const client = createSudojoClient(networkClient, baseUrl);
+
+      // Phase 1: If techniqueFilter is set, first try to find that specific technique
+      if (techniqueFilter !== undefined) {
+        console.log(`[useHint] Phase 1: Trying with techniqueFilter=${techniqueFilter}`);
+        const filteredOptions = {
+          original: puzzle,
+          user: userInput,
+          autoPencilmarks,
+          ...(pencilmarks !== undefined && { pencilmarks }),
+          techniques: techniqueFilter.toString(),
+        };
+
+        const filteredResponse = await client.solverSolve(token, filteredOptions);
+        console.log('[useHint] Filtered response:', {
+          success: filteredResponse.success,
+          hasData: !!filteredResponse.data,
+          hasHints: !!filteredResponse.data?.hints,
+          hintCount: filteredResponse.data?.hints?.steps?.length,
+        });
+
+        // If we found hints for the target technique, use them
+        if (processHintResponse(filteredResponse, true)) {
+          console.log('[useHint] Found target technique!');
+          setIsLoading(false);
+          return;
+        }
+
+        // No hints for target technique, fall through to Phase 2
+        console.log('[useHint] Phase 2: Target technique not found, trying without filter');
+      }
+
+      // Phase 2: Regular (unfiltered) call to get next available hint
+      const solveOptions = {
+        original: puzzle,
+        user: userInput,
+        autoPencilmarks,
+        ...(pencilmarks !== undefined && { pencilmarks }),
+      };
+      console.log('[useHint] Calling solverSolve (unfiltered)...');
+      const response: BaseResponse<SolveData> = await client.solverSolve(
+        token,
+        solveOptions
+      );
+      console.log('[useHint] solverSolve response:', {
+        success: response.success,
+        hasData: !!response.data,
+        hasHints: !!response.data?.hints,
+        hintCount: response.data?.hints?.steps?.length,
+        error: response.error,
+      });
+
+      if (processHintResponse(response, false)) {
+        // Successfully got hints (not the target technique)
       } else if (response.error) {
         setError(response.error);
         setHints(null);
@@ -289,7 +350,8 @@ export function useHint({
     userInput,
     pencilmarks,
     autoPencilmarks,
-    onHintReceived,
+    techniqueFilter,
+    processHintResponse,
   ]);
 
   // Get hint: fetch if no hints or puzzle changed, otherwise advance
@@ -326,6 +388,7 @@ export function useHint({
     setStepIndex(0);
     setError(null);
     setAccessError(null);
+    setIsTargetTechnique(false);
     lastPuzzleStateRef.current = '';
     boardDataRef.current = null;
   }, []);
@@ -370,5 +433,6 @@ export function useHint({
     hasNextStep,
     hasPreviousStep,
     canApply,
+    isTargetTechnique,
   };
 }
