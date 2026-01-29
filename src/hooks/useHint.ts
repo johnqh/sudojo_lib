@@ -198,7 +198,7 @@ export function useHint({
     (response: BaseResponse<SolveData>, isTarget: boolean): boolean => {
       if (response.success && response.data?.hints?.steps?.length) {
         const hintSteps = response.data.hints.steps;
-        const board = response.data.board?.board ?? null;
+        const board = response.data.board ?? null;
 
         // Call onHintReceived callback if provided (for interception/logging)
         if (
@@ -212,8 +212,8 @@ export function useHint({
             hints: hintSteps,
             boardData: {
               user: board.user,
-              pencilmarks: board.pencilmarks?.pencilmarks ?? null,
-              autoPencilmarks: board.pencilmarks?.auto ?? false,
+              pencilmarks: board.pencilmark?.numbers ?? null,
+              autoPencilmarks: board.pencilmark?.autopencil ?? false,
             },
           });
         }
@@ -221,7 +221,7 @@ export function useHint({
         setHints(hintSteps);
         setStepIndex(0);
         setIsTargetTechnique(isTarget);
-        // Store board data for applying hint later (board is nested inside board wrapper)
+        // Store board data for applying hint later
         boardDataRef.current = board;
         // Track the puzzle state we fetched for
         lastPuzzleStateRef.current = `${puzzle}|${userInput}|${pencilmarks ?? ''}`;
@@ -409,8 +409,8 @@ export function useHint({
 
     const result: HintBoardData = {
       user: board.user,
-      pencilmarks: board.pencilmarks?.pencilmarks ?? null,
-      autoPencilmarks: board.pencilmarks?.auto ?? false,
+      pencilmarks: board.pencilmark?.numbers ?? null,
+      autoPencilmarks: board.pencilmark?.autopencil ?? false,
     };
 
     // Clear hints after applying (matches Kotlin: result = null)
