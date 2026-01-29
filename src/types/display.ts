@@ -101,6 +101,48 @@ export interface HintStep {
   text: string;
   areas?: HintArea[] | null;
   cells?: HintCell[] | null;
+  links?: DisplayLink[] | null;
+  groups?: DisplayCellGroup[] | null;
+  digit?: number | null;
+}
+
+// =============================================================================
+// Link Types (for chain visualization)
+// =============================================================================
+
+/**
+ * Link type for chain visualization
+ */
+export type LinkType = 'strong' | 'weak';
+
+/**
+ * A link between two cells in a chain (display format)
+ */
+export interface DisplayLink {
+  /** Start cell index (0-80) */
+  fromIndex: number;
+  /** End cell index (0-80) */
+  toIndex: number;
+  /** Link type: "strong" (solid line) or "weak" (dashed line) */
+  type: LinkType;
+  /** The digit this link applies to (1-9) */
+  digit: number;
+}
+
+// =============================================================================
+// Cell Group Types (for pattern visualization)
+// =============================================================================
+
+/**
+ * A group of cells for pattern visualization (display format)
+ */
+export interface DisplayCellGroup {
+  /** Group name (e.g., "ALS A", "Conjugate Pair", "UR Corner") */
+  name: string;
+  /** Theme color for the group */
+  color: ThemeColor;
+  /** Array of cell indices (0-80) */
+  cellIndices: number[];
 }
 
 // =============================================================================

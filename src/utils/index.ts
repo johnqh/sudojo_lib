@@ -68,6 +68,9 @@ export {
   getCellsWithDigit,
   getSelectedDigit,
   computeSelectedDigitCells,
+  convertSolverLink,
+  convertSolverCellGroup,
+  sudokuColorToTheme,
 } from './sudokuPresenter';
 
 // Time utilities

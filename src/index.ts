@@ -64,6 +64,10 @@ export type {
   CellDisplayState,
   PencilmarkDisplayState,
   UIColorPalette,
+  // Link and group types for chain visualization
+  LinkType,
+  DisplayLink,
+  DisplayCellGroup,
 } from './types';
 
 export { ThemeColor, SudokuColor, UIColorLight, UIColorDark } from './types';
@@ -148,6 +152,9 @@ export {
   getCellsWithDigit,
   getSelectedDigit,
   computeSelectedDigitCells,
+  convertSolverLink,
+  convertSolverCellGroup,
+  sudokuColorToTheme,
 } from './utils';
 
 // Time Utilities

@@ -56,6 +56,10 @@ export type {
   CellDisplayState,
   PencilmarkDisplayState,
   UIColorPalette,
+  // Link and group types for chain visualization
+  LinkType,
+  DisplayLink,
+  DisplayCellGroup,
 } from './display';
 
 export { ThemeColor, SudokuColor, UIColorLight, UIColorDark } from './display';

@@ -13,6 +13,8 @@ import type { SudokuCell } from '../types/sudoku';
 import { blockOf, columnOf, rowOf } from '../types/sudoku';
 import {
   type CellDisplayState,
+  type DisplayCellGroup,
+  type DisplayLink,
   type HintCell,
   type HintStep,
   type PencilmarkDisplayState,
@@ -568,3 +570,53 @@ export function computeSelectedDigitCells(
   if (selectedDigit === null) return null;
   return getCellsWithDigit(cells, selectedDigit);
 }
+
+// =============================================================================
+// Link and Group Conversion
+// =============================================================================
+
+/**
+ * Convert a solver link to display link format
+ * Converts row/col coordinates to flat cell index
+ */
+export function convertSolverLink(link: {
+  fromRow: number;
+  fromCol: number;
+  toRow: number;
+  toCol: number;
+  type: 'strong' | 'weak';
+  digit: number;
+}): DisplayLink {
+  return {
+    fromIndex: link.fromRow * 9 + link.fromCol,
+    toIndex: link.toRow * 9 + link.toCol,
+    type: link.type,
+    digit: link.digit,
+  };
+}
+
+/**
+ * Convert a solver cell group to display format
+ * Converts row/col pairs to flat cell indices and SolverColor to ThemeColor
+ */
+export function convertSolverCellGroup(group: {
+  name: string;
+  color: string;
+  cells: number[][];
+}): DisplayCellGroup {
+  // Map solver color string to SudokuColor enum
+  const sudokuColor = Object.values(SudokuColor).find(
+    c => c.toLowerCase() === group.color.toLowerCase()
+  ) as SudokuColor | undefined;
+
+  return {
+    name: group.name,
+    color: sudokuColorToTheme(sudokuColor ?? SudokuColor.BLUE) ?? ThemeColor.SELECTED,
+    cellIndices: group.cells.map(([row, col]) => row * 9 + col),
+  };
+}
+
+/**
+ * Export sudokuColorToTheme for external use
+ */
+export { sudokuColorToTheme };
