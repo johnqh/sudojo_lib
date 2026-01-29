@@ -611,8 +611,10 @@ export function convertSolverCellGroup(group: {
 
   return {
     name: group.name,
-    color: sudokuColorToTheme(sudokuColor ?? SudokuColor.BLUE) ?? ThemeColor.SELECTED,
-    cellIndices: group.cells.map(([row, col]) => row * 9 + col),
+    color:
+      sudokuColorToTheme(sudokuColor ?? SudokuColor.BLUE) ??
+      ThemeColor.SELECTED,
+    cellIndices: group.cells.map(cell => (cell[0] ?? 0) * 9 + (cell[1] ?? 0)),
   };
 }
 
