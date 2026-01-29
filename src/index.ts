@@ -20,12 +20,10 @@ export type {
   GameSettings,
   GameState,
   GameStatus,
-  ScrambleConfig,
-  ScrambleResult,
   TeachingState,
 } from './types';
 
-export { DEFAULT_GAME_SETTINGS, DEFAULT_SCRAMBLE_CONFIG } from './types';
+export { DEFAULT_GAME_SETTINGS } from './types';
 
 // Sudoku Types (useSudoku hook - ported from renderable)
 export type {
@@ -94,8 +92,6 @@ export type { GameSource, CurrentGameMeta, CurrentGame } from './types';
 // Legacy Utilities (useGame hook)
 export {
   // Board utilities
-  BLOCK_SIZE,
-  BOARD_SIZE,
   cloneBoard,
   countFilledCells,
   createGameBoard,
@@ -108,12 +104,6 @@ export {
   getRelatedCells,
   getRowCells,
   isValidPlacement,
-  parseBoardString,
-  stringifyBoard,
-  TOTAL_CELLS,
-  // Scramble utilities
-  noScramble,
-  scrambleBoard,
   // Validation utilities
   autoRemovePencilmarks,
   clearHighlights,
@@ -281,13 +271,3 @@ export type {
 // Stores
 export { useGamePlayStore } from './stores/gamePlayStore';
 export type { GamePlayState } from './stores/gamePlayStore';
-
-// Re-export types from dependencies for convenience
-export type {
-  Board,
-  Challenge,
-  Daily,
-  Learning,
-  Level,
-  Technique,
-} from '@sudobility/sudojo_types';

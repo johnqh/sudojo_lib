@@ -4,8 +4,6 @@
 
 // Board utilities (legacy - for useGame hook)
 export {
-  BLOCK_SIZE,
-  BOARD_SIZE,
   cloneBoard,
   countFilledCells,
   createGameBoard,
@@ -18,13 +16,7 @@ export {
   getRelatedCells,
   getRowCells,
   isValidPlacement,
-  parseBoardString,
-  stringifyBoard,
-  TOTAL_CELLS,
 } from './board';
-
-// Scramble utilities (legacy - for useGame hook)
-export { noScramble, scrambleBoard } from './scramble';
 
 // Validation utilities (legacy - for useGame hook)
 export {

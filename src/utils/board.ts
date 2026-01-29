@@ -3,17 +3,6 @@
  */
 
 import type { CellState, GameBoard } from '../types';
-
-// Re-export board constants and basic utilities from sudojo_types
-export {
-  BOARD_SIZE,
-  BLOCK_SIZE,
-  TOTAL_CELLS,
-  parseBoardString,
-  stringifyBoard,
-} from '@sudobility/sudojo_types';
-
-// Import for local use
 import {
   BLOCK_SIZE,
   BOARD_SIZE,

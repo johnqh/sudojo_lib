@@ -5,6 +5,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   BOARD_SIZE,
+  parseBoardString,
+  stringifyBoard,
+  TOTAL_CELLS,
+} from '@sudobility/sudojo_types';
+import {
   cloneBoard,
   countFilledCells,
   createGameBoard,
@@ -17,9 +22,6 @@ import {
   getRelatedCells,
   getRowCells,
   isValidPlacement,
-  parseBoardString,
-  stringifyBoard,
-  TOTAL_CELLS,
 } from './board';
 
 // Sample puzzles for testing - valid Sudoku puzzle and solution pair

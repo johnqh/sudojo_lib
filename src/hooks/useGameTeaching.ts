@@ -4,12 +4,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import type { NetworkClient } from '@sudobility/types';
-import {
-  type BaseResponse,
-  createSudojoClient,
-  type SolveData,
-  type SolverHintStep,
-} from '@sudobility/sudojo_client';
+import type {
+  BaseResponse,
+  SolveData,
+  SolverHintStep,
+} from '@sudobility/sudojo_types';
+import { createSudojoClient } from '@sudobility/sudojo_client';
 import type { GameHint, TeachingState } from '../types';
 
 export interface UseGameTeachingOptions {

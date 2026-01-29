@@ -3,7 +3,7 @@
  */
 
 import type { GameBoard, GameState } from '../types';
-import { BOARD_SIZE, parseBoardString } from './board';
+import { BOARD_SIZE, parseBoardString } from '@sudobility/sudojo_types';
 
 /**
  * Checks if a cell value matches the solution

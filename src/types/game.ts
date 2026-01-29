@@ -141,11 +141,6 @@ export interface CellPosition {
   column: number;
 }
 
-// Re-export scramble types from sudojo_types for backwards compatibility
-export type { ScrambleConfig, ScrambleResult } from '@sudobility/sudojo_types';
-
-export { DEFAULT_SCRAMBLE_CONFIG } from '@sudobility/sudojo_types';
-
 /**
  * Hint information from the solver
  */

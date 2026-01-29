@@ -3,21 +3,20 @@
  */
 
 import { useCallback, useMemo, useReducer } from 'react';
-import type {
-  GameBoard,
-  GameMove,
-  GameSettings,
-  GameState,
-  ScrambleConfig,
-} from '../types';
-import { DEFAULT_GAME_SETTINGS, DEFAULT_SCRAMBLE_CONFIG } from '../types';
+import type { GameBoard, GameMove, GameSettings, GameState } from '../types';
+import { DEFAULT_GAME_SETTINGS } from '../types';
+import type { ScrambleConfig } from '@sudobility/sudojo_types';
+import {
+  DEFAULT_SCRAMBLE_CONFIG,
+  noScramble,
+  scrambleBoard,
+} from '@sudobility/sudojo_types';
 import {
   cloneBoard,
   createGameBoard,
   getBoardStateString,
   getPencilmarksString,
 } from '../utils/board';
-import { noScramble, scrambleBoard } from '../utils/scramble';
 import {
   autoRemovePencilmarks,
   clearHighlights,

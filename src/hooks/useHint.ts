@@ -10,15 +10,17 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
+import type {
+  BaseResponse,
+  HintAccessUserState,
+  HintEntitlement,
+  SolveData,
+  SolverBoard,
+  SolverHintStep,
+} from '@sudobility/sudojo_types';
 import {
-  type BaseResponse,
   createSudojoClient,
   HintAccessDeniedError,
-  type HintAccessUserState,
-  type HintEntitlement,
-  type SolveData,
-  type SolverBoard,
-  type SolverHintStep,
 } from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
 

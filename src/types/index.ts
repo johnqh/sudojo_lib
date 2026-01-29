@@ -12,12 +12,10 @@ export type {
   GameSettings,
   GameState,
   GameStatus,
-  ScrambleConfig,
-  ScrambleResult,
   TeachingState,
 } from './game';
 
-export { DEFAULT_GAME_SETTINGS, DEFAULT_SCRAMBLE_CONFIG } from './game';
+export { DEFAULT_GAME_SETTINGS } from './game';
 
 // Sudoku types (useSudoku hook - ported from renderable)
 export type {
