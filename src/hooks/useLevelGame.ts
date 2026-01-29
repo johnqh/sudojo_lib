@@ -77,8 +77,8 @@ export interface UseLevelGameOptions {
   baseUrl: string;
   /** Access token for authentication */
   token: string;
-  /** Level UUID to fetch game for */
-  levelId: string;
+  /** Level number (1-12) to fetch game for */
+  level: number;
   /** Whether subscription is currently active */
   subscriptionActive?: boolean;
   /** Whether to enable the query */
@@ -111,12 +111,12 @@ export interface UseLevelGameResult {
  *
  * @example
  * ```tsx
- * function LevelPlayPage({ levelId }: { levelId: string }) {
+ * function LevelPlayPage({ level }: { level: number }) {
  *   const { board, status, refetch, nextPuzzle } = useLevelGame({
  *     networkClient,
  *     config,
  *     auth,
- *     levelId,
+ *     level,
  *     subscriptionActive: subscription.isActive,
  *   });
  *
@@ -134,7 +134,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     networkClient,
     baseUrl,
     token,
-    levelId,
+    level,
     subscriptionActive = false,
     enabled = true,
   } = options;
@@ -147,14 +147,14 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     subscriptionActive,
   });
 
-  const queryParams = useMemo(() => ({ level_uuid: levelId }), [levelId]);
+  const queryParams = useMemo(() => ({ level }), [level]);
 
   const { data, isLoading, error, refetch } = useSudojoRandomBoard(
     networkClient,
     baseUrl,
     token,
     queryParams,
-    { enabled: enabled && !!levelId }
+    { enabled: enabled && level >= 1 && level <= 12 }
   );
 
   // Determine status based on response

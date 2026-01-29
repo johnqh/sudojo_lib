@@ -17,8 +17,8 @@ export interface UseLearningOptions {
   baseUrl: string;
   /** Access token for authentication (optional for public data) */
   token?: string;
-  /** Optional technique UUID to filter learning materials */
-  techniqueUuid?: string;
+  /** Optional technique number (1-37) to filter learning materials */
+  technique?: number;
   /** Optional language code to filter learning materials */
   languageCode?: string;
   /** Whether to enable the query */
@@ -38,8 +38,8 @@ export interface UseLearningResult {
   getLearningByUuid: (uuid: string) => Learning | undefined;
   /** Learning materials sorted by index */
   sortedLearning: Learning[];
-  /** Group learning materials by technique UUID */
-  learningByTechnique: Map<string, Learning[]>;
+  /** Group learning materials by technique number */
+  learningByTechnique: Map<number, Learning[]>;
   /** Group learning materials by language code */
   learningByLanguage: Map<string, Learning[]>;
 }
@@ -52,11 +52,11 @@ export interface UseLearningResult {
  *
  * @example
  * ```tsx
- * function LearningContent({ techniqueUuid }: { techniqueUuid: string }) {
+ * function LearningContent({ technique }: { technique: number }) {
  *   const { learningMaterials, isLoading, sortedLearning } = useLearning({
  *     networkClient,
  *     baseUrl: 'https://api.sudojo.com',
- *     techniqueUuid,
+ *     technique,
  *     languageCode: 'en',
  *   });
  *
@@ -80,19 +80,19 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
     networkClient,
     baseUrl,
     token = '',
-    techniqueUuid,
+    technique,
     languageCode,
     enabled = true,
   } = options;
 
   const queryParams = useMemo(() => {
     // Only return params if at least one filter is provided
-    if (!techniqueUuid && !languageCode) return undefined;
+    if (technique === undefined && !languageCode) return undefined;
     return {
-      technique_uuid: techniqueUuid ?? null,
-      language_code: languageCode ?? null,
+      technique: technique ?? undefined,
+      language_code: languageCode ?? undefined,
     };
-  }, [techniqueUuid, languageCode]);
+  }, [technique, languageCode]);
 
   const { data, isLoading, error, refetch } = useSudojoLearning(
     networkClient,
@@ -109,9 +109,9 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
 
   const sortedLearning = useMemo(() => {
     return [...learningMaterials].sort((a, b) => {
-      // First sort by technique UUID, then by index
-      if (a.technique_uuid !== b.technique_uuid) {
-        return (a.technique_uuid ?? '').localeCompare(b.technique_uuid ?? '');
+      // First sort by technique number, then by index
+      if (a.technique !== b.technique) {
+        return (a.technique ?? 0) - (b.technique ?? 0);
       }
       return a.index - b.index;
     });
@@ -123,9 +123,9 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
   }, [learningMaterials]);
 
   const learningByTechnique = useMemo(() => {
-    const byTechnique = new Map<string, Learning[]>();
+    const byTechnique = new Map<number, Learning[]>();
     for (const learning of sortedLearning) {
-      const key = learning.technique_uuid ?? '';
+      const key = learning.technique ?? 0;
       const existing = byTechnique.get(key) ?? [];
       existing.push(learning);
       byTechnique.set(key, existing);

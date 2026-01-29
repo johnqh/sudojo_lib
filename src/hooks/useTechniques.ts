@@ -17,8 +17,8 @@ export interface UseTechniquesOptions {
   baseUrl: string;
   /** Access token for authentication (optional for public data) */
   token?: string;
-  /** Optional level UUID to filter techniques */
-  levelUuid?: string;
+  /** Optional level number (1-12) to filter techniques */
+  level?: number;
   /** Whether to enable the query */
   enabled?: boolean;
 }
@@ -32,12 +32,12 @@ export interface UseTechniquesResult {
   error: Error | null;
   /** Refetch techniques */
   refetch: () => void;
-  /** Get technique by UUID */
-  getTechniqueByUuid: (uuid: string) => Technique | undefined;
-  /** Techniques sorted by index */
+  /** Get technique by its number (1-37) */
+  getTechniqueByNumber: (technique: number) => Technique | undefined;
+  /** Techniques sorted by technique number */
   sortedTechniques: Technique[];
-  /** Group techniques by level UUID */
-  techniquesByLevel: Map<string, Technique[]>;
+  /** Group techniques by level number */
+  techniquesByLevel: Map<number, Technique[]>;
 }
 
 /**
@@ -48,11 +48,11 @@ export interface UseTechniquesResult {
  *
  * @example
  * ```tsx
- * function TechniqueList({ levelUuid }: { levelUuid: string }) {
+ * function TechniqueList({ level }: { level: number }) {
  *   const { techniques, isLoading, sortedTechniques } = useTechniques({
  *     networkClient,
  *     baseUrl: 'https://api.sudojo.com',
- *     levelUuid,
+ *     level,
  *   });
  *
  *   if (isLoading) return <Loading />;
@@ -60,7 +60,7 @@ export interface UseTechniquesResult {
  *   return (
  *     <ul>
  *       {sortedTechniques.map(technique => (
- *         <li key={technique.uuid}>{technique.title}</li>
+ *         <li key={technique.technique}>{technique.title}</li>
  *       ))}
  *     </ul>
  *   );
@@ -70,18 +70,12 @@ export interface UseTechniquesResult {
 export function useTechniques(
   options: UseTechniquesOptions
 ): UseTechniquesResult {
-  const {
-    networkClient,
-    baseUrl,
-    token = '',
-    levelUuid,
-    enabled = true,
-  } = options;
+  const { networkClient, baseUrl, token = '', level, enabled = true } = options;
 
   const queryParams = useMemo(() => {
-    if (!levelUuid) return undefined;
-    return { level_uuid: levelUuid };
-  }, [levelUuid]);
+    if (level === undefined) return undefined;
+    return { level };
+  }, [level]);
 
   const { data, isLoading, error, refetch } = useSudojoTechniques(
     networkClient,
@@ -98,23 +92,23 @@ export function useTechniques(
 
   const sortedTechniques = useMemo(() => {
     return [...techniques].sort((a, b) => {
-      // First sort by level UUID, then by index
-      if (a.level_uuid !== b.level_uuid) {
-        return (a.level_uuid ?? '').localeCompare(b.level_uuid ?? '');
+      // First sort by level, then by technique number
+      if (a.level !== b.level) {
+        return (a.level ?? 0) - (b.level ?? 0);
       }
-      return a.index - b.index;
+      return a.technique - b.technique;
     });
   }, [techniques]);
 
-  const getTechniqueByUuid = useMemo(() => {
-    const techniqueMap = new Map(techniques.map(t => [t.uuid, t]));
-    return (uuid: string) => techniqueMap.get(uuid);
+  const getTechniqueByNumber = useMemo(() => {
+    const techniqueMap = new Map(techniques.map(t => [t.technique, t]));
+    return (technique: number) => techniqueMap.get(technique);
   }, [techniques]);
 
   const techniquesByLevel = useMemo(() => {
-    const byLevel = new Map<string, Technique[]>();
+    const byLevel = new Map<number, Technique[]>();
     for (const technique of sortedTechniques) {
-      const key = technique.level_uuid ?? '';
+      const key = technique.level ?? 0;
       const existing = byLevel.get(key) ?? [];
       existing.push(technique);
       byLevel.set(key, existing);
@@ -129,7 +123,7 @@ export function useTechniques(
     refetch: () => {
       refetch();
     },
-    getTechniqueByUuid,
+    getTechniqueByNumber,
     sortedTechniques,
     techniquesByLevel,
   };
@@ -142,8 +136,8 @@ export interface UseTechniqueOptions {
   baseUrl: string;
   /** Access token for authentication (optional for public data) */
   token?: string;
-  /** Technique UUID to fetch */
-  techniqueUuid: string;
+  /** Technique number (1-37) to fetch */
+  technique: number;
   /** Whether to enable the query */
   enabled?: boolean;
 }
@@ -160,7 +154,7 @@ export interface UseTechniqueResult {
 }
 
 /**
- * Hook for fetching a single technique by UUID
+ * Hook for fetching a single technique by number
  *
  * @param options - Hook options
  * @returns Technique data
@@ -170,7 +164,7 @@ export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
     networkClient,
     baseUrl,
     token = '',
-    techniqueUuid,
+    technique,
     enabled = true,
   } = options;
 
@@ -178,19 +172,19 @@ export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
     networkClient,
     baseUrl,
     token,
-    techniqueUuid,
+    technique,
     {
-      enabled: enabled && !!techniqueUuid,
+      enabled: enabled && technique >= 1 && technique <= 37,
     }
   );
 
-  const technique = useMemo(() => {
+  const techniqueData = useMemo(() => {
     if (!data?.success || !data.data) return null;
     return data.data;
   }, [data]);
 
   return {
-    technique,
+    technique: techniqueData,
     isLoading,
     error: error ?? null,
     refetch: () => {
