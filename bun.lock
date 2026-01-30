@@ -4,10 +4,10 @@
     "": {
       "name": "@sudobility/sudojo_lib",
       "devDependencies": {
-        "@sudobility/di": "^1.5.30",
-        "@sudobility/sudojo_client": "^0.0.49",
-        "@sudobility/sudojo_types": "^1.2.14",
-        "@sudobility/types": "^1.9.48",
+        "@sudobility/di": "^1.5.31",
+        "@sudobility/sudojo_client": "^0.0.50",
+        "@sudobility/sudojo_types": "^1.2.15",
+        "@sudobility/types": "^1.9.49",
         "@tanstack/react-query": "^5.90.11",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/react": "^16.3.0",
@@ -30,10 +30,10 @@
         "zustand": "^5.0.9",
       },
       "peerDependencies": {
-        "@sudobility/di": "^1.5.30",
-        "@sudobility/sudojo_client": "^0.0.49",
-        "@sudobility/sudojo_types": "^1.2.14",
-        "@sudobility/types": "^1.9.48",
+        "@sudobility/di": "^1.5.31",
+        "@sudobility/sudojo_client": "^0.0.50",
+        "@sudobility/sudojo_types": "^1.2.15",
+        "@sudobility/types": "^1.9.49",
         "@tanstack/react-query": ">=5.0.0",
         "react": ">=18.0.0",
         "zustand": ">=5.0.0",
@@ -189,13 +189,13 @@
 
     "@standard-schema/spec": ["@standard-schema/spec@1.0.0", "", {}, "sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA=="],
 
-    "@sudobility/di": ["@sudobility/di@1.5.30", "", { "peerDependencies": { "@notifee/react-native": ">=7.0.0", "@react-native-async-storage/async-storage": ">=1.19.0", "@react-native-community/netinfo": ">=9.0.0", "@sudobility/types": "^1.9.48", "react": ">=18.0.0", "react-native": ">=0.70.0" }, "optionalPeers": ["@notifee/react-native", "@react-native-async-storage/async-storage", "@react-native-community/netinfo", "react-native"] }, "sha512-oqPZGZErn7nJ2Z0Lpfn6fD0bGE6FEG7jQjZ4zH8qQGRcuk2hWes2Za7gv0KcOnd9SCCYc0WHHrrUG+Fee0qa+g=="],
+    "@sudobility/di": ["@sudobility/di@1.5.31", "", { "peerDependencies": { "@notifee/react-native": ">=7.0.0", "@react-native-async-storage/async-storage": ">=1.19.0", "@react-native-community/netinfo": ">=9.0.0", "@sudobility/types": "^1.9.49", "react": ">=18.0.0", "react-native": ">=0.70.0" }, "optionalPeers": ["@notifee/react-native", "@react-native-async-storage/async-storage", "@react-native-community/netinfo", "react-native"] }, "sha512-ntMkqsFsY07vbZHb31GmO1r7qXJRuyEmoXARojKdqn8pq0OSnZx73NaI3r8ye2V5g0lK72J6pEDvuzjTTyjo0g=="],
 
-    "@sudobility/sudojo_client": ["@sudobility/sudojo_client@0.0.49", "", { "peerDependencies": { "@sudobility/di": "^1.5.30", "@sudobility/sudojo_types": "^1.2.14", "@sudobility/types": "^1.9.48", "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0" } }, "sha512-OrflTtDQ9gHAoAoosBIgGDCnwNu8tBfg75+Glwdhi9Hj+1TtAvQo3nDHnBFGgQmZ4Ki3cejtQXnes+KYUwyt4Q=="],
+    "@sudobility/sudojo_client": ["@sudobility/sudojo_client@0.0.50", "", { "peerDependencies": { "@sudobility/di": "^1.5.31", "@sudobility/sudojo_types": "^1.2.15", "@sudobility/types": "^1.9.49", "@tanstack/react-query": ">=5.0.0", "react": ">=18.0.0" } }, "sha512-QNu9uhZul2F4eiOrTzKdUE1BvBw9rerZUJu+NSOCoiFsOXn7nRfmJIyV+XNPjlxHskRsFgyxdmoJGLstxoRkPg=="],
 
-    "@sudobility/sudojo_types": ["@sudobility/sudojo_types@1.2.14", "", { "peerDependencies": { "@sudobility/types": "^1.9.48" } }, "sha512-/PW5hql5sTupMlHpn9pWNbAhTvTIKUqDuNO1xLgRhVLPz366htGtXAfVsO13rB4rDERt9awQ1/SEGwAo2Ei6gA=="],
+    "@sudobility/sudojo_types": ["@sudobility/sudojo_types@1.2.15", "", { "peerDependencies": { "@sudobility/types": "^1.9.49" } }, "sha512-SnPh2Qx8SKFT3bsRm+Utl+tglAKD4AkQNvWTwHYBVWcOayKYBFMPOVhKl/wVCIfoMJg1AYVuxaf11oQUGI/PXA=="],
 
-    "@sudobility/types": ["@sudobility/types@1.9.48", "", {}, "sha512-sCXkeICtA//ftTDHdlLEcojVpOJi/ocvOmUYGh0S0eTl/tG5HWbOP4cz5aJz8jue4c2vYe/cJxj6BwtRlAOLEA=="],
+    "@sudobility/types": ["@sudobility/types@1.9.49", "", {}, "sha512-Gt8kaxnL5uWDsIAW1A6vKKvDUopb+q3QeyuUirVnT7yyqaMKXmcqvAGupvvZ/ATr2bOckcSPns/Bz3lRT1GVTg=="],
 
     "@tanstack/query-core": ["@tanstack/query-core@5.90.12", "", {}, "sha512-T1/8t5DhV/SisWjDnaiU2drl6ySvsHj1bHBCWNXd+/T+Hh1cf6JodyEYMd5sgwm+b/mETT4EV3H+zCVczCU5hg=="],
 
