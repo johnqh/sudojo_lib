@@ -42,6 +42,10 @@ export interface HintReceivedData {
   hints: SolverHintStep[];
   /** Board data that will be applied */
   boardData: HintBoardData;
+  /** Difficulty level for this hint (from SolverHints.level) */
+  hintLevel: number;
+  /** Technique ID for this hint (from SolverHints.technique) */
+  hintTechnique: number;
 }
 
 /** Access denied error info when hint level exceeds subscription tier */
@@ -215,6 +219,8 @@ export function useHint({
               pencilmarks: board.pencilmark?.numbers ?? null,
               autoPencilmarks: board.pencilmark?.autopencil ?? false,
             },
+            hintLevel: response.data.hints.level,
+            hintTechnique: response.data.hints.technique,
           });
         }
 
@@ -239,27 +245,11 @@ export function useHint({
     setAccessError(null);
     setIsTargetTechnique(false);
 
-    // Debug: Log the values being sent to the solver
-    console.log('[useHint] fetchHints called with:', {
-      puzzle: `${puzzle.substring(0, 20)}...`,
-      puzzleLength: puzzle.length,
-      userInput: `${userInput.substring(0, 20)}...`,
-      userInputLength: userInput.length,
-      hasPencilmarks: pencilmarks !== undefined,
-      autoPencilmarks,
-      techniqueFilter,
-      hasToken: !!token,
-      baseUrl,
-    });
-
     try {
       const client = createSudojoClient(networkClient, baseUrl);
 
       // Phase 1: If techniqueFilter is set, first try to find that specific technique
       if (techniqueFilter !== undefined) {
-        console.log(
-          `[useHint] Phase 1: Trying with techniqueFilter=${techniqueFilter}`
-        );
         const filteredOptions = {
           original: puzzle,
           user: userInput,
@@ -272,24 +262,13 @@ export function useHint({
           token,
           filteredOptions
         );
-        console.log('[useHint] Filtered response:', {
-          success: filteredResponse.success,
-          hasData: !!filteredResponse.data,
-          hasHints: !!filteredResponse.data?.hints,
-          hintCount: filteredResponse.data?.hints?.steps?.length,
-        });
 
         // If we found hints for the target technique, use them
         if (processHintResponse(filteredResponse, true)) {
-          console.log('[useHint] Found target technique!');
           setIsLoading(false);
           return;
         }
-
         // No hints for target technique, fall through to Phase 2
-        console.log(
-          '[useHint] Phase 2: Target technique not found, trying without filter'
-        );
       }
 
       // Phase 2: Regular (unfiltered) call to get next available hint
@@ -299,18 +278,10 @@ export function useHint({
         autoPencilmarks,
         ...(pencilmarks !== undefined && { pencilmarks }),
       };
-      console.log('[useHint] Calling solverSolve (unfiltered)...');
       const response: BaseResponse<SolveData> = await client.solverSolve(
         token,
         solveOptions
       );
-      console.log('[useHint] solverSolve response:', {
-        success: response.success,
-        hasData: !!response.data,
-        hasHints: !!response.data?.hints,
-        hintCount: response.data?.hints?.steps?.length,
-        error: response.error,
-      });
 
       if (processHintResponse(response, false)) {
         // Successfully got hints (not the target technique)
@@ -324,14 +295,6 @@ export function useHint({
         boardDataRef.current = null;
       }
     } catch (err) {
-      // Debug: Log the error details
-      console.error('[useHint] Error in fetchHints:', {
-        errorType: err?.constructor?.name,
-        errorMessage: err instanceof Error ? err.message : String(err),
-        isHintAccessDenied: HintAccessDeniedError.isHintAccessDeniedError(err),
-        fullError: err,
-      });
-
       // Handle hint access denied error (402)
       if (HintAccessDeniedError.isHintAccessDeniedError(err)) {
         setAccessError({
