@@ -147,7 +147,15 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     subscriptionActive,
   });
 
-  const queryParams = useMemo(() => ({ level }), [level]);
+  const queryParams = useMemo(
+    () => ({
+      level,
+      limit: undefined,
+      offset: undefined,
+      techniques: undefined,
+    }),
+    [level]
+  );
 
   const { data, isLoading, error, refetch } = useSudojoRandomBoard(
     networkClient,
