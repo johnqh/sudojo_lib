@@ -87,7 +87,8 @@ export function getTechniqueFromHelpFile(fileName: string): string | undefined {
 }
 
 /**
- * Extract body content from HTML and clean up navigation links
+ * Extract body content from HTML and clean up navigation links.
+ * Browser-specific - uses DOMParser.
  *
  * @param html - Raw HTML string
  * @returns Cleaned HTML body content
