@@ -153,6 +153,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
       limit: undefined,
       offset: undefined,
       techniques: undefined,
+      technique_bit: undefined,
     }),
     [level]
   );
