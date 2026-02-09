@@ -2,11 +2,12 @@
  * Hook for managing the current game
  *
  * Provides a clean API for starting, updating, and clearing the current game.
- * Includes debounced auto-save to avoid excessive localStorage writes.
+ * The `slot` option selects which independent store slot to use ('daily' or 'play'),
+ * keeping the returned function signatures identical to before.
  *
  * @example
  * ```tsx
- * const { currentGame, startGame, updateProgress, clearGame } = useGamePlay();
+ * const { currentGame, startGame, updateProgress, clearGame } = useGamePlay({ slot: 'daily' });
  *
  * // Start a new game
  * startGame('daily', puzzle, solution, { dailyDate: '2024-01-15' });
@@ -24,13 +25,13 @@ import { useGamePlayStore } from '../stores/gamePlayStore';
 import type {
   CurrentGame,
   CurrentGameMeta,
+  GameSlot,
   GameSource,
 } from '../types/currentGame';
 
-// Get stable reference to store actions (doesn't change on state updates)
-const getStoreActions = () => useGamePlayStore.getState();
-
 export interface UseGamePlayOptions {
+  /** Which game slot to use (default: 'play') */
+  slot?: GameSlot;
   /** Debounce delay for auto-save in ms (default: 2000) */
   autoSaveDelay?: number;
 }
@@ -61,12 +62,35 @@ export interface UseGamePlayResult {
 export function useGamePlay(
   options: UseGamePlayOptions = {}
 ): UseGamePlayResult {
-  const { autoSaveDelay = 2000 } = options;
-  const store = useGamePlayStore();
+  const { slot = 'play', autoSaveDelay = 2000 } = options;
+
+  // Select the correct slot from the store
+  const currentGame = useGamePlayStore((s) =>
+    slot === 'daily' ? s.dailyGame : s.playGame
+  );
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingUpdate = useRef<[string, string, boolean, number] | null>(null);
 
-  // Debounced update - uses getState() for stable reference
+  // Curry slot into startGame so callers keep the same signature
+  const startGame = useCallback(
+    (
+      source: GameSource,
+      puzzle: string,
+      solution: string,
+      meta?: CurrentGameMeta
+    ) => {
+      useGamePlayStore.getState().startGame(slot, source, puzzle, solution, meta);
+    },
+    [slot]
+  );
+
+  // Curry slot into clearGame
+  const clearGame = useCallback(() => {
+    useGamePlayStore.getState().clearGame(slot);
+  }, [slot]);
+
+  // Debounced update — curries slot
   const updateProgress = useCallback(
     (
       inputString: string,
@@ -87,13 +111,14 @@ export function useGamePlay(
 
       timeoutRef.current = setTimeout(() => {
         if (pendingUpdate.current) {
-          // Use getState() to get stable reference that doesn't trigger re-renders
-          getStoreActions().updateProgress(...pendingUpdate.current);
+          useGamePlayStore
+            .getState()
+            .updateProgress(slot, ...pendingUpdate.current);
           pendingUpdate.current = null;
         }
       }, autoSaveDelay);
     },
-    [autoSaveDelay]
+    [slot, autoSaveDelay]
   );
 
   // Flush pending updates on unmount only
@@ -103,17 +128,18 @@ export function useGamePlay(
         clearTimeout(timeoutRef.current);
       }
       if (pendingUpdate.current) {
-        // Use getState() to get stable reference that doesn't trigger re-renders
-        getStoreActions().updateProgress(...pendingUpdate.current);
+        useGamePlayStore
+          .getState()
+          .updateProgress(slot, ...pendingUpdate.current);
       }
     };
-  }, []); // Empty deps - only run cleanup on actual unmount
+  }, [slot]);
 
   return {
-    currentGame: store.currentGame,
-    hasCurrentGame: store.currentGame !== null,
-    startGame: store.startGame,
+    currentGame,
+    hasCurrentGame: currentGame !== null,
+    startGame,
     updateProgress,
-    clearGame: store.clearGame,
+    clearGame,
   };
 }

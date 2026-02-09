@@ -79,4 +79,4 @@ export type { SavedGameState, GamePersistenceKey } from './gamePersistence';
 export { GAME_STORAGE_PREFIX, getGameStorageKey } from './gamePersistence';
 
 // Current game types (for current game feature)
-export type { GameSource, CurrentGameMeta, CurrentGame } from './currentGame';
+export type { GameSource, CurrentGameMeta, CurrentGame, GameSlot } from './currentGame';
