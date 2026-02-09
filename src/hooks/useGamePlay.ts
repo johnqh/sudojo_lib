@@ -65,7 +65,7 @@ export function useGamePlay(
   const { slot = 'play', autoSaveDelay = 2000 } = options;
 
   // Select the correct slot from the store
-  const currentGame = useGamePlayStore((s) =>
+  const currentGame = useGamePlayStore(s =>
     slot === 'daily' ? s.dailyGame : s.playGame
   );
 
@@ -80,7 +80,9 @@ export function useGamePlay(
       solution: string,
       meta?: CurrentGameMeta
     ) => {
-      useGamePlayStore.getState().startGame(slot, source, puzzle, solution, meta);
+      useGamePlayStore
+        .getState()
+        .startGame(slot, source, puzzle, solution, meta);
     },
     [slot]
   );

@@ -87,7 +87,12 @@ export type { SavedGameState, GamePersistenceKey } from './types';
 export { GAME_STORAGE_PREFIX, getGameStorageKey } from './types';
 
 // Current Game Types (for current game feature)
-export type { GameSource, CurrentGameMeta, CurrentGame, GameSlot } from './types';
+export type {
+  GameSource,
+  CurrentGameMeta,
+  CurrentGame,
+  GameSlot,
+} from './types';
 
 // Legacy Utilities (useGame hook)
 export {

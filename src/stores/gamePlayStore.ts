@@ -94,7 +94,7 @@ export const useGamePlayStore = create<GamePlayState>()(
         });
       },
 
-      clearGame: (slot) => set({ [slotField(slot)]: null }),
+      clearGame: slot => set({ [slotField(slot)]: null }),
     }),
     {
       name: 'sudojo-current-game',
