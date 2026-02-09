@@ -105,7 +105,10 @@ function formatDigits(digits: string | string[]): string {
     : digits.split('').filter(d => d >= '1' && d <= '9');
   if (arr.length === 0) return '';
   if (arr.length === 1) return formatDigit(arr[0] ?? '');
-  return `{${arr.sort().map(d => formatDigit(d)).join(', ')}}`;
+  return `{${arr
+    .sort()
+    .map(d => formatDigit(d))
+    .join(', ')}}`;
 }
 
 // Extract first valid Sudoku digit (1-9) from a string
@@ -214,7 +217,10 @@ function getHighlightCells(
 /**
  * Generate detailed explanation for a hint
  */
-export function generateDetailedExplanation(hint: SolverHintStep, digitDisplay?: DigitDisplay): string {
+export function generateDetailedExplanation(
+  hint: SolverHintStep,
+  digitDisplay?: DigitDisplay
+): string {
   _display = digitDisplay ?? 'numeric';
   const techniqueId = TECHNIQUE_IDS[hint.title];
   const selectCells = getSelectCells(hint);
@@ -1121,7 +1127,10 @@ function generateGenericExplanation(
 /**
  * Get a summary of the hint action (what to do)
  */
-export function getHintActionSummary(hint: SolverHintStep, digitDisplay?: DigitDisplay): string {
+export function getHintActionSummary(
+  hint: SolverHintStep,
+  digitDisplay?: DigitDisplay
+): string {
   _display = digitDisplay ?? 'numeric';
   const selectCells = getSelectCells(hint);
   const removeCells = getRemoveCells(hint);
