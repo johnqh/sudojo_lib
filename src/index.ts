@@ -298,3 +298,7 @@ export type {
 // Stores
 export { useGamePlayStore } from './stores/gamePlayStore';
 export type { GamePlayState } from './stores/gamePlayStore';
+
+// Config
+export type { AuthProviderType, AuthProvidersConfig } from './config';
+export { DEFAULT_AUTH_PROVIDERS } from './config';
