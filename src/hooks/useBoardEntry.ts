@@ -3,7 +3,7 @@
  * Allows users to enter given clues for a custom puzzle
  */
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SudokuCell } from '../types';
 import { useSolverValidate } from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
@@ -86,7 +86,7 @@ function puzzleStringToCells(puzzle: string): SudokuCell[] {
   }
 
   return Array.from({ length: 81 }, (_, index) => {
-    const char = puzzle[index];
+    const char = puzzle.charAt(index);
     const value = parseInt(char, 10);
     const given = value >= 1 && value <= 9 ? value : null;
 
@@ -108,7 +108,8 @@ export function useBoardEntry({
   const [cells, setCells] = useState<SudokuCell[]>(createEmptyBoard);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [validatedPuzzle, setValidatedPuzzle] = useState<ValidatedPuzzle | null>(null);
+  const [validatedPuzzle, setValidatedPuzzle] =
+    useState<ValidatedPuzzle | null>(null);
   const [shouldValidate, setShouldValidate] = useState(false);
 
   // Compute puzzle string for validation
@@ -151,7 +152,10 @@ export function useBoardEntry({
       const errorMsg = validateData.error.toLowerCase();
       if (errorMsg.includes('multiple') || errorMsg.includes('not unique')) {
         setValidationError('enter.errors.multipleSolutions');
-      } else if (errorMsg.includes('cannot solve') || errorMsg.includes('no solution')) {
+      } else if (
+        errorMsg.includes('cannot solve') ||
+        errorMsg.includes('no solution')
+      ) {
         setValidationError('enter.errors.noSolution');
       } else {
         setValidationError('enter.errors.validationFailed');
@@ -174,22 +178,25 @@ export function useBoardEntry({
   }, []);
 
   // Set a given value at the selected cell
-  const setGiven = useCallback((value: number) => {
-    if (selectedIndex === null || value < 1 || value > 9) return;
+  const setGiven = useCallback(
+    (value: number) => {
+      if (selectedIndex === null || value < 1 || value > 9) return;
 
-    setCells(prevCells => {
-      const newCells = [...prevCells];
-      newCells[selectedIndex] = {
-        ...newCells[selectedIndex],
-        given: value,
-      };
-      return newCells;
-    });
+      setCells(prevCells => {
+        const newCells = [...prevCells];
+        const existing = newCells[selectedIndex];
+        if (existing) {
+          newCells[selectedIndex] = { ...existing, given: value };
+        }
+        return newCells;
+      });
 
-    // Clear validation state when board changes
-    setValidationError(null);
-    setValidatedPuzzle(null);
-  }, [selectedIndex]);
+      // Clear validation state when board changes
+      setValidationError(null);
+      setValidatedPuzzle(null);
+    },
+    [selectedIndex]
+  );
 
   // Erase the selected cell
   const erase = useCallback(() => {
@@ -197,10 +204,10 @@ export function useBoardEntry({
 
     setCells(prevCells => {
       const newCells = [...prevCells];
-      newCells[selectedIndex] = {
-        ...newCells[selectedIndex],
-        given: null,
-      };
+      const existing = newCells[selectedIndex];
+      if (existing) {
+        newCells[selectedIndex] = { ...existing, given: null };
+      }
       return newCells;
     });
 

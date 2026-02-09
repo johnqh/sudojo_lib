@@ -4,7 +4,10 @@ import type { SolverHintStep } from '@sudobility/sudojo_types';
  * A translation function that takes a key and interpolation values.
  * Compatible with i18next's `t` function.
  */
-export type TranslateFunction = (key: string, values?: Record<string, string>) => string;
+export type TranslateFunction = (
+  key: string,
+  values?: Record<string, string>
+) => string;
 
 /**
  * Convert localization values array to i18next interpolation object.
@@ -30,7 +33,7 @@ function valuesToInterpolation(values: string[]): Record<string, string> {
 export function getLocalizedHintText(
   t: TranslateFunction,
   step: SolverHintStep,
-  keyPrefix: string = '',
+  keyPrefix: string = ''
 ): string {
   if (!step.localization?.stringKey) {
     return step.text;

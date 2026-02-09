@@ -193,10 +193,7 @@ export {
 } from './utils';
 
 // Hint Explanation Utilities
-export {
-  generateDetailedExplanation,
-  getHintActionSummary,
-} from './utils';
+export { generateDetailedExplanation, getHintActionSummary } from './utils';
 
 // Localized Hint Utilities
 export type { TranslateFunction } from './utils';

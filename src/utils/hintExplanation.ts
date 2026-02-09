@@ -6,7 +6,7 @@
  * not just WHAT to do.
  */
 
-import type { SolverHintStep, SolverHintCell } from '@sudobility/sudojo_types';
+import type { SolverHintCell, SolverHintStep } from '@sudobility/sudojo_types';
 
 // Technique IDs (matching SudokuDefines.h and TechniqueId enum)
 const TECHNIQUE_IDS: Record<string, number> = {
@@ -21,11 +21,11 @@ const TECHNIQUE_IDS: Record<string, number> = {
   'Hidden Quad': 9,
   'Naked Quad': 10,
   'X-Wing': 11,
-  'Swordfish': 12,
-  'Jellyfish': 13,
+  Swordfish: 12,
+  Jellyfish: 13,
   'XY-Wing': 14,
   'Finned X-Wing': 15,
-  'Squirmbag': 16,
+  Squirmbag: 16,
   'Finned Swordfish': 17,
   'Finned Jellyfish': 18,
   'XYZ-Wing': 19,
@@ -33,7 +33,7 @@ const TECHNIQUE_IDS: Record<string, number> = {
   'Almost Locked Sets': 21,
   'Finned Squirmbag': 22,
   'ALS Chain': 23,
-  'Skyscraper': 24,
+  Skyscraper: 24,
   'Two-String Kite': 25,
   'Empty Rectangle': 26,
   'Simple Coloring': 27,
@@ -47,7 +47,7 @@ const TECHNIQUE_IDS: Record<string, number> = {
   'X-Cycles': 35,
   'Forcing Chains': 36,
   '3D Medusa': 37,
-  'Crane': 38,
+  Crane: 38,
   'Unique Rectangle Type 3': 39,
   'Unique Rectangle Type 4': 40,
   'Unique Rectangle Type 5': 41,
@@ -57,14 +57,14 @@ const TECHNIQUE_IDS: Record<string, number> = {
   'UVWXYZ-Wing': 45,
   'TUVWXYZ-Wing': 46,
   'STUVWXYZ-Wing': 47,
-  'AIC': 48,
+  AIC: 48,
   'Forcing Net': 49,
   'Avoidable Rectangle': 50,
   'Sashimi X-Wing': 51,
   'Sashimi Swordfish': 52,
   'Sashimi Jellyfish': 53,
   'Hidden Unique Rectangle': 54,
-  'Firework': 55,
+  Firework: 55,
   'Death Blossom': 56,
   'Franken X-Wing': 57,
   'Franken Swordfish': 58,
@@ -94,7 +94,7 @@ function formatDigits(digits: string | string[]): string {
     ? digits.filter(d => d >= '1' && d <= '9')
     : digits.split('').filter(d => d >= '1' && d <= '9');
   if (arr.length === 0) return '';
-  if (arr.length === 1) return arr[0];
+  if (arr.length === 1) return arr[0] ?? '';
   return `{${arr.sort().join(', ')}}`;
 }
 
@@ -119,22 +119,27 @@ function getBlock(row: number, col: number): number {
 }
 
 // Determine the common house for cells
-function findCommonHouse(cells: Array<{ row: number; col: number }>): { type: 'row' | 'col' | 'block'; index: number; name: string } | null {
-  if (cells.length < 2) return null;
+function findCommonHouse(
+  cells: Array<{ row: number; col: number }>
+): { type: 'row' | 'col' | 'block'; index: number; name: string } | null {
+  const first = cells[0];
+  if (cells.length < 2 || !first) return null;
 
-  const sameRow = cells.every(c => c.row === cells[0].row);
+  const sameRow = cells.every(c => c.row === first.row);
   if (sameRow) {
-    return { type: 'row', index: cells[0].row, name: `Row ${cells[0].row + 1}` };
+    return { type: 'row', index: first.row, name: `Row ${first.row + 1}` };
   }
 
-  const sameCol = cells.every(c => c.col === cells[0].col);
+  const sameCol = cells.every(c => c.col === first.col);
   if (sameCol) {
-    return { type: 'col', index: cells[0].col, name: `Column ${cells[0].col + 1}` };
+    return { type: 'col', index: first.col, name: `Column ${first.col + 1}` };
   }
 
-  const sameBlock = cells.every(c => getBlock(c.row, c.col) === getBlock(cells[0].row, cells[0].col));
+  const sameBlock = cells.every(
+    c => getBlock(c.row, c.col) === getBlock(first.row, first.col)
+  );
   if (sameBlock) {
-    const block = getBlock(cells[0].row, cells[0].col);
+    const block = getBlock(first.row, first.col);
     return { type: 'block', index: block, name: `Block ${block}` };
   }
 
@@ -143,26 +148,57 @@ function findCommonHouse(cells: Array<{ row: number; col: number }>): { type: 'r
 
 // Extract cells that have select action (digit placement)
 // Note: select: "0" means no selection (placeholder), only 1-9 are valid digits
-function getSelectCells(hint: SolverHintStep): Array<{ row: number; col: number; digit: string }> {
+function getSelectCells(
+  hint: SolverHintStep
+): Array<{ row: number; col: number; digit: string }> {
   return hint.cells
-    .filter((c: SolverHintCell) => c.actions.select && c.actions.select !== '' && c.actions.select !== '0')
-    .map((c: SolverHintCell) => ({ row: c.row, col: c.column, digit: c.actions.select }));
+    .filter(
+      (c: SolverHintCell) =>
+        c.actions.select && c.actions.select !== '' && c.actions.select !== '0'
+    )
+    .map((c: SolverHintCell) => ({
+      row: c.row,
+      col: c.column,
+      digit: c.actions.select,
+    }));
 }
 
 // Extract cells that have remove action (eliminations)
 // Note: Filter out cells where remove only contains "0" (placeholder)
-function getRemoveCells(hint: SolverHintStep): Array<{ row: number; col: number; digits: string }> {
+function getRemoveCells(
+  hint: SolverHintStep
+): Array<{ row: number; col: number; digits: string }> {
   return hint.cells
-    .filter((c: SolverHintCell) => c.actions.remove && c.actions.remove !== '' && getValidDigits(c.actions.remove).length > 0)
-    .map((c: SolverHintCell) => ({ row: c.row, col: c.column, digits: c.actions.remove }));
+    .filter(
+      (c: SolverHintCell) =>
+        c.actions.remove &&
+        c.actions.remove !== '' &&
+        getValidDigits(c.actions.remove).length > 0
+    )
+    .map((c: SolverHintCell) => ({
+      row: c.row,
+      col: c.column,
+      digits: c.actions.remove,
+    }));
 }
 
 // Extract cells that have highlight action (pattern cells)
 // Note: Filter out cells where highlight only contains "0" (placeholder)
-function getHighlightCells(hint: SolverHintStep): Array<{ row: number; col: number; digits: string }> {
+function getHighlightCells(
+  hint: SolverHintStep
+): Array<{ row: number; col: number; digits: string }> {
   return hint.cells
-    .filter((c: SolverHintCell) => c.actions.highlight && c.actions.highlight !== '' && getValidDigits(c.actions.highlight).length > 0)
-    .map((c: SolverHintCell) => ({ row: c.row, col: c.column, digits: c.actions.highlight }));
+    .filter(
+      (c: SolverHintCell) =>
+        c.actions.highlight &&
+        c.actions.highlight !== '' &&
+        getValidDigits(c.actions.highlight).length > 0
+    )
+    .map((c: SolverHintCell) => ({
+      row: c.row,
+      col: c.column,
+      digits: c.actions.highlight,
+    }));
 }
 
 /**
@@ -262,6 +298,7 @@ function explainFullHouse(
   if (selectCells.length !== 1) return hint.text;
 
   const cell = selectCells[0];
+  if (!cell) return hint.text;
   const digit = formatDigit(cell.digit);
 
   const area = hint.areas?.[0];
@@ -273,12 +310,16 @@ function explainFullHouse(
   }
 
   if (houseName) {
-    return `${houseName} has 8 cells filled, leaving only ${cellName(cell.row, cell.col)} empty. ` +
-      `The missing digit is ${digit} — place it here.`;
+    return (
+      `${houseName} has 8 cells filled, leaving only ${cellName(cell.row, cell.col)} empty. ` +
+      `The missing digit is ${digit} — place it here.`
+    );
   }
 
-  return `Cell ${cellName(cell.row, cell.col)} is the only empty cell in its house. ` +
-    `Place ${digit} here.`;
+  return (
+    `Cell ${cellName(cell.row, cell.col)} is the only empty cell in its house. ` +
+    `Place ${digit} here.`
+  );
 }
 
 /**
@@ -291,21 +332,27 @@ function explainHiddenSingle(
   if (selectCells.length !== 1) return hint.text;
 
   const cell = selectCells[0];
+  if (!cell) return hint.text;
   const digit = formatDigit(cell.digit);
 
   const area = hint.areas?.[0];
   let houseName: string;
   if (area) {
-    houseName = area.type === 'row' ? `Row ${area.index + 1}` :
-                area.type === 'column' ? `Column ${area.index + 1}` :
-                `Block ${area.index + 1}`;
+    houseName =
+      area.type === 'row'
+        ? `Row ${area.index + 1}`
+        : area.type === 'column'
+          ? `Column ${area.index + 1}`
+          : `Block ${area.index + 1}`;
   } else {
     houseName = `Block ${getBlock(cell.row, cell.col)}`;
   }
 
-  return `In ${houseName}, digit ${digit} can only go in one cell: ${cellName(cell.row, cell.col)}. ` +
+  return (
+    `In ${houseName}, digit ${digit} can only go in one cell: ${cellName(cell.row, cell.col)}. ` +
     `Even though this cell may have other candidates, ${digit} has no other place in ${houseName.toLowerCase()}. ` +
-    `Place ${digit} here.`;
+    `Place ${digit} here.`
+  );
 }
 
 /**
@@ -318,11 +365,14 @@ function explainNakedSingle(
   if (selectCells.length !== 1) return hint.text;
 
   const cell = selectCells[0];
+  if (!cell) return hint.text;
   const digit = formatDigit(cell.digit);
 
-  return `Cell ${cellName(cell.row, cell.col)} has only one candidate left: ${digit}. ` +
+  return (
+    `Cell ${cellName(cell.row, cell.col)} has only one candidate left: ${digit}. ` +
     `All other digits are eliminated by numbers already placed in its row, column, and block. ` +
-    `Place ${digit} here.`;
+    `Place ${digit} here.`
+  );
 }
 
 /**
@@ -335,7 +385,9 @@ function explainHiddenPair(
 ): string {
   if (highlightCells.length < 2) return hint.text;
 
-  const cells = highlightCells.slice(0, 2).map(c => ({ row: c.row, col: c.col }));
+  const cells = highlightCells
+    .slice(0, 2)
+    .map(c => ({ row: c.row, col: c.col }));
   const house = findCommonHouse(cells);
   const houseName = house?.name || 'their house';
 
@@ -376,7 +428,9 @@ function explainNakedPair(
 ): string {
   if (highlightCells.length < 2) return hint.text;
 
-  const cells = highlightCells.slice(0, 2).map(c => ({ row: c.row, col: c.col }));
+  const cells = highlightCells
+    .slice(0, 2)
+    .map(c => ({ row: c.row, col: c.col }));
   const house = findCommonHouse(cells);
   const houseName = house?.name || 'their shared house';
 
@@ -411,28 +465,40 @@ function explainLockedCandidates(
   if (highlightCells.length < 2) return hint.text;
 
   const cells = highlightCells.map(c => ({ row: c.row, col: c.col }));
-  const lockedDigit = formatDigit(getFirstValidDigit(highlightCells[0]?.digits));
+  const first = cells[0];
+  if (!first) return hint.text;
+  const lockedDigit = formatDigit(
+    getFirstValidDigit(highlightCells[0]?.digits)
+  );
 
-  const sameRow = cells.every(c => c.row === cells[0].row);
-  const sameCol = cells.every(c => c.col === cells[0].col);
-  const sameBlock = cells.every(c => getBlock(c.row, c.col) === getBlock(cells[0].row, cells[0].col));
+  const sameRow = cells.every(c => c.row === first.row);
+  const sameCol = cells.every(c => c.col === first.col);
+  const sameBlock = cells.every(
+    c => getBlock(c.row, c.col) === getBlock(first.row, first.col)
+  );
 
-  const block = getBlock(cells[0].row, cells[0].col);
+  const block = getBlock(first.row, first.col);
   const elimCells = removeCells.map(c => ({ row: c.row, col: c.col }));
-  const elimInSameBlock = elimCells.every(c => getBlock(c.row, c.col) === block);
+  const elimInSameBlock = elimCells.every(
+    c => getBlock(c.row, c.col) === block
+  );
 
   let explanation = '';
 
   if (sameBlock && (sameRow || sameCol)) {
     if (elimInSameBlock) {
-      const lineName = sameRow ? `Row ${cells[0].row + 1}` : `Column ${cells[0].col + 1}`;
+      const lineName = sameRow
+        ? `Row ${first.row + 1}`
+        : `Column ${first.col + 1}`;
       explanation = `In ${lineName}, digit ${lockedDigit} can only appear in Block ${block} (cells ${cellList(cells)}). `;
       explanation += `This "claims" ${lockedDigit} for this line within the block. `;
       if (elimCells.length > 0) {
         explanation += `Eliminate ${lockedDigit} from other cells in Block ${block}: ${cellList(elimCells)}.`;
       }
     } else {
-      const lineName = sameRow ? `Row ${cells[0].row + 1}` : `Column ${cells[0].col + 1}`;
+      const lineName = sameRow
+        ? `Row ${first.row + 1}`
+        : `Column ${first.col + 1}`;
       explanation = `In Block ${block}, digit ${lockedDigit} can only appear in ${lineName} (cells ${cellList(cells)}). `;
       explanation += `This "points" to ${lockedDigit} being restricted to this line. `;
       if (elimCells.length > 0) {
@@ -440,12 +506,12 @@ function explainLockedCandidates(
       }
     }
   } else if (sameRow) {
-    explanation = `Digit ${lockedDigit} is locked to Row ${cells[0].row + 1} in these cells: ${cellList(cells)}. `;
+    explanation = `Digit ${lockedDigit} is locked to Row ${first.row + 1} in these cells: ${cellList(cells)}. `;
     if (elimCells.length > 0) {
       explanation += `Eliminate ${lockedDigit} from ${cellList(elimCells)}.`;
     }
   } else if (sameCol) {
-    explanation = `Digit ${lockedDigit} is locked to Column ${cells[0].col + 1} in these cells: ${cellList(cells)}. `;
+    explanation = `Digit ${lockedDigit} is locked to Column ${first.col + 1} in these cells: ${cellList(cells)}. `;
     if (elimCells.length > 0) {
       explanation += `Eliminate ${lockedDigit} from ${cellList(elimCells)}.`;
     }
@@ -469,7 +535,9 @@ function explainHiddenTriple(
 ): string {
   if (highlightCells.length < 3) return hint.text;
 
-  const cells = highlightCells.slice(0, 3).map(c => ({ row: c.row, col: c.col }));
+  const cells = highlightCells
+    .slice(0, 3)
+    .map(c => ({ row: c.row, col: c.col }));
   const house = findCommonHouse(cells);
   const houseName = house?.name || 'their house';
 
@@ -485,8 +553,11 @@ function explainHiddenTriple(
 
   if (removeCells.length > 0) {
     const elimDigits = new Set<string>();
-    removeCells.filter(c => cells.some(hc => hc.row === c.row && hc.col === c.col))
-      .forEach(e => { for (const d of getValidDigits(e.digits)) elimDigits.add(d); });
+    removeCells
+      .filter(c => cells.some(hc => hc.row === c.row && hc.col === c.col))
+      .forEach(e => {
+        for (const d of getValidDigits(e.digits)) elimDigits.add(d);
+      });
     if (elimDigits.size > 0) {
       explanation += `eliminate the other candidates ${formatDigits(Array.from(elimDigits))} from these cells.`;
     } else {
@@ -509,7 +580,9 @@ function explainNakedTriple(
 ): string {
   if (highlightCells.length < 3) return hint.text;
 
-  const cells = highlightCells.slice(0, 3).map(c => ({ row: c.row, col: c.col }));
+  const cells = highlightCells
+    .slice(0, 3)
+    .map(c => ({ row: c.row, col: c.col }));
   const house = findCommonHouse(cells);
   const houseName = house?.name || 'their house';
 
@@ -524,7 +597,9 @@ function explainNakedTriple(
   explanation += `Since ${tripleDigits} must go in these cells, `;
 
   if (removeCells.length > 0) {
-    const elimCells = removeCells.filter(c => !cells.some(nc => nc.row === c.row && nc.col === c.col));
+    const elimCells = removeCells.filter(
+      c => !cells.some(nc => nc.row === c.row && nc.col === c.col)
+    );
     if (elimCells.length > 0) {
       explanation += `eliminate ${tripleDigits} from other cells in ${houseName.toLowerCase()}: ${cellList(elimCells.map(c => ({ row: c.row, col: c.col })))}.`;
     } else {
@@ -547,7 +622,9 @@ function explainHiddenQuad(
 ): string {
   if (highlightCells.length < 4) return hint.text;
 
-  const cells = highlightCells.slice(0, 4).map(c => ({ row: c.row, col: c.col }));
+  const cells = highlightCells
+    .slice(0, 4)
+    .map(c => ({ row: c.row, col: c.col }));
   const house = findCommonHouse(cells);
   const houseName = house?.name || 'their house';
 
@@ -562,8 +639,11 @@ function explainHiddenQuad(
 
   if (removeCells.length > 0) {
     const elimDigits = new Set<string>();
-    removeCells.filter(c => cells.some(hc => hc.row === c.row && hc.col === c.col))
-      .forEach(e => { for (const d of getValidDigits(e.digits)) elimDigits.add(d); });
+    removeCells
+      .filter(c => cells.some(hc => hc.row === c.row && hc.col === c.col))
+      .forEach(e => {
+        for (const d of getValidDigits(e.digits)) elimDigits.add(d);
+      });
     if (elimDigits.size > 0) {
       explanation += `Eliminate the other candidates ${formatDigits(Array.from(elimDigits))} from these cells.`;
     }
@@ -582,7 +662,9 @@ function explainNakedQuad(
 ): string {
   if (highlightCells.length < 4) return hint.text;
 
-  const cells = highlightCells.slice(0, 4).map(c => ({ row: c.row, col: c.col }));
+  const cells = highlightCells
+    .slice(0, 4)
+    .map(c => ({ row: c.row, col: c.col }));
   const house = findCommonHouse(cells);
   const houseName = house?.name || 'their house';
 
@@ -596,7 +678,9 @@ function explainNakedQuad(
   explanation += `This is a Naked Quad — 4 cells sharing only 4 digits. `;
 
   if (removeCells.length > 0) {
-    const elimCells = removeCells.filter(c => !cells.some(nc => nc.row === c.row && nc.col === c.col));
+    const elimCells = removeCells.filter(
+      c => !cells.some(nc => nc.row === c.row && nc.col === c.col)
+    );
     if (elimCells.length > 0) {
       explanation += `Eliminate ${quadDigits} from other cells in ${houseName.toLowerCase()}: ${cellList(elimCells.map(c => ({ row: c.row, col: c.col })))}.`;
     }
@@ -621,7 +705,8 @@ function explainXWing(
   const cols = [...new Set(cells.map(c => c.col))].sort((a, b) => a - b);
   const elimCells = removeCells.map(c => ({ row: c.row, col: c.col }));
 
-  const elimInCols = elimCells.length > 0 && elimCells.every(c => cols.includes(c.col));
+  const elimInCols =
+    elimCells.length > 0 && elimCells.every(c => cols.includes(c.col));
 
   let explanation = '';
   if (elimInCols || rows.length === 2) {
@@ -732,8 +817,13 @@ function explainXYWing(
 ): string {
   if (highlightCells.length < 3) return hint.text;
 
-  const cells = highlightCells.slice(0, 3).map(c => ({ row: c.row, col: c.col }));
-  const zDigit = removeCells.length > 0 ? formatDigit(getFirstValidDigit(removeCells[0]?.digits)) : '?';
+  const cells = highlightCells
+    .slice(0, 3)
+    .map(c => ({ row: c.row, col: c.col }));
+  const zDigit =
+    removeCells.length > 0
+      ? formatDigit(getFirstValidDigit(removeCells[0]?.digits))
+      : '?';
 
   let explanation = `XY-Wing pattern found. `;
   explanation += `Three cells form a "bent triple": ${cellList(cells)}. `;
@@ -759,8 +849,13 @@ function explainXYZWing(
 ): string {
   if (highlightCells.length < 3) return hint.text;
 
-  const cells = highlightCells.slice(0, 3).map(c => ({ row: c.row, col: c.col }));
-  const zDigit = removeCells.length > 0 ? formatDigit(getFirstValidDigit(removeCells[0]?.digits)) : '?';
+  const cells = highlightCells
+    .slice(0, 3)
+    .map(c => ({ row: c.row, col: c.col }));
+  const zDigit =
+    removeCells.length > 0
+      ? formatDigit(getFirstValidDigit(removeCells[0]?.digits))
+      : '?';
 
   let explanation = `XYZ-Wing pattern found. `;
   explanation += `The pivot cell has 3 candidates (XYZ), and two wing cells each have 2 candidates. `;
@@ -786,8 +881,13 @@ function explainWXYZWing(
 ): string {
   if (highlightCells.length < 4) return hint.text;
 
-  const cells = highlightCells.slice(0, 4).map(c => ({ row: c.row, col: c.col }));
-  const elimDigit = removeCells.length > 0 ? formatDigit(getFirstValidDigit(removeCells[0]?.digits)) : '?';
+  const cells = highlightCells
+    .slice(0, 4)
+    .map(c => ({ row: c.row, col: c.col }));
+  const elimDigit =
+    removeCells.length > 0
+      ? formatDigit(getFirstValidDigit(removeCells[0]?.digits))
+      : '?';
 
   const allDigits = new Set<string>();
   highlightCells.slice(0, 4).forEach(c => {
@@ -823,7 +923,10 @@ function explainFinnedXWing(
   const elimCells = removeCells.map(c => ({ row: c.row, col: c.col }));
 
   let explanation = `Finned X-Wing for digit ${digit}. `;
-  explanation += `An X-Wing pattern exists in Rows ${rows.map(r => r + 1).join(' and ')}, Columns ${cols.slice(0, 2).map(c => c + 1).join(' and ')}, `;
+  explanation += `An X-Wing pattern exists in Rows ${rows.map(r => r + 1).join(' and ')}, Columns ${cols
+    .slice(0, 2)
+    .map(c => c + 1)
+    .join(' and ')}, `;
   explanation += `but with an extra "fin" candidate that breaks the perfect rectangle. `;
   explanation += `The fin limits eliminations to cells that see both the pattern and the fin. `;
 
@@ -984,12 +1087,16 @@ function generateGenericExplanation(
   parts.push(hint.text);
 
   if (selectCells.length > 0) {
-    const placements = selectCells.map(c => `${formatDigit(c.digit)} in ${cellName(c.row, c.col)}`);
+    const placements = selectCells.map(
+      c => `${formatDigit(c.digit)} in ${cellName(c.row, c.col)}`
+    );
     parts.push(`Place: ${placements.join(', ')}.`);
   }
 
   if (removeCells.length > 0) {
-    const eliminations = removeCells.map(c => `${formatDigits(c.digits)} from ${cellName(c.row, c.col)}`);
+    const eliminations = removeCells.map(
+      c => `${formatDigits(c.digits)} from ${cellName(c.row, c.col)}`
+    );
     if (eliminations.length <= 5) {
       parts.push(`Eliminate: ${eliminations.join('; ')}.`);
     } else {
@@ -1010,6 +1117,7 @@ export function getHintActionSummary(hint: SolverHintStep): string {
   if (selectCells.length > 0) {
     if (selectCells.length === 1) {
       const c = selectCells[0];
+      if (!c) return 'Place a digit';
       return `Place ${formatDigit(c.digit)} in ${cellName(c.row, c.col)}`;
     }
     return `Place digits in ${selectCells.length} cells`;

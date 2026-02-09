@@ -9,12 +9,12 @@
 
 import { useCallback, useRef, useState } from 'react';
 import {
-  useSudojoPlayStart,
   useSudojoPlayFinish,
+  useSudojoPlayStart,
 } from '@sudobility/sudojo_client';
 import type {
-  GameStartRequest,
   GameFinishResponse,
+  GameStartRequest,
 } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 
