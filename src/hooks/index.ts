@@ -82,3 +82,19 @@ export type {
 // Game play hook (current game management)
 export { useGamePlay } from './useGamePlay';
 export type { UseGamePlayOptions, UseGamePlayResult } from './useGamePlay';
+
+// Board entry hook
+export { useBoardEntry } from './useBoardEntry';
+export type {
+  UseBoardEntryOptions,
+  UseBoardEntryReturn,
+  ValidatedPuzzle,
+} from './useBoardEntry';
+
+// Game session hook
+export { useGameSession } from './useGameSession';
+export type {
+  UseGameSessionOptions,
+  GameSessionResult,
+  GameFinishResult,
+} from './useGameSession';

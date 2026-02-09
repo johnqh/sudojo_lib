@@ -192,6 +192,16 @@ export {
   extractBodyContent,
 } from './utils';
 
+// Hint Explanation Utilities
+export {
+  generateDetailedExplanation,
+  getHintActionSummary,
+} from './utils';
+
+// Localized Hint Utilities
+export type { TranslateFunction } from './utils';
+export { getLocalizedHintText } from './utils';
+
 // Hooks
 export {
   // Levels
@@ -223,6 +233,10 @@ export {
   useHint,
   // Game play (current game management)
   useGamePlay,
+  // Board entry
+  useBoardEntry,
+  // Game session
+  useGameSession,
 } from './hooks';
 
 export type {
@@ -271,6 +285,14 @@ export type {
   // Game play (current game management)
   UseGamePlayOptions,
   UseGamePlayResult,
+  // Board entry
+  UseBoardEntryOptions,
+  UseBoardEntryReturn,
+  ValidatedPuzzle,
+  // Game session
+  UseGameSessionOptions,
+  GameSessionResult,
+  GameFinishResult,
 } from './hooks';
 
 // Stores

@@ -104,3 +104,13 @@ export {
   getTechniqueFromHelpFile,
   extractBodyContent,
 } from './technique';
+
+// Hint explanation utilities
+export {
+  generateDetailedExplanation,
+  getHintActionSummary,
+} from './hintExplanation';
+
+// Localized hint utilities
+export type { TranslateFunction } from './localizedHint';
+export { getLocalizedHintText } from './localizedHint';
