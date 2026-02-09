@@ -114,3 +114,6 @@ export {
 // Localized hint utilities
 export type { TranslateFunction } from './localizedHint';
 export { getLocalizedHintText } from './localizedHint';
+
+// Digit display utilities
+export { displayDigit } from './digitDisplay';

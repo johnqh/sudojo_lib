@@ -7,6 +7,11 @@
  */
 
 import type { SolverHintCell, SolverHintStep } from '@sudobility/sudojo_types';
+import type { DigitDisplay } from '../types/settings';
+import { displayDigit as mapDigitDisplay } from './digitDisplay';
+
+// Module-level display format, set by public entry points before calling internals.
+let _display: DigitDisplay = 'numeric';
 
 // Technique IDs (matching SudokuDefines.h and TechniqueId enum)
 const TECHNIQUE_IDS: Record<string, number> = {
@@ -83,9 +88,14 @@ function cellList(cells: Array<{ row: number; col: number }>): string {
 }
 
 // Format digit(s) - only valid Sudoku digits 1-9
+// Uses module-level _display set by public entry points.
 function formatDigit(d: string | number): string {
   const s = String(d);
-  return s >= '1' && s <= '9' ? s : '?';
+  if (s < '1' || s > '9') return '?';
+  if (_display !== 'numeric') {
+    return mapDigitDisplay(parseInt(s, 10), _display);
+  }
+  return s;
 }
 
 // Format multiple digits as set - only valid Sudoku digits 1-9
@@ -94,8 +104,8 @@ function formatDigits(digits: string | string[]): string {
     ? digits.filter(d => d >= '1' && d <= '9')
     : digits.split('').filter(d => d >= '1' && d <= '9');
   if (arr.length === 0) return '';
-  if (arr.length === 1) return arr[0] ?? '';
-  return `{${arr.sort().join(', ')}}`;
+  if (arr.length === 1) return formatDigit(arr[0] ?? '');
+  return `{${arr.sort().map(d => formatDigit(d)).join(', ')}}`;
 }
 
 // Extract first valid Sudoku digit (1-9) from a string
@@ -204,7 +214,8 @@ function getHighlightCells(
 /**
  * Generate detailed explanation for a hint
  */
-export function generateDetailedExplanation(hint: SolverHintStep): string {
+export function generateDetailedExplanation(hint: SolverHintStep, digitDisplay?: DigitDisplay): string {
+  _display = digitDisplay ?? 'numeric';
   const techniqueId = TECHNIQUE_IDS[hint.title];
   const selectCells = getSelectCells(hint);
   const removeCells = getRemoveCells(hint);
@@ -1110,7 +1121,8 @@ function generateGenericExplanation(
 /**
  * Get a summary of the hint action (what to do)
  */
-export function getHintActionSummary(hint: SolverHintStep): string {
+export function getHintActionSummary(hint: SolverHintStep, digitDisplay?: DigitDisplay): string {
+  _display = digitDisplay ?? 'numeric';
   const selectCells = getSelectCells(hint);
   const removeCells = getRemoveCells(hint);
 

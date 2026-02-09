@@ -199,6 +199,9 @@ export { generateDetailedExplanation, getHintActionSummary } from './utils';
 export type { TranslateFunction } from './utils';
 export { getLocalizedHintText } from './utils';
 
+// Digit Display Utilities
+export { displayDigit } from './utils';
+
 // Hooks
 export {
   // Levels

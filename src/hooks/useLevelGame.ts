@@ -79,6 +79,8 @@ export interface UseLevelGameOptions {
   token: string;
   /** Level number (1-12) to fetch game for */
   level: number;
+  /** Whether to fetch only symmetrical puzzles */
+  symmetrical?: boolean;
   /** Whether subscription is currently active */
   subscriptionActive?: boolean;
   /** Whether to enable the query */
@@ -135,6 +137,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     baseUrl,
     token,
     level,
+    symmetrical,
     subscriptionActive = false,
     enabled = true,
   } = options;
@@ -150,12 +153,13 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
   const queryParams = useMemo(
     () => ({
       level,
+      symmetrical: symmetrical || undefined,
       limit: undefined,
       offset: undefined,
       techniques: undefined,
       technique_bit: undefined,
     }),
-    [level]
+    [level, symmetrical]
   );
 
   const { data, isLoading, error, refetch } = useSudojoRandomBoard(

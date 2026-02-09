@@ -92,7 +92,9 @@ export function useGamePlay(
     useGamePlayStore.getState().clearGame(slot);
   }, [slot]);
 
-  // Debounced update — curries slot
+  // Throttled update — saves at most every autoSaveDelay ms.
+  // Unlike debounce, throttle ensures periodic saves even when called
+  // continuously (e.g. every second from the game timer).
   const updateProgress = useCallback(
     (
       inputString: string,
@@ -107,33 +109,41 @@ export function useGamePlay(
         elapsedTime,
       ];
 
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      // Only start a new timer if one isn't already running (throttle)
+      if (!timeoutRef.current) {
+        timeoutRef.current = setTimeout(() => {
+          if (pendingUpdate.current) {
+            useGamePlayStore
+              .getState()
+              .updateProgress(slot, ...pendingUpdate.current);
+            pendingUpdate.current = null;
+          }
+          timeoutRef.current = null;
+        }, autoSaveDelay);
       }
-
-      timeoutRef.current = setTimeout(() => {
-        if (pendingUpdate.current) {
-          useGamePlayStore
-            .getState()
-            .updateProgress(slot, ...pendingUpdate.current);
-          pendingUpdate.current = null;
-        }
-      }, autoSaveDelay);
     },
     [slot, autoSaveDelay]
   );
 
-  // Flush pending updates on unmount only
+  // Flush pending updates on unmount and beforeunload
   useEffect(() => {
-    return () => {
+    const flush = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
       if (pendingUpdate.current) {
         useGamePlayStore
           .getState()
           .updateProgress(slot, ...pendingUpdate.current);
+        pendingUpdate.current = null;
       }
+    };
+
+    window.addEventListener('beforeunload', flush);
+    return () => {
+      window.removeEventListener('beforeunload', flush);
+      flush();
     };
   }, [slot]);
 
