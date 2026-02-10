@@ -96,14 +96,7 @@ export {
 } from './subscription';
 
 // Technique utilities
-export {
-  getTechniqueIconUrl,
-  TECHNIQUE_TO_HELP_FILE,
-  HELP_FILE_TO_TECHNIQUE,
-  getHelpFileUrl,
-  getTechniqueFromHelpFile,
-  extractBodyContent,
-} from './technique';
+export { getTechniqueIconUrl } from './technique';
 
 // Hint explanation utilities
 export {
@@ -114,6 +107,18 @@ export {
 // Localized hint utilities
 export type { TranslateFunction } from './localizedHint';
 export { getLocalizedHintText } from './localizedHint';
+
+// i18n key utilities
+export {
+  getBeltKey,
+  getLocalizedBeltName,
+  getBeltLabelKey,
+  getLocalizedBeltLabel,
+  getLevelKey,
+  getLocalizedLevelTitle,
+  getTechniqueKey,
+  getLocalizedTechniqueName,
+} from './i18nKeys';
 
 // Digit display utilities
 export { displayDigit } from './digitDisplay';

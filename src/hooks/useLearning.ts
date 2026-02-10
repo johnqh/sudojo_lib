@@ -17,7 +17,7 @@ export interface UseLearningOptions {
   baseUrl: string;
   /** Access token for authentication (optional for public data) */
   token?: string;
-  /** Optional technique number (1-37) to filter learning materials */
+  /** Optional technique number to filter learning materials */
   technique?: number;
   /** Optional language code to filter learning materials */
   languageCode?: string;

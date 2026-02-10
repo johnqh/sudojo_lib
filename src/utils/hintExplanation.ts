@@ -7,75 +7,12 @@
  */
 
 import type { SolverHintCell, SolverHintStep } from '@sudobility/sudojo_types';
+import { TechniqueId } from '@sudobility/sudojo_types';
 import type { DigitDisplay } from '../types/settings';
 import { displayDigit as mapDigitDisplay } from './digitDisplay';
 
 // Module-level display format, set by public entry points before calling internals.
 let _display: DigitDisplay = 'numeric';
-
-// Technique IDs (matching SudokuDefines.h and TechniqueId enum)
-const TECHNIQUE_IDS: Record<string, number> = {
-  'Full House': 1,
-  'Hidden Single': 2,
-  'Naked Single': 3,
-  'Hidden Pair': 4,
-  'Naked Pair': 5,
-  'Locked Candidates': 6,
-  'Hidden Triple': 7,
-  'Naked Triple': 8,
-  'Hidden Quad': 9,
-  'Naked Quad': 10,
-  'X-Wing': 11,
-  Swordfish: 12,
-  Jellyfish: 13,
-  'XY-Wing': 14,
-  'Finned X-Wing': 15,
-  Squirmbag: 16,
-  'Finned Swordfish': 17,
-  'Finned Jellyfish': 18,
-  'XYZ-Wing': 19,
-  'WXYZ-Wing': 20,
-  'Almost Locked Sets': 21,
-  'Finned Squirmbag': 22,
-  'ALS Chain': 23,
-  Skyscraper: 24,
-  'Two-String Kite': 25,
-  'Empty Rectangle': 26,
-  'Simple Coloring': 27,
-  'W-Wing': 28,
-  'Remote Pairs': 29,
-  'Unique Rectangle Type 1': 30,
-  'Unique Rectangle Type 2': 31,
-  'BUG+1': 32,
-  'Sue de Coq': 33,
-  'ALS-XZ': 34,
-  'X-Cycles': 35,
-  'Forcing Chains': 36,
-  '3D Medusa': 37,
-  Crane: 38,
-  'Unique Rectangle Type 3': 39,
-  'Unique Rectangle Type 4': 40,
-  'Unique Rectangle Type 5': 41,
-  'X-Chain': 42,
-  'XY-Chain': 43,
-  'VWXYZ-Wing': 44,
-  'UVWXYZ-Wing': 45,
-  'TUVWXYZ-Wing': 46,
-  'STUVWXYZ-Wing': 47,
-  AIC: 48,
-  'Forcing Net': 49,
-  'Avoidable Rectangle': 50,
-  'Sashimi X-Wing': 51,
-  'Sashimi Swordfish': 52,
-  'Sashimi Jellyfish': 53,
-  'Hidden Unique Rectangle': 54,
-  Firework: 55,
-  'Death Blossom': 56,
-  'Franken X-Wing': 57,
-  'Franken Swordfish': 58,
-  'Franken Jellyfish': 59,
-  'Grouped X-Cycles': 60,
-};
 
 // Cell notation (R1C1 format)
 function cellName(row: number, col: number): string {
@@ -216,91 +153,93 @@ function getHighlightCells(
 
 /**
  * Generate detailed explanation for a hint
+ *
+ * @param hint - The hint step data
+ * @param techniqueId - The technique ID (from SolverHints.technique)
+ * @param digitDisplay - Optional digit display format
  */
 export function generateDetailedExplanation(
   hint: SolverHintStep,
+  techniqueId?: number,
   digitDisplay?: DigitDisplay
 ): string {
   _display = digitDisplay ?? 'numeric';
-  const techniqueId = TECHNIQUE_IDS[hint.title];
   const selectCells = getSelectCells(hint);
   const removeCells = getRemoveCells(hint);
   const highlightCells = getHighlightCells(hint);
 
-  // Technique-specific explanations (IDs match SudokuDefines.h)
   switch (techniqueId) {
-    case 1: // Full House
+    case TechniqueId.FULL_HOUSE:
       return explainFullHouse(hint, selectCells);
 
-    case 2: // Hidden Single
+    case TechniqueId.HIDDEN_SINGLE:
       return explainHiddenSingle(hint, selectCells);
 
-    case 3: // Naked Single
+    case TechniqueId.NAKED_SINGLE:
       return explainNakedSingle(hint, selectCells);
 
-    case 4: // Hidden Pair
+    case TechniqueId.HIDDEN_PAIR:
       return explainHiddenPair(hint, highlightCells, removeCells);
 
-    case 5: // Naked Pair
+    case TechniqueId.NAKED_PAIR:
       return explainNakedPair(hint, highlightCells, removeCells);
 
-    case 6: // Locked Candidates
+    case TechniqueId.LOCKED_CANDIDATES:
       return explainLockedCandidates(hint, highlightCells, removeCells);
 
-    case 7: // Hidden Triple
+    case TechniqueId.HIDDEN_TRIPLE:
       return explainHiddenTriple(hint, highlightCells, removeCells);
 
-    case 8: // Naked Triple
+    case TechniqueId.NAKED_TRIPLE:
       return explainNakedTriple(hint, highlightCells, removeCells);
 
-    case 9: // Hidden Quad
+    case TechniqueId.HIDDEN_QUAD:
       return explainHiddenQuad(hint, highlightCells, removeCells);
 
-    case 10: // Naked Quad
+    case TechniqueId.NAKED_QUAD:
       return explainNakedQuad(hint, highlightCells, removeCells);
 
-    case 11: // X-Wing
+    case TechniqueId.X_WING:
       return explainXWing(hint, highlightCells, removeCells);
 
-    case 12: // Swordfish
+    case TechniqueId.SWORDFISH:
       return explainSwordfish(hint, highlightCells, removeCells);
 
-    case 13: // Jellyfish
+    case TechniqueId.JELLYFISH:
       return explainJellyfish(hint, highlightCells, removeCells);
 
-    case 14: // XY-Wing
+    case TechniqueId.XY_WING:
       return explainXYWing(hint, highlightCells, removeCells);
 
-    case 15: // Finned X-Wing
+    case TechniqueId.FINNED_X_WING:
       return explainFinnedXWing(hint, highlightCells, removeCells);
 
-    case 16: // Squirmbag
+    case TechniqueId.SQUIRMBAG:
       return explainSquirmbag(hint, highlightCells, removeCells);
 
-    case 17: // Finned Swordfish
+    case TechniqueId.FINNED_SWORDFISH:
       return explainFinnedSwordfish(hint, highlightCells, removeCells);
 
-    case 18: // Finned Jellyfish
+    case TechniqueId.FINNED_JELLYFISH:
       return explainFinnedJellyfish(hint, highlightCells, removeCells);
 
-    case 19: // XYZ-Wing
+    case TechniqueId.XYZ_WING:
       return explainXYZWing(hint, highlightCells, removeCells);
 
-    case 20: // WXYZ-Wing
+    case TechniqueId.WXYZ_WING:
       return explainWXYZWing(hint, highlightCells, removeCells);
 
-    case 21: // Almost Locked Sets
+    case TechniqueId.ALMOST_LOCKED_SETS:
       return explainAlmostLockedSets(hint, highlightCells, removeCells);
 
-    case 22: // Finned Squirmbag
+    case TechniqueId.FINNED_SQUIRMBAG:
       return explainFinnedSquirmbag(hint, highlightCells, removeCells);
 
-    case 23: // ALS Chain
-    case 34: // ALS-XZ
+    case TechniqueId.ALS_CHAIN:
+    case TechniqueId.ALS_XZ:
       return explainALSChain(hint, highlightCells, removeCells);
 
     default:
-      // Generic explanation with action details
       return generateGenericExplanation(hint, selectCells, removeCells);
   }
 }

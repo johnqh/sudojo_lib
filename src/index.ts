@@ -183,14 +183,7 @@ export {
 } from './utils';
 
 // Technique Utilities
-export {
-  getTechniqueIconUrl,
-  TECHNIQUE_TO_HELP_FILE,
-  HELP_FILE_TO_TECHNIQUE,
-  getHelpFileUrl,
-  getTechniqueFromHelpFile,
-  extractBodyContent,
-} from './utils';
+export { getTechniqueIconUrl } from './utils';
 
 // Hint Explanation Utilities
 export { generateDetailedExplanation, getHintActionSummary } from './utils';
@@ -198,6 +191,18 @@ export { generateDetailedExplanation, getHintActionSummary } from './utils';
 // Localized Hint Utilities
 export type { TranslateFunction } from './utils';
 export { getLocalizedHintText } from './utils';
+
+// i18n Key Utilities
+export {
+  getBeltKey,
+  getLocalizedBeltName,
+  getBeltLabelKey,
+  getLocalizedBeltLabel,
+  getLevelKey,
+  getLocalizedLevelTitle,
+  getTechniqueKey,
+  getLocalizedTechniqueName,
+} from './utils';
 
 // Digit Display Utilities
 export { displayDigit } from './utils';

@@ -32,7 +32,7 @@ export interface UseTechniquesResult {
   error: Error | null;
   /** Refetch techniques */
   refetch: () => void;
-  /** Get technique by its number (1-37) */
+  /** Get technique by its number */
   getTechniqueByNumber: (technique: number) => Technique | undefined;
   /** Techniques sorted by technique number */
   sortedTechniques: Technique[];
@@ -136,7 +136,7 @@ export interface UseTechniqueOptions {
   baseUrl: string;
   /** Access token for authentication (optional for public data) */
   token?: string;
-  /** Technique number (1-37) to fetch */
+  /** Technique number to fetch */
   technique: number;
   /** Whether to enable the query */
   enabled?: boolean;
@@ -174,7 +174,7 @@ export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
     token,
     technique,
     {
-      enabled: enabled && technique >= 1 && technique <= 37,
+      enabled: enabled && technique >= 1,
     }
   );
 
