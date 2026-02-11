@@ -3,7 +3,7 @@
  * Handles auth and subscription status with automatic refresh
  */
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import type { Board } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import { useSudojoRandomBoard } from '@sudobility/sudojo_client';
@@ -138,14 +138,10 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     token,
     level,
     symmetrical,
-    subscriptionActive = false,
     enabled = true,
   } = options;
 
   const queryClient = useQueryClient();
-
-  // Track previous subscription state to detect changes
-  const prevSubscriptionRef = useRef(subscriptionActive);
 
   const queryParams = useMemo(
     () => ({
@@ -187,23 +183,6 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     }
     return null;
   }, [data]);
-
-  // Auto-refresh when subscription status changes from inactive to active
-  // (e.g., user was on subscription_required screen and just subscribed).
-  // Token changes are intentionally NOT watched — token refreshes (e.g.,
-  // from hint API 401 retries) must never cause a new random board fetch.
-  useEffect(() => {
-    const subscriptionChanged = !prevSubscriptionRef.current && subscriptionActive;
-
-    if (subscriptionChanged) {
-      queryClient.invalidateQueries({
-        queryKey: ['sudojo', 'boards', 'random'],
-      });
-      refetch();
-    }
-
-    prevSubscriptionRef.current = subscriptionActive;
-  }, [subscriptionActive, queryClient, refetch]);
 
   const nextPuzzle = useMemo(() => {
     return () => {
