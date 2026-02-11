@@ -144,11 +144,8 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
 
   const queryClient = useQueryClient();
 
-  // Track previous state to detect changes
-  const prevStateRef = useRef({
-    authToken: token,
-    subscriptionActive,
-  });
+  // Track previous subscription state to detect changes
+  const prevSubscriptionRef = useRef(subscriptionActive);
 
   const queryParams = useMemo(
     () => ({
@@ -191,22 +188,22 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     return null;
   }, [data]);
 
-  // Auto-refresh when auth token or subscription status changes
+  // Auto-refresh when subscription status changes from inactive to active
+  // (e.g., user was on subscription_required screen and just subscribed).
+  // Token changes are intentionally NOT watched — token refreshes (e.g.,
+  // from hint API 401 retries) must never cause a new random board fetch.
   useEffect(() => {
-    const prev = prevStateRef.current;
-    const authChanged = prev.authToken !== token;
-    const subscriptionChanged = !prev.subscriptionActive && subscriptionActive;
+    const subscriptionChanged = !prevSubscriptionRef.current && subscriptionActive;
 
-    if (authChanged || subscriptionChanged) {
+    if (subscriptionChanged) {
       queryClient.invalidateQueries({
         queryKey: ['sudojo', 'boards', 'random'],
       });
       refetch();
     }
 
-    // Update ref for next comparison
-    prevStateRef.current = { authToken: token, subscriptionActive };
-  }, [token, subscriptionActive, queryClient, refetch]);
+    prevSubscriptionRef.current = subscriptionActive;
+  }, [subscriptionActive, queryClient, refetch]);
 
   const nextPuzzle = useMemo(() => {
     return () => {
