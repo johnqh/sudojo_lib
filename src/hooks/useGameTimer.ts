@@ -6,11 +6,12 @@
  * should use their own interval to read from elapsedRef.
  */
 
+import type { RefObject } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseGameTimerResult {
   /** Ref holding the current elapsed seconds (does not trigger re-renders) */
-  elapsedRef: React.RefObject<number>;
+  elapsedRef: RefObject<number>;
   /** Get current elapsed seconds */
   getElapsedSeconds: () => number;
   /** Whether the timer is running */
