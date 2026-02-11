@@ -16,6 +16,10 @@ export interface CurrentGameMeta {
   levelId?: string;
   /** Level title for display */
   levelTitle?: string;
+  /** Board UUID for the puzzle */
+  boardUuid?: string;
+  /** Techniques bitset for the puzzle */
+  techniques?: number | null;
 }
 
 /** Current game state stored in Zustand */
@@ -34,6 +38,8 @@ export interface CurrentGame {
   pencilmarksString: string;
   /** Whether pencil mode was active */
   isPencilMode: boolean;
+  /** Whether auto pencilmarks were enabled */
+  autoPencilmarks: boolean;
   /** Elapsed time in seconds */
   elapsedTime: number;
   /** When the game was started (ISO string) */

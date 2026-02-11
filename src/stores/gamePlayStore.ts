@@ -40,6 +40,7 @@ export interface GamePlayState {
     inputString: string,
     pencilmarksString: string,
     isPencilMode: boolean,
+    autoPencilmarks: boolean,
     elapsedTime: number
   ) => void;
 
@@ -64,6 +65,7 @@ export const useGamePlayStore = create<GamePlayState>()(
             inputString: '0'.repeat(81),
             pencilmarksString: '',
             isPencilMode: false,
+            autoPencilmarks: false,
             elapsedTime: 0,
             startedAt: now,
             updatedAt: now,
@@ -76,6 +78,7 @@ export const useGamePlayStore = create<GamePlayState>()(
         inputString,
         pencilmarksString,
         isPencilMode,
+        autoPencilmarks,
         elapsedTime
       ) => {
         const field = slotField(slot);
@@ -88,6 +91,7 @@ export const useGamePlayStore = create<GamePlayState>()(
             inputString,
             pencilmarksString,
             isPencilMode,
+            autoPencilmarks,
             elapsedTime,
             updatedAt: new Date().toISOString(),
           },
@@ -98,7 +102,7 @@ export const useGamePlayStore = create<GamePlayState>()(
     }),
     {
       name: 'sudojo-current-game',
-      version: 1,
+      version: 2,
       migrate: (persistedState: unknown, version: number) => {
         if (version === 0) {
           // v0 had a single `currentGame` field — move it to the right slot
@@ -114,6 +118,25 @@ export const useGamePlayStore = create<GamePlayState>()(
             ...rest,
             dailyGame: isDailySource ? game : null,
             playGame: isDailySource ? null : game,
+          };
+        }
+        if (version === 1) {
+          const state = persistedState as {
+            dailyGame?: CurrentGame | null;
+            playGame?: CurrentGame | null;
+          };
+          const addAuto = (game: CurrentGame | null | undefined) =>
+            game
+              ? {
+                  ...game,
+                  autoPencilmarks:
+                    'autoPencilmarks' in game ? game.autoPencilmarks : false,
+                }
+              : (game ?? null);
+          return {
+            ...state,
+            dailyGame: addAuto(state.dailyGame),
+            playGame: addAuto(state.playGame),
           };
         }
         return persistedState;

@@ -13,7 +13,7 @@
  * startGame('daily', puzzle, solution, { dailyDate: '2024-01-15' });
  *
  * // Update progress (debounced)
- * updateProgress(inputString, pencilmarksString, isPencilMode, elapsedTime);
+ * updateProgress(inputString, pencilmarksString, isPencilMode, autoPencilmarks, elapsedTime);
  *
  * // Clear on completion
  * clearGame();
@@ -53,6 +53,7 @@ export interface UseGamePlayResult {
     inputString: string,
     pencilmarksString: string,
     isPencilMode: boolean,
+    autoPencilmarks: boolean,
     elapsedTime: number
   ) => void;
   /** Clear current game (call on completion) */
@@ -70,7 +71,9 @@ export function useGamePlay(
   );
 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingUpdate = useRef<[string, string, boolean, number] | null>(null);
+  const pendingUpdate = useRef<
+    [string, string, boolean, boolean, number] | null
+  >(null);
 
   // Curry slot into startGame so callers keep the same signature
   const startGame = useCallback(
@@ -100,12 +103,14 @@ export function useGamePlay(
       inputString: string,
       pencilmarksString: string,
       isPencilMode: boolean,
+      autoPencilmarks: boolean,
       elapsedTime: number
     ) => {
       pendingUpdate.current = [
         inputString,
         pencilmarksString,
         isPencilMode,
+        autoPencilmarks,
         elapsedTime,
       ];
 
