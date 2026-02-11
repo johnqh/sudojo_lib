@@ -1,18 +1,21 @@
 /**
  * Game Timer Hook - Track elapsed time during gameplay
+ *
+ * Uses a ref for elapsed seconds to avoid re-rendering the parent
+ * component every second. Components that need to display the time
+ * should use their own interval to read from elapsedRef.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { formatTime } from '../utils/time';
 
 export interface UseGameTimerResult {
-  /** Elapsed time in seconds */
-  elapsedSeconds: number;
-  /** Formatted time string (MM:SS or HH:MM:SS) */
-  formattedTime: string;
+  /** Ref holding the current elapsed seconds (does not trigger re-renders) */
+  elapsedRef: React.RefObject<number>;
+  /** Get current elapsed seconds */
+  getElapsedSeconds: () => number;
   /** Whether the timer is running */
   isRunning: boolean;
-  /** Start the timer */
+  /** Start the timer (resets to 0) */
   start: () => void;
   /** Pause the timer */
   pause: () => void;
@@ -34,15 +37,22 @@ export interface UseGameTimerOptions {
 /**
  * Hook for game timer functionality
  *
+ * Elapsed time is tracked in a ref to avoid causing re-renders every second.
+ * Use `elapsedRef` in display components that manage their own update interval.
+ * Use `getElapsedSeconds()` to read the current time in event handlers.
+ *
  * @param options - Timer options
  * @returns Timer state and controls
  *
  * @example
  * ```tsx
- * const { elapsedSeconds, formattedTime, isRunning, start, pause, stop } = useGameTimer({ autoStart: true });
+ * const { elapsedRef, getElapsedSeconds, isRunning, stop } = useGameTimer({ autoStart: true });
  *
- * // Display: <span>{formattedTime}</span>
- * // On completion: const finalTime = stop();
+ * // Pass to self-updating GameTimer component:
+ * <GameTimer elapsedRef={elapsedRef} isRunning={isRunning} />
+ *
+ * // Read time in handlers:
+ * const finalTime = stop();
  * ```
  */
 export function useGameTimer(
@@ -50,17 +60,17 @@ export function useGameTimer(
 ): UseGameTimerResult {
   const { autoStart = false, initialTime = 0 } = options;
 
-  const [elapsedSeconds, setElapsedSeconds] = useState(initialTime);
+  const elapsedRef = useRef(initialTime);
   const [isRunning, setIsRunning] = useState(autoStart);
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(
     null
   );
 
-  // Timer tick effect
+  // Timer tick effect — only updates the ref, no state change
   useEffect(() => {
     if (isRunning) {
       intervalRef.current = globalThis.setInterval(() => {
-        setElapsedSeconds(prev => prev + 1);
+        elapsedRef.current = (elapsedRef.current ?? 0) + 1;
       }, 1000);
     }
 
@@ -72,8 +82,10 @@ export function useGameTimer(
     };
   }, [isRunning]);
 
+  const getElapsedSeconds = useCallback(() => elapsedRef.current ?? 0, []);
+
   const start = useCallback(() => {
-    setElapsedSeconds(0);
+    elapsedRef.current = 0;
     setIsRunning(true);
   }, []);
 
@@ -87,17 +99,17 @@ export function useGameTimer(
 
   const reset = useCallback(() => {
     setIsRunning(false);
-    setElapsedSeconds(0);
+    elapsedRef.current = 0;
   }, []);
 
   const stop = useCallback(() => {
     setIsRunning(false);
-    return elapsedSeconds;
-  }, [elapsedSeconds]);
+    return elapsedRef.current ?? 0;
+  }, []);
 
   return {
-    elapsedSeconds,
-    formattedTime: formatTime(elapsedSeconds),
+    elapsedRef,
+    getElapsedSeconds,
     isRunning,
     start,
     pause,

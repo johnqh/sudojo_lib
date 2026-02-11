@@ -1071,6 +1071,7 @@ export function getHintActionSummary(
   digitDisplay?: DigitDisplay
 ): string {
   _display = digitDisplay ?? 'numeric';
+  if (!hint.cells) return '';
   const selectCells = getSelectCells(hint);
   const removeCells = getRemoveCells(hint);
 

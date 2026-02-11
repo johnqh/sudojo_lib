@@ -12,7 +12,7 @@ import { columnOf, rowOf, type SudokuCell } from '../types/sudoku';
 // =============================================================================
 
 export interface ScramblerProtocol {
-  scramble9(symmetrical: boolean): number[];
+  scramble9(symmetrical: boolean, seed?: number): number[];
 }
 
 // =============================================================================
@@ -44,8 +44,8 @@ class SeededRandom {
  * Scrambler implementation that matches the Kotlin version
  */
 export const Scrambler: ScramblerProtocol = {
-  scramble9(symmetrical: boolean): number[] {
-    const random = new SeededRandom(Math.floor(Date.now() / 1000));
+  scramble9(symmetrical: boolean, seed?: number): number[] {
+    const random = new SeededRandom(seed ?? Math.floor(Date.now() / 1000));
 
     const block0 = scramble3(symmetrical, random);
     const block1 = scramble3(symmetrical, random);
@@ -71,10 +71,21 @@ export const Scrambler: ScramblerProtocol = {
  * Non-scrambler that returns identity permutation
  */
 export const NonScrambler: ScramblerProtocol = {
-  scramble9(_symmetrical: boolean): number[] {
+  scramble9(_symmetrical: boolean, _seed?: number): number[] {
     return [0, 1, 2, 3, 4, 5, 6, 7, 8];
   },
 };
+
+function hashCells(cells: SudokuCell[]): number {
+  let hash = 2166136261;
+  for (const cell of cells) {
+    const given = cell.given ?? 0;
+    const solution = cell.solution ?? 0;
+    hash ^= (given * 11 + solution) & 0xff;
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  return hash >>> 0;
+}
 
 /**
  * Generates a permutation of [0, 1, 2]
@@ -118,9 +129,10 @@ export function scrambleBoard(
   cells: SudokuCell[],
   symmetrical: boolean = false
 ): ScrambleResult {
-  const rows = scrambler.scramble9(symmetrical);
-  const columns = scrambler.scramble9(symmetrical);
-  const numbers = scrambler.scramble9(symmetrical);
+  const seedBase = hashCells(cells);
+  const rows = scrambler.scramble9(symmetrical, seedBase);
+  const columns = scrambler.scramble9(symmetrical, seedBase + 1);
+  const numbers = scrambler.scramble9(symmetrical, seedBase + 2);
 
   // Create digit mapping (1-based to 1-based)
   const digitMapping = new Map<number, number>();
