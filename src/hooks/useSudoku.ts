@@ -187,7 +187,8 @@ function sudokuReducer(state: SudokuState, action: SudokuAction): SudokuState {
         ...state,
         play: {
           ...state.play,
-          selectedIndex: action.index,
+          selectedIndex:
+            state.play.selectedIndex === action.index ? null : action.index,
         },
       };
     }

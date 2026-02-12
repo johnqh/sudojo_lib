@@ -351,8 +351,8 @@ describe('useSudoku', () => {
 
       expect(result.current.board!.cells[2].pencilmarks).toContain(4);
 
+      // Cell 2 is still selected (pencil mode doesn't deselect), so just input again
       act(() => {
-        result.current.selectCell(2);
         result.current.input(4); // Remove 4
       });
 
@@ -371,13 +371,12 @@ describe('useSudoku', () => {
         result.current.input(1);
       });
 
+      // Cell 2 is still selected (pencil mode doesn't deselect)
       act(() => {
-        result.current.selectCell(2);
         result.current.input(4);
       });
 
       act(() => {
-        result.current.selectCell(2);
         result.current.input(7);
       });
 
@@ -419,15 +418,14 @@ describe('useSudoku', () => {
         result.current.input(1);
       });
 
+      // Cell 2 is still selected (pencil mode doesn't deselect)
       act(() => {
-        result.current.selectCell(2);
         result.current.input(4);
       });
 
       expect(result.current.board!.cells[2].pencilmarks.length).toBe(2);
 
       act(() => {
-        result.current.selectCell(2);
         result.current.erase();
       });
 
