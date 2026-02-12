@@ -145,9 +145,13 @@ export function useGamePlay(
       }
     };
 
-    window.addEventListener('beforeunload', flush);
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('beforeunload', flush);
+    }
     return () => {
-      window.removeEventListener('beforeunload', flush);
+      if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+        window.removeEventListener('beforeunload', flush);
+      }
       flush();
     };
   }, [slot]);
