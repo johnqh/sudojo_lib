@@ -7,7 +7,7 @@
  * - Tracking achievement results for display
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   useSudojoPlayFinish,
   useSudojoPlayStart,
@@ -60,6 +60,18 @@ export function useGameSession({
   const playStartMutation = useSudojoPlayStart(networkClient, baseUrl);
   const playFinishMutation = useSudojoPlayFinish(networkClient, baseUrl);
 
+  // Use refs for mutations so callbacks have stable identity
+  const playStartRef = useRef(playStartMutation);
+  const playFinishRef = useRef(playFinishMutation);
+  const tokenRef = useRef(token);
+  const userIdRef = useRef(userId);
+  useEffect(() => {
+    playStartRef.current = playStartMutation;
+    playFinishRef.current = playFinishMutation;
+    tokenRef.current = token;
+    userIdRef.current = userId;
+  });
+
   /**
    * Start a game session on the server
    * Only works if user is authenticated
@@ -67,14 +79,14 @@ export function useGameSession({
   const startSession = useCallback(
     async (data: GameStartRequest): Promise<GameSessionResult> => {
       // Skip if not authenticated
-      if (!userId || !token) {
+      if (!userIdRef.current || !tokenRef.current) {
         return { sessionStarted: false };
       }
 
       setIsStarting(true);
       try {
-        const response = await playStartMutation.mutateAsync({
-          token,
+        const response = await playStartRef.current.mutateAsync({
+          token: tokenRef.current,
           data,
         });
 
@@ -94,7 +106,7 @@ export function useGameSession({
         setIsStarting(false);
       }
     },
-    [userId, token, playStartMutation]
+    []
   );
 
   /**
@@ -104,7 +116,7 @@ export function useGameSession({
   const finishSession = useCallback(
     async (elapsedTime: number): Promise<GameFinishResult> => {
       // Skip if not authenticated
-      if (!userId || !token) {
+      if (!userIdRef.current || !tokenRef.current) {
         return {
           leveledUp: false,
           newBadges: [],
@@ -114,8 +126,8 @@ export function useGameSession({
 
       setIsFinishing(true);
       try {
-        const response = await playFinishMutation.mutateAsync({
-          token,
+        const response = await playFinishRef.current.mutateAsync({
+          token: tokenRef.current,
           data: { elapsedTime },
         });
 
@@ -146,7 +158,7 @@ export function useGameSession({
         setIsFinishing(false);
       }
     },
-    [userId, token, playFinishMutation]
+    []
   );
 
   /**
