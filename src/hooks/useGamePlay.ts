@@ -145,11 +145,17 @@ export function useGamePlay(
       }
     };
 
-    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.addEventListener === 'function'
+    ) {
       window.addEventListener('beforeunload', flush);
     }
     return () => {
-      if (typeof window !== 'undefined' && typeof window.removeEventListener === 'function') {
+      if (
+        typeof window !== 'undefined' &&
+        typeof window.removeEventListener === 'function'
+      ) {
         window.removeEventListener('beforeunload', flush);
       }
       flush();
