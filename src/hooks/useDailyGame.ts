@@ -6,8 +6,17 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Daily } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
-import { useSudojoTodayDaily } from '@sudobility/sudojo_client';
+import { useSudojoDailyByDate } from '@sudobility/sudojo_client';
 import type { GameFetchStatus } from './useLevelGame';
+
+/** Get today's date in local timezone as YYYY-MM-DD */
+function getLocalDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 /** Extended API response with action field from Sudojo API */
 interface SudojoApiResponse<T> {
@@ -133,12 +142,13 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
     subscriptionActive,
   });
 
-  // Note: useSudojoTodayDaily doesn't support enabled option directly
-  // We handle enabled by conditionally using the data
-  const { data, isLoading, error, refetch } = useSudojoTodayDaily(
+  const todayDate = useMemo(() => getLocalDateString(), []);
+
+  const { data, isLoading, error, refetch } = useSudojoDailyByDate(
     networkClient,
     baseUrl,
-    token
+    token,
+    todayDate
   );
 
   // Determine status based on response
@@ -160,8 +170,11 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
 
   const dailyDate = useMemo((): string | null => {
     if (daily?.date) {
-      const dateStr = new Date(daily.date).toISOString().split('T')[0];
-      return dateStr ?? null;
+      const d = new Date(daily.date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     return null;
   }, [daily]);
