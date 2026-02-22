@@ -94,6 +94,10 @@ This library requires these peer dependencies in the consuming app:
 - `@tanstack/react-query` - Data fetching
 - `react` - React 18+
 
+## Deprecation Notice
+
+**`useGame` is deprecated.** Use `useSudoku` instead. `useGame` uses a legacy 2D array board representation, while `useSudoku` uses a flat 81-cell array consistent with the rest of the codebase.
+
 ## Code Conventions
 
 - Export all public APIs from `src/index.ts`
