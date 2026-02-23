@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_lib",
-  "version": "0.0.91",
+  "version": "0.0.92",
   "description": "Business logic library for Sudojo app",
   "type": "module",
   "main": "dist/index.js",
@@ -46,10 +46,10 @@
   "author": "Sudobility team",
   "license": "BUSL-1.1",
   "devDependencies": {
-    "@sudobility/di": "^1.5.37",
-    "@sudobility/sudojo_client": "^0.0.78",
-    "@sudobility/sudojo_types": "^1.2.33",
-    "@sudobility/types": "^1.9.52",
+    "@sudobility/di": "^1.5.38",
+    "@sudobility/sudojo_client": "^0.0.79",
+    "@sudobility/sudojo_types": "^1.2.34",
+    "@sudobility/types": "^1.9.53",
     "@tanstack/react-query": "^5.90.11",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
@@ -72,10 +72,10 @@
     "zustand": "^5.0.9"
   },
   "peerDependencies": {
-    "@sudobility/di": "^1.5.37",
-    "@sudobility/sudojo_client": "^0.0.78",
-    "@sudobility/sudojo_types": "^1.2.33",
-    "@sudobility/types": "^1.9.52",
+    "@sudobility/di": "^1.5.38",
+    "@sudobility/sudojo_client": "^0.0.79",
+    "@sudobility/sudojo_types": "^1.2.34",
+    "@sudobility/types": "^1.9.53",
     "@tanstack/react-query": ">=5.0.0",
     "react": ">=18.0.0",
     "zustand": ">=5.0.0"
