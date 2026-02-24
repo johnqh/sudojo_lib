@@ -2,8 +2,6 @@
  * Tests for useSudoku hook
  */
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useSudoku } from './useSudoku';
