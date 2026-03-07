@@ -106,33 +106,6 @@ This library requires these peer dependencies in the consuming app:
 - Use types from `@sudobility/sudojo_types`
 - Keep hooks focused on single responsibility
 
-## Testing
-
-Tests use Vitest with happy-dom and @testing-library/react:
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useBoard } from '../hooks/useBoard';
-
-describe('useBoard', () => {
-  it('should initialize with puzzle', () => {
-    const { result } = renderHook(() => useBoard(puzzle));
-    expect(result.current.board).toBeDefined();
-  });
-
-  it('should update cell value', () => {
-    const { result } = renderHook(() => useBoard(puzzle));
-    act(() => {
-      result.current.setCell(0, 0, 5);
-    });
-    expect(result.current.board[0][0]).toBe(5);
-  });
-});
-```
-
-Coverage thresholds are enforced - aim for high coverage on business logic.
-
 ## Publishing
 
 Package is published to npm with restricted access:
