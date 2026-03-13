@@ -100,6 +100,20 @@ function puzzleStringToCells(puzzle: string): SudokuCell[] {
   });
 }
 
+/**
+ * Classify a validation error message into a translation key
+ */
+function classifyValidationError(errorMsg: string): string {
+  const lower = errorMsg.toLowerCase();
+  if (lower.includes('multiple') || lower.includes('not unique')) {
+    return 'enter.errors.multipleSolutions';
+  }
+  if (lower.includes('cannot solve') || lower.includes('no solution')) {
+    return 'enter.errors.noSolution';
+  }
+  return 'enter.errors.validationFailed';
+}
+
 export function useBoardEntry({
   networkClient,
   baseUrl,
@@ -117,7 +131,11 @@ export function useBoardEntry({
   const clueCount = useMemo(() => countClues(cells), [cells]);
 
   // Use the solver validate hook
-  const { data: validateData, isLoading: isValidating } = useSolverValidate(
+  const {
+    data: validateData,
+    error: validateError,
+    isLoading: isValidating,
+  } = useSolverValidate(
     networkClient,
     baseUrl,
     token,
@@ -130,6 +148,7 @@ export function useBoardEntry({
 
   // Track whether we've already processed this validation result
   const processedDataRef = useRef<typeof validateData | null>(null);
+  const processedErrorRef = useRef<typeof validateError | null>(null);
 
   // Handle validation result
   useEffect(() => {
@@ -149,17 +168,7 @@ export function useBoardEntry({
       setValidationError(null);
     } else if (validateData.error) {
       // Validation failed with specific error
-      const errorMsg = validateData.error.toLowerCase();
-      if (errorMsg.includes('multiple') || errorMsg.includes('not unique')) {
-        setValidationError('enter.errors.multipleSolutions');
-      } else if (
-        errorMsg.includes('cannot solve') ||
-        errorMsg.includes('no solution')
-      ) {
-        setValidationError('enter.errors.noSolution');
-      } else {
-        setValidationError('enter.errors.validationFailed');
-      }
+      setValidationError(classifyValidationError(validateData.error));
       setValidatedPuzzle(null);
     } else {
       // Unexpected response - success but no solution
@@ -169,6 +178,24 @@ export function useBoardEntry({
     }
     setShouldValidate(false);
   }, [validateData, shouldValidate, isValidating, puzzleString]);
+
+  // Handle network/query errors (e.g. 400 responses throw NetworkError)
+  useEffect(() => {
+    if (!shouldValidate || isValidating) return;
+    if (!validateError) return;
+    if (processedErrorRef.current === validateError) return;
+    processedErrorRef.current = validateError;
+
+    // Extract error message from NetworkError response body or message
+    const networkErr = validateError as {
+      response?: { error?: string };
+      message?: string;
+    };
+    const errorMsg = networkErr.response?.error ?? networkErr.message ?? '';
+    setValidationError(classifyValidationError(errorMsg));
+    setValidatedPuzzle(null);
+    setShouldValidate(false);
+  }, [validateError, shouldValidate, isValidating]);
 
   // Select a cell
   const selectCell = useCallback((index: number) => {
