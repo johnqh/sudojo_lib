@@ -10,7 +10,7 @@
  * const { currentGame, startGame, updateProgress, clearGame } = useGamePlay({ slot: 'daily' });
  *
  * // Start a new game
- * startGame('daily', puzzle, solution, { dailyDate: '2024-01-15' });
+ * startGame('daily', board, solution, { dailyDate: '2024-01-15' });
  *
  * // Update progress (debounced)
  * updateProgress(inputString, pencilmarksString, isPencilMode, autoPencilmarks, elapsedTime);
@@ -21,6 +21,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import type { SolverBoard } from '@sudobility/sudojo_types';
 import { useGamePlayStore } from '../stores/gamePlayStore';
 import type {
   CurrentGame,
@@ -44,7 +45,7 @@ export interface UseGamePlayResult {
   /** Start a new game */
   startGame: (
     source: GameSource,
-    puzzle: string,
+    board: SolverBoard,
     solution: string,
     meta?: CurrentGameMeta
   ) => void;
@@ -79,13 +80,13 @@ export function useGamePlay(
   const startGame = useCallback(
     (
       source: GameSource,
-      puzzle: string,
+      board: SolverBoard,
       solution: string,
       meta?: CurrentGameMeta
     ) => {
       useGamePlayStore
         .getState()
-        .startGame(slot, source, puzzle, solution, meta);
+        .startGame(slot, source, board, solution, meta);
     },
     [slot]
   );

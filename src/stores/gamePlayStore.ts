@@ -7,6 +7,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { SolverBoard } from '@sudobility/sudojo_types';
 import type {
   CurrentGame,
   CurrentGameMeta,
@@ -29,7 +30,7 @@ export interface GamePlayState {
   startGame: (
     slot: GameSlot,
     source: GameSource,
-    puzzle: string,
+    board: SolverBoard,
     solution: string,
     meta?: CurrentGameMeta
   ) => void;
@@ -54,18 +55,18 @@ export const useGamePlayStore = create<GamePlayState>()(
       dailyGame: null,
       playGame: null,
 
-      startGame: (slot, source, puzzle, solution, meta = {}) => {
+      startGame: (slot, source, board, solution, meta = {}) => {
         const now = new Date().toISOString();
         set({
           [slotField(slot)]: {
             source,
-            puzzle,
+            puzzle: board.original,
             solution,
             meta,
             inputString: '0'.repeat(81),
-            pencilmarksString: '',
+            pencilmarksString: board.pencilmark.numbers,
             isPencilMode: false,
-            autoPencilmarks: false,
+            autoPencilmarks: board.pencilmark.autopencil,
             elapsedTime: 0,
             startedAt: now,
             updatedAt: now,
