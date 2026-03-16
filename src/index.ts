@@ -627,7 +627,7 @@ export type {
   UseDailyGameOptions,
   /** Result type for useDailyGame hook (daily data, fetch status). */
   UseDailyGameResult,
-  /** Status of a game fetch: 'loading' | 'success' | 'auth_required' | 'subscription_required' | 'error'. */
+  /** Status of a game fetch: 'loading' | 'success' | 'auth_required' | 'subscription_required' | 'entitlement_required' | 'error'. */
   GameFetchStatus,
 
   // Timer hook types
@@ -700,3 +700,13 @@ export type {
 
 /** Default auth providers configuration (Google + Email, anonymous fallback). */
 export { DEFAULT_AUTH_PROVIDERS } from './config';
+
+// ============================================================================
+// Entitlement Utilities (re-exported from sudojo_types)
+// ============================================================================
+
+/** Parse a comma-delimited entitlement string into an array. */
+export { parseEntitlements } from '@sudobility/sudojo_types';
+
+/** Check if a user has the required entitlement for a level. */
+export { hasRequiredEntitlement } from '@sudobility/sudojo_types';

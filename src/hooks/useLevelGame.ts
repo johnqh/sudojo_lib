@@ -5,6 +5,7 @@
 
 import { useMemo } from 'react';
 import type { Board } from '@sudobility/sudojo_types';
+import { hasRequiredEntitlement } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 import { useSudojoRandomBoard } from '@sudobility/sudojo_client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ export type GameFetchStatus =
   | 'success'
   | 'auth_required'
   | 'subscription_required'
+  | 'entitlement_required'
   | 'error';
 
 /** Extended API response with action field from Sudojo API */
@@ -83,6 +85,10 @@ export interface UseLevelGameOptions {
   symmetrical?: boolean;
   /** Whether subscription is currently active */
   subscriptionActive?: boolean;
+  /** The user's active entitlement IDs (e.g., ['blue_belt'] or ['red_belt']) */
+  userEntitlements?: string[];
+  /** The entitlement field from the current level (e.g., "blue_belt,red_belt") */
+  levelEntitlement?: string | null;
   /** Whether to enable the query */
   enabled?: boolean;
 }
@@ -100,6 +106,8 @@ export interface UseLevelGameResult {
   refetch: () => void;
   /** Fetch a new random board for this level */
   nextPuzzle: () => void;
+  /** The entitlement string required for this level (for paywall display) */
+  requiredEntitlement: string | null;
 }
 
 /**
@@ -138,8 +146,16 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     token,
     level,
     symmetrical,
+    userEntitlements,
+    levelEntitlement,
     enabled = true,
   } = options;
+
+  // Client-side entitlement check before making API call
+  const entitlementDenied = useMemo(
+    () => !hasRequiredEntitlement(levelEntitlement, userEntitlements ?? []),
+    [levelEntitlement, userEntitlements]
+  );
 
   const queryClient = useQueryClient();
 
@@ -160,7 +176,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     baseUrl,
     token,
     queryParams,
-    { enabled: enabled && level >= 1 && level <= 12 }
+    { enabled: enabled && level >= 1 && level <= 12 && !entitlementDenied }
   );
 
   // Determine status based on response
@@ -168,6 +184,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
   const apiResponse = data as SudojoApiResponse<Board> | undefined;
 
   const status = useMemo((): GameFetchStatus => {
+    if (entitlementDenied) return 'entitlement_required';
     if (isLoading) return 'loading';
     if (isAuthRequired(apiResponse, error)) return 'auth_required';
     if (isSubscriptionRequired(apiResponse, error))
@@ -175,7 +192,7 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     if (error) return 'error';
     if (apiResponse?.success && apiResponse.data) return 'success';
     return 'loading';
-  }, [isLoading, apiResponse, error]);
+  }, [entitlementDenied, isLoading, apiResponse, error]);
 
   const board = useMemo(() => {
     if (data?.success && data.data) {
@@ -200,5 +217,6 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     error: error ?? null,
     refetch: () => refetch(),
     nextPuzzle,
+    requiredEntitlement: levelEntitlement ?? null,
   };
 }

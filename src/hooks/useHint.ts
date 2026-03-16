@@ -9,7 +9,7 @@
  * - getHint() fetches new hints OR advances to next step if hints exist
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   BaseResponse,
   HintAccessUserState,
@@ -19,10 +19,17 @@ import type {
   SolverHintStep,
 } from '@sudobility/sudojo_types';
 import {
+  hasRequiredEntitlement,
+  parseEntitlements,
+} from '@sudobility/sudojo_types';
+import {
   createSudojoClient,
   HintAccessDeniedError,
 } from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
+
+/** Number of hint steps shown for free before paywall */
+const FREE_HINT_STEP_LIMIT = 2;
 
 /** Board data returned when applying a hint */
 export interface HintBoardData {
@@ -86,6 +93,16 @@ export interface UseHintOptions {
    * Called before state is updated.
    */
   onHintReceived?: (data: HintReceivedData) => void;
+  /**
+   * The user's active entitlement IDs (e.g., ['blue_belt'] or ['red_belt']).
+   * Used for client-side hint step gating.
+   */
+  userEntitlements?: string[];
+  /**
+   * The entitlement field from the current level (e.g., "blue_belt,red_belt").
+   * If null/empty, the level is free and all hint steps are visible.
+   */
+  levelEntitlement?: string | null;
 }
 
 export interface UseHintResult {
@@ -121,6 +138,8 @@ export interface UseHintResult {
   canApply: boolean;
   /** Whether the current hint matches the techniqueFilter (if one was set) */
   isTargetTechnique: boolean;
+  /** Whether the hint has steps gated behind a paywall */
+  isHintGated: boolean;
 }
 
 /**
@@ -172,6 +191,8 @@ export function useHint({
   autoPencilmarks = false,
   techniqueFilter,
   onHintReceived,
+  userEntitlements,
+  levelEntitlement,
 }: UseHintOptions): UseHintResult {
   const [hints, setHints] = useState<SolverHintStep[] | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -186,15 +207,27 @@ export function useHint({
   // Store board data from API response for applying hint
   const boardDataRef = useRef<SolverBoard | null>(null);
 
+  // Store the hint level from the API response for entitlement checking
+  const hintLevelRef = useRef<number>(0);
+
+  // Client-side entitlement check: does the user have access to this hint's level?
+  const hasAccess = useMemo(
+    () => hasRequiredEntitlement(levelEntitlement, userEntitlements ?? []),
+    [levelEntitlement, userEntitlements]
+  );
+
   // Compute current hint step
   const hint = hints?.[stepIndex] ?? null;
   const totalSteps = hints?.length ?? 0;
-  const hasNextStep = stepIndex < totalSteps - 1;
+  const isHintGated = !hasAccess && totalSteps > FREE_HINT_STEP_LIMIT;
+  const maxVisibleStep = hasAccess ? totalSteps - 1 : FREE_HINT_STEP_LIMIT - 1;
+  const hasNextStep = stepIndex < Math.min(totalSteps - 1, maxVisibleStep);
   const hasPreviousStep = stepIndex > 0;
-  // Can apply when on last step and have board data
+  // Can apply when on last step (of all steps) and have board data and have access
   const canApply =
     hints !== null &&
     stepIndex === totalSteps - 1 &&
+    hasAccess &&
     boardDataRef.current !== null;
 
   // Helper to process a successful hint response
@@ -229,13 +262,38 @@ export function useHint({
         setIsTargetTechnique(isTarget);
         // Store board data for applying hint later
         boardDataRef.current = board;
+        // Store hint level for entitlement checking
+        hintLevelRef.current = response.data.hints.level;
         // Track the puzzle state we fetched for
         lastPuzzleStateRef.current = `${puzzle}|${userInput}|${pencilmarks ?? ''}`;
+
+        // If user doesn't have access and there are more than FREE_HINT_STEP_LIMIT steps,
+        // set access error so UI can show paywall after the free steps
+        if (!hasAccess && hintSteps.length > FREE_HINT_STEP_LIMIT) {
+          const required = parseEntitlements(levelEntitlement);
+          setAccessError({
+            hintLevel: response.data.hints.level,
+            requiredEntitlement: required[0] ?? 'blue_belt',
+            userState:
+              (userEntitlements?.length ?? 0) > 0
+                ? 'insufficient_tier'
+                : 'no_subscription',
+          });
+        }
+
         return true;
       }
       return false;
     },
-    [onHintReceived, puzzle, userInput, pencilmarks]
+    [
+      onHintReceived,
+      puzzle,
+      userInput,
+      pencilmarks,
+      hasAccess,
+      levelEntitlement,
+      userEntitlements,
+    ]
   );
 
   // Fetch hints from API
@@ -403,5 +461,6 @@ export function useHint({
     hasPreviousStep,
     canApply,
     isTargetTechnique,
+    isHintGated,
   };
 }
