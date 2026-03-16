@@ -98,3 +98,6 @@ export type {
   GameSessionResult,
   GameFinishResult,
 } from './useGameSession';
+
+// Entitlement access hooks
+export { useLevelEnabled, useTechniqueEnabled } from './useEntitlement';

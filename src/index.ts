@@ -571,6 +571,11 @@ export {
 
   /** Server-side game session management for gamification (points, badges). */
   useGameSession,
+
+  /** Check whether a level is enabled for the current user's entitlements. */
+  useLevelEnabled,
+  /** Check whether a technique is enabled for the current user's entitlements. */
+  useTechniqueEnabled,
 } from './hooks';
 
 export type {
