@@ -707,6 +707,15 @@ export type {
 export { DEFAULT_AUTH_PROVIDERS } from './config';
 
 // ============================================================================
+// Entitlement Context
+// ============================================================================
+
+/** Provider that supplies entitlements to useLevelEnabled / useTechniqueEnabled. */
+export { EntitlementProvider } from './context';
+/** React context for entitlements (for advanced use). */
+export { EntitlementContext, useEntitlementContext } from './context';
+
+// ============================================================================
 // Entitlement Utilities (re-exported from sudojo_types)
 // ============================================================================
 

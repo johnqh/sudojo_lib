@@ -2,14 +2,13 @@
  * Entitlement-based access hooks
  *
  * Check whether a level or technique is enabled for the current user's
- * subscription entitlements. Uses useEntitlements() from subscription_lib
- * internally — works cross-platform (web + React Native).
+ * subscription entitlements. Uses EntitlementContext provided by the app.
  */
 
 import { useMemo } from 'react';
 import type { Level, Technique } from '@sudobility/sudojo_types';
 import { hasRequiredEntitlement } from '@sudobility/sudojo_types';
-import { useEntitlements } from '@sudobility/subscription_lib';
+import { useEntitlementContext } from '../context';
 
 /**
  * Check whether a level is enabled for the current user.
@@ -27,7 +26,7 @@ import { useEntitlements } from '@sudobility/subscription_lib';
  * ```
  */
 export function useLevelEnabled(level: Level | null | undefined): boolean {
-  const { entitlements } = useEntitlements();
+  const entitlements = useEntitlementContext();
 
   return useMemo(
     () => hasRequiredEntitlement(level?.entitlement, entitlements),
@@ -55,7 +54,7 @@ export function useTechniqueEnabled(
   technique: Technique | null | undefined,
   levels: Level[]
 ): boolean {
-  const { entitlements } = useEntitlements();
+  const entitlements = useEntitlementContext();
 
   return useMemo(() => {
     if (!technique?.level) return true; // unassigned technique = free
