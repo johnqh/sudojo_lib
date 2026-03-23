@@ -105,3 +105,6 @@ export { useLevelEnabled, useTechniqueEnabled } from './useEntitlement';
 // Display level hook
 export { useDisplayLevel } from './useDisplayLevel';
 export type { UseDisplayLevelResult } from './useDisplayLevel';
+
+// Puzzle distribution hook
+export { usePuzzleDistribution } from './usePuzzleDistribution';

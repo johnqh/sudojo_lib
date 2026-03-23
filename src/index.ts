@@ -579,6 +579,9 @@ export {
 
   /** Convert internal user level (0-indexed) to display values (1-indexed + belt). */
   useDisplayLevel,
+
+  /** Compute cumulative puzzle distribution across entitlement tiers. */
+  usePuzzleDistribution,
 } from './hooks';
 
 export type {
