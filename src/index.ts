@@ -576,6 +576,9 @@ export {
   useLevelEnabled,
   /** Check whether a technique is enabled for the current user's entitlements. */
   useTechniqueEnabled,
+
+  /** Convert internal user level (0-indexed) to display values (1-indexed + belt). */
+  useDisplayLevel,
 } from './hooks';
 
 export type {
@@ -680,6 +683,10 @@ export type {
   GameSessionResult,
   /** Result of finishing a game session (leveledUp, badges, points). */
   GameFinishResult,
+
+  // Display level hook types
+  /** Result type for useDisplayLevel hook. */
+  UseDisplayLevelResult,
 } from './hooks';
 
 // ============================================================================

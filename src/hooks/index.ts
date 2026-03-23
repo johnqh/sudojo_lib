@@ -101,3 +101,7 @@ export type {
 
 // Entitlement access hooks
 export { useLevelEnabled, useTechniqueEnabled } from './useEntitlement';
+
+// Display level hook
+export { useDisplayLevel } from './useDisplayLevel';
+export type { UseDisplayLevelResult } from './useDisplayLevel';
