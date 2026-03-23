@@ -1,32 +1,34 @@
 import { useMemo } from 'react';
-import type { HintEntitlement, Level } from '@sudobility/sudojo_types';
-import { parseEntitlements } from '@sudobility/sudojo_types';
+import type { Level } from '@sudobility/sudojo_types';
+import { getSubscriptionOfferId } from '@sudobility/sudojo_types';
 
 /**
- * Compute the fraction of puzzles accessible at a given entitlement tier.
+ * Compute the fraction of puzzles accessible for a given offering.
  *
- * Sums the `percentage` field (decimal 0–1) of every level whose
- * entitlement requirement is met:
+ * Sums the `percentage` field (decimal 0–1) of matching levels based
+ * on their derived `subscriptionOfferId`:
  *
- * - No entitlement param — only free levels (no entitlement required)
- * - `'blue_belt'` — free levels + levels whose entitlement includes `blue_belt`
- * - `'red_belt'` — free levels + levels whose entitlement includes `red_belt`
+ * - No offerId — only free levels (no subscription required)
+ * - `'1_blue_belt'` — free levels + blue_belt levels
+ * - Anything else — returns 1.0 (all puzzles)
  */
 export function usePuzzleDistribution(
   levels: Level[],
-  entitlement?: HintEntitlement | null
+  offerId?: string | null
 ): number {
   return useMemo(() => {
+    if (offerId && offerId !== '1_blue_belt') return 1.0;
+
     let total = 0;
     for (const level of levels) {
-      const required = parseEntitlements(level.entitlement);
+      const levelOfferId = getSubscriptionOfferId(level.entitlement);
       if (
-        required.length === 0 ||
-        (entitlement && required.includes(entitlement))
+        !levelOfferId ||
+        (offerId === '1_blue_belt' && levelOfferId === '1_blue_belt')
       ) {
         total += level.percentage ?? 0;
       }
     }
     return total;
-  }, [levels, entitlement]);
+  }, [levels, offerId]);
 }
