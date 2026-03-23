@@ -6,7 +6,7 @@ import { getSubscriptionOfferId } from '@sudobility/sudojo_types';
  * Compute the fraction of puzzles accessible for a given offering.
  *
  * Sums the `percentage` field (decimal 0–1) of matching levels based
- * on their derived `subscriptionOfferId`:
+ * on their derived subscription offer ID:
  *
  * - No offerId — only free levels (no subscription required)
  * - `'1_blue_belt'` — free levels + blue_belt levels
