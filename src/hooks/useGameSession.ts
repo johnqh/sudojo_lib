@@ -100,7 +100,7 @@ export function useGameSession({
 
         return { sessionStarted: false };
       } catch (error) {
-        console.error('Failed to start game session:', error);
+        console.warn('Failed to start game session:', error);
         return { sessionStarted: false };
       } finally {
         setIsStarting(false);
