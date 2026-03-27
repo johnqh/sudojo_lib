@@ -100,7 +100,8 @@ export function useGameSession({
 
         return { sessionStarted: false };
       } catch (error) {
-        console.warn('Failed to start game session:', error);
+        // Non-critical: gamification tracking only
+        console.log('[game-session] Failed to start session:', error);
         return { sessionStarted: false };
       } finally {
         setIsStarting(false);
