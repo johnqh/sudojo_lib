@@ -513,6 +513,19 @@ export {
 } from './utils';
 
 // ============================================================================
+// Share URL Utilities
+// ============================================================================
+
+/** Types for share URL building and parsing. */
+export type { ShareUrlParams, ParsedShareParams } from './utils';
+
+/** Build a share URL from game state. */
+export { buildShareUrl } from './utils';
+
+/** Parse share URL query parameters into game state. */
+export { parseShareParams } from './utils';
+
+// ============================================================================
 // Hooks
 // ============================================================================
 

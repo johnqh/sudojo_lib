@@ -122,3 +122,7 @@ export {
 
 // Digit display utilities
 export { displayDigit } from './digitDisplay';
+
+// Share URL utilities
+export type { ShareUrlParams, ParsedShareParams } from './shareUrl';
+export { buildShareUrl, parseShareParams } from './shareUrl';
