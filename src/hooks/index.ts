@@ -112,3 +112,14 @@ export { usePuzzleDistribution } from './usePuzzleDistribution';
 // Hint step tracker (shared across web and RN game screens)
 export { useHintStepTracker } from './useHintStepTracker';
 export type { UseHintStepTrackerResult } from './useHintStepTracker';
+
+// Auto-hint orchestration (shared across web and RN SudokuGame)
+export { useAutoHint } from './useAutoHint';
+export type { UseAutoHintOptions } from './useAutoHint';
+
+// Progress reporting (shared across web and RN SudokuGame)
+export { useProgressReporter } from './useProgressReporter';
+export type {
+  UseProgressReporterOptions,
+  ProgressUpdateCallback,
+} from './useProgressReporter';

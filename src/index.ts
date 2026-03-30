@@ -601,6 +601,12 @@ export {
 
   /** Shared hint step tracker for game screens (ref + state). */
   useHintStepTracker,
+
+  /** Auto-hint orchestration for shared links/deep links. */
+  useAutoHint,
+
+  /** Progress reporting for game state persistence. */
+  useProgressReporter,
 } from './hooks';
 
 export type {
@@ -713,6 +719,16 @@ export type {
   // Hint step tracker types
   /** Result type for useHintStepTracker hook. */
   UseHintStepTrackerResult,
+
+  // Auto-hint types
+  /** Options for useAutoHint hook. */
+  UseAutoHintOptions,
+
+  // Progress reporter types
+  /** Options for useProgressReporter hook. */
+  UseProgressReporterOptions,
+  /** Callback type for progress updates. */
+  ProgressUpdateCallback,
 } from './hooks';
 
 // ============================================================================
