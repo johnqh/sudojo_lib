@@ -525,6 +525,9 @@ export { buildShareUrl } from './utils';
 /** Parse share URL query parameters into game state. */
 export { parseShareParams } from './utils';
 
+/** Derive web app URL from API base URL. */
+export { getWebUrl } from './utils';
+
 // ============================================================================
 // Hooks
 // ============================================================================
