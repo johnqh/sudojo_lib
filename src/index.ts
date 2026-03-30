@@ -598,6 +598,9 @@ export {
 
   /** Compute cumulative puzzle distribution across entitlement tiers. */
   usePuzzleDistribution,
+
+  /** Shared hint step tracker for game screens (ref + state). */
+  useHintStepTracker,
 } from './hooks';
 
 export type {
@@ -706,6 +709,10 @@ export type {
   // Display level hook types
   /** Result type for useDisplayLevel hook. */
   UseDisplayLevelResult,
+
+  // Hint step tracker types
+  /** Result type for useHintStepTracker hook. */
+  UseHintStepTrackerResult,
 } from './hooks';
 
 // ============================================================================

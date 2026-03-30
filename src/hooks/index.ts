@@ -108,3 +108,7 @@ export type { UseDisplayLevelResult } from './useDisplayLevel';
 
 // Puzzle distribution hook
 export { usePuzzleDistribution } from './usePuzzleDistribution';
+
+// Hint step tracker (shared across web and RN game screens)
+export { useHintStepTracker } from './useHintStepTracker';
+export type { UseHintStepTrackerResult } from './useHintStepTracker';
