@@ -126,3 +126,7 @@ export { displayDigit } from './digitDisplay';
 // Share URL utilities
 export type { ShareUrlParams, ParsedShareParams } from './shareUrl';
 export { buildShareUrl, parseShareParams, getWebUrl } from './shareUrl';
+
+// Auth utilities
+export type { AuthUser } from './auth';
+export { isAuthenticatedUser } from './auth';

@@ -529,6 +529,16 @@ export { parseShareParams } from './utils';
 export { getWebUrl } from './utils';
 
 // ============================================================================
+// Auth Utilities
+// ============================================================================
+
+/** Minimal user shape for auth checks. */
+export type { AuthUser } from './utils';
+
+/** Check if user-specific API calls should be enabled (non-anonymous, has token). */
+export { isAuthenticatedUser } from './utils';
+
+// ============================================================================
 // Hooks
 // ============================================================================
 
