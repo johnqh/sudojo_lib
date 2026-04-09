@@ -15,6 +15,7 @@ import {
 import type {
   GameFinishResponse,
   GameStartRequest,
+  LocalizedHint,
 } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
 
@@ -42,6 +43,10 @@ export interface GameFinishResult {
     badgeKey: string;
     title: string;
     description: string | null;
+    localization?: {
+      title?: LocalizedHint;
+      description?: LocalizedHint;
+    };
   }>;
   /** Total points earned */
   totalPointsEarned: number;

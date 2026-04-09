@@ -476,6 +476,8 @@ export type {
 export {
   /** Get localized text for a hint step using a translation function. */
   getLocalizedHintText,
+  /** Get localized title for a hint step using a translation function. */
+  getLocalizedHintTitle,
 } from './utils';
 
 // ============================================================================

@@ -106,7 +106,7 @@ export {
 
 // Localized hint utilities
 export type { TranslateFunction } from './localizedHint';
-export { getLocalizedHintText } from './localizedHint';
+export { getLocalizedHintText, getLocalizedHintTitle } from './localizedHint';
 
 // i18n key utilities
 export {
