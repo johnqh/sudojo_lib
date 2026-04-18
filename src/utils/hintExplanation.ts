@@ -10,6 +10,7 @@ import type { SolverHintCell, SolverHintStep } from '@sudobility/sudojo_types';
 import { TechniqueId } from '@sudobility/sudojo_types';
 import type { DigitDisplay } from '../types/settings';
 import { displayDigit as mapDigitDisplay } from './digitDisplay';
+import type { TranslateFunction } from './localizedHint';
 
 // Module-level display format, set by public entry points before calling internals.
 let _display: DigitDisplay = 'numeric';
@@ -1068,7 +1069,8 @@ function generateGenericExplanation(
  */
 export function getHintActionSummary(
   hint: SolverHintStep,
-  digitDisplay?: DigitDisplay
+  digitDisplay?: DigitDisplay,
+  t?: TranslateFunction
 ): string {
   _display = digitDisplay ?? 'numeric';
   if (!hint.cells) return '';
@@ -1078,10 +1080,28 @@ export function getHintActionSummary(
   if (selectCells.length > 0) {
     if (selectCells.length === 1) {
       const c = selectCells[0];
-      if (!c) return 'Place a digit';
-      return `Place ${formatDigit(c.digit)} in ${cellName(c.row, c.col)}`;
+      if (!c) {
+        return t
+          ? t('hintAction.placeDigit', { defaultValue: 'Place a digit' })
+          : 'Place a digit';
+      }
+      const digit = formatDigit(c.digit);
+      const cell = cellName(c.row, c.col);
+      return t
+        ? t('hintAction.placeInCell', {
+            defaultValue: `Place ${digit} in ${cell}`,
+            digit,
+            cell,
+          })
+        : `Place ${digit} in ${cell}`;
     }
-    return `Place digits in ${selectCells.length} cells`;
+    const count = String(selectCells.length);
+    return t
+      ? t('hintAction.placeInCells', {
+          defaultValue: `Place digits in ${count} cells`,
+          count,
+        })
+      : `Place digits in ${selectCells.length} cells`;
   }
 
   if (removeCells.length > 0) {
@@ -1089,8 +1109,21 @@ export function getHintActionSummary(
     removeCells.forEach(c => {
       for (const d of getValidDigits(c.digits)) allDigits.add(d);
     });
-    return `Eliminate ${formatDigits(Array.from(allDigits))} from ${removeCells.length} cell${removeCells.length > 1 ? 's' : ''}`;
+    const digits = formatDigits(Array.from(allDigits));
+    const count = String(removeCells.length);
+    const suffix = removeCells.length > 1 ? 's' : '';
+    return t
+      ? t('hintAction.eliminate', {
+          defaultValue: `Eliminate ${digits} from ${count} cell${suffix}`,
+          digits,
+          count,
+        })
+      : `Eliminate ${digits} from ${count} cell${suffix}`;
   }
 
-  return 'Apply the technique';
+  return t
+    ? t('hintAction.applyTechnique', {
+        defaultValue: 'Apply the technique',
+      })
+    : 'Apply the technique';
 }
