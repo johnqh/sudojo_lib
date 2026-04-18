@@ -79,8 +79,10 @@ export function useHintActionListener({
   stepIndex,
   totalSteps,
   hasNextStep,
+  canApply,
   getHint,
   nextStep,
+  applyHint,
   deselectCell,
 }: {
   hint: unknown | null;
@@ -88,8 +90,10 @@ export function useHintActionListener({
   stepIndex: number;
   totalSteps: number;
   hasNextStep: boolean;
+  canApply: boolean;
   getHint: () => void;
   nextStep: () => void;
+  applyHint: () => void;
   deselectCell: () => void;
 }): void {
   // Use refs to avoid stale closures in the listener
@@ -99,20 +103,29 @@ export function useHintActionListener({
     stepIndex,
     totalSteps,
     hasNextStep,
+    canApply,
   });
-  stateRef.current = { hint, hints, stepIndex, totalSteps, hasNextStep };
+  stateRef.current = {
+    hint,
+    hints,
+    stepIndex,
+    totalSteps,
+    hasNextStep,
+    canApply,
+  };
 
-  const actionsRef = useRef({ getHint, nextStep, deselectCell });
-  actionsRef.current = { getHint, nextStep, deselectCell };
+  const actionsRef = useRef({ getHint, nextStep, applyHint, deselectCell });
+  actionsRef.current = { getHint, nextStep, applyHint, deselectCell };
 
   // Track if we just triggered an action and need to report status after state updates
   const pendingStatusRef = useRef(false);
 
   const handleAction = useCallback(() => {
-    const { hint: h, hasNextStep: hasNext } = stateRef.current;
+    const { hint: h, hasNextStep: hasNext, canApply: canDo } = stateRef.current;
     const {
       getHint: doGetHint,
       nextStep: doNextStep,
+      applyHint: doApply,
       deselectCell: doDeselect,
     } = actionsRef.current;
 
@@ -123,8 +136,10 @@ export function useHintActionListener({
     } else if (hasNext) {
       // Hint showing, advance to next step
       doNextStep();
+    } else if (canDo) {
+      // On last step — apply the hint
+      doApply();
     }
-    // If on last step with no next, do nothing (already completed)
 
     pendingStatusRef.current = true;
   }, []);
