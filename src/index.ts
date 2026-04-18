@@ -478,6 +478,8 @@ export {
   getLocalizedHintText,
   /** Get localized title for a hint step using a translation function. */
   getLocalizedHintTitle,
+  /** Resolve a localized API field, falling back to the raw value. */
+  localizedField,
 } from './utils';
 
 // ============================================================================

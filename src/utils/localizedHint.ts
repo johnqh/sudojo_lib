@@ -94,6 +94,22 @@ export function getLocalizedHintText(
  * @param step - The hint step containing localization data
  * @param keyPrefix - Optional prefix to prepend to the string key
  */
+/**
+ * Resolve a localized field value using the API-provided string key.
+ * Falls back to the raw value if translation is missing.
+ *
+ * @param t - Translation function (e.g. from `useTranslation()`)
+ * @param loc - LocalizedHint from API response (stringKey + values)
+ * @param fallback - Raw value from API to use if translation is missing
+ */
+export function localizedField(
+  t: TranslateFunction,
+  loc: LocalizedHint | undefined,
+  fallback: string | null | undefined
+): string {
+  return resolveLocalization(t, loc, fallback ?? '');
+}
+
 export function getLocalizedHintTitle(
   t: TranslateFunction,
   step: SolverHintStep,
