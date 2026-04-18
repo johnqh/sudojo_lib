@@ -117,6 +117,15 @@ export type { UseHintStepTrackerResult } from './useHintStepTracker';
 export { useAutoHint } from './useAutoHint';
 export type { UseAutoHintOptions } from './useAutoHint';
 
+// Hint action events (external control of hint UI via deep links)
+export {
+  emitHintAction,
+  reportHintStatus,
+  onHintStatus,
+  useHintActionListener,
+} from './useHintAction';
+export type { HintActionStatus } from './useHintAction';
+
 // Progress reporting (shared across web and RN SudokuGame)
 export { useProgressReporter } from './useProgressReporter';
 export type {

@@ -619,6 +619,15 @@ export {
 
   /** Progress reporting for game state persistence. */
   useProgressReporter,
+
+  /** Emit a hint action event to the active SudokuGame. */
+  emitHintAction,
+  /** Report hint status back after processing an action. */
+  reportHintStatus,
+  /** Subscribe to hint status updates. */
+  onHintStatus,
+  /** Hook for SudokuGame to listen for external hint action events. */
+  useHintActionListener,
 } from './hooks';
 
 export type {
@@ -741,6 +750,10 @@ export type {
   UseProgressReporterOptions,
   /** Callback type for progress updates. */
   ProgressUpdateCallback,
+
+  // Hint action types
+  /** Status reported after a hint action is processed. */
+  HintActionStatus,
 } from './hooks';
 
 // ============================================================================
