@@ -98,6 +98,19 @@ export {
 // Technique utilities
 export { getTechniqueIconUrl } from './technique';
 
+// Technique walkthrough utilities
+export type { WalkthroughStep } from './techniqueWalkthrough';
+export {
+  parsePencilmarksString,
+  pencilmarksToString,
+  parsePracticeBoard,
+  cloneSudokuBoard,
+  applyHintStep,
+  parseHintData,
+  localizeHintStep,
+  buildWalkthroughSteps,
+} from './techniqueWalkthrough';
+
 // Hint explanation utilities
 export {
   generateDetailedExplanation,

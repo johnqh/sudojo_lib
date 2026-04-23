@@ -451,6 +451,33 @@ export {
 } from './utils';
 
 // ============================================================================
+// Technique Walkthrough Utilities
+// ============================================================================
+
+/** A single step in a technique walkthrough (board + hint overlay + text). */
+export type { WalkthroughStep } from './utils';
+
+/** Shared logic for building step-by-step technique examples from practice data. */
+export {
+  /** Parse a comma-delimited pencilmarks string into per-cell arrays. */
+  parsePencilmarksString,
+  /** Convert per-cell pencilmarks arrays back to a comma-delimited string. */
+  pencilmarksToString,
+  /** Parse board/pencilmarks/solution strings into a SudokuCell array. */
+  parsePracticeBoard,
+  /** Deep clone a SudokuCell array. */
+  cloneSudokuBoard,
+  /** Apply a hint step's actions to a board, returning new state. */
+  applyHintStep,
+  /** Parse a hint_data JSON string into SolverHints. */
+  parseHintData,
+  /** Resolve localised title and text for a single hint step. */
+  localizeHintStep,
+  /** Build the full walkthrough step array from board and hint data. */
+  buildWalkthroughSteps,
+} from './utils';
+
+// ============================================================================
 // Hint Explanation Utilities
 // ============================================================================
 
