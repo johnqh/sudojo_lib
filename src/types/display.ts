@@ -113,7 +113,7 @@ export interface HintStep {
 /**
  * Link type for chain visualization
  */
-export type LinkType = 'strong' | 'weak';
+export type LinkType = 'strong' | 'weak' | 'conflict';
 
 /**
  * A link between two cells in a chain (display format)

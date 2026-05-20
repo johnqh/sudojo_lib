@@ -584,7 +584,7 @@ export function convertSolverLink(link: {
   fromCol: number;
   toRow: number;
   toCol: number;
-  type: 'strong' | 'weak';
+  type: 'strong' | 'weak' | 'conflict';
   digit: number;
 }): DisplayLink {
   return {
