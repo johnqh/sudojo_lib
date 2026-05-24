@@ -126,6 +126,13 @@ export {
 } from './useHintAction';
 export type { HintActionStatus } from './useHintAction';
 
+// Admin practice operations
+export { useRegeneratePracticeHints } from './usePractices';
+export type {
+  UseRegeneratePracticeHintsOptions,
+  UseRegeneratePracticeHintsResult,
+} from './usePractices';
+
 // Progress reporting (shared across web and RN SudokuGame)
 export { useProgressReporter } from './useProgressReporter';
 export type {

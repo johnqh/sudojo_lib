@@ -649,6 +649,9 @@ export {
   /** Progress reporting for game state persistence. */
   useProgressReporter,
 
+  /** Regenerate hint_data for all stored practices via solver. */
+  useRegeneratePracticeHints,
+
   /** Emit a hint action event to the active SudokuGame. */
   emitHintAction,
   /** Report hint status back after processing an action. */
@@ -773,6 +776,10 @@ export type {
   // Auto-hint types
   /** Options for useAutoHint hook. */
   UseAutoHintOptions,
+
+  // Practice admin types
+  UseRegeneratePracticeHintsOptions,
+  UseRegeneratePracticeHintsResult,
 
   // Progress reporter types
   /** Options for useProgressReporter hook. */
