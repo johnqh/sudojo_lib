@@ -659,9 +659,7 @@ describe('presentBoard conflict hint textColor', () => {
         { index: 0, color: SudokuColor.ORANGE, fill: false }, // source cell (given=5)
         { index: 4, color: SudokuColor.BLUE, fill: false }, // target cell (given=7)
       ],
-      links: [
-        { fromIndex: 0, toIndex: 4, type: 'conflict', digit: 5 },
-      ],
+      links: [{ fromIndex: 0, toIndex: 4, type: 'conflict', digit: 5 }],
     };
 
     const states = presentBoard({
@@ -682,9 +680,7 @@ describe('presentBoard conflict hint textColor', () => {
     const hintStep: HintStep = {
       title: 'Normal hint',
       text: 'Some hint',
-      cells: [
-        { index: 1, color: SudokuColor.ORANGE, fill: false },
-      ],
+      cells: [{ index: 1, color: SudokuColor.ORANGE, fill: false }],
     };
 
     const states = presentBoard({
