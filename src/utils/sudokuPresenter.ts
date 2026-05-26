@@ -427,6 +427,10 @@ export function presentBoard(options: PresentBoardOptions): CellDisplayState[] {
     selectedDigitCells = null,
   } = options;
 
+  // Detect conflict hint (has links with type 'conflict')
+  const isConflictHint =
+    hintStep?.links?.some(link => link.type === 'conflict') ?? false;
+
   // Calculate hint cell map
   const cellHints = calculateCellHints(hintStep);
 
@@ -492,6 +496,17 @@ export function presentBoard(options: PresentBoardOptions): CellDisplayState[] {
       hintCell
     );
 
+    // In conflict hints, override textColor for orange source cells
+    let finalTextColor = textColor;
+    if (
+      isConflictHint &&
+      hintCell &&
+      !hintCell.fill &&
+      hintCell.color === SudokuColor.ORANGE
+    ) {
+      finalTextColor = ThemeColor.WARNING;
+    }
+
     // Get pencilmarks if no digit
     const pencilmarks = digit === null ? getPencilmarks(cell, hintCell) : [];
 
@@ -499,7 +514,7 @@ export function presentBoard(options: PresentBoardOptions): CellDisplayState[] {
       index,
       backgroundColor: finalBgColor,
       borderColor: finalBorderColor,
-      textColor,
+      textColor: finalTextColor,
       digit,
       isGiven,
       pencilmarks,

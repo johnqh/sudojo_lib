@@ -647,3 +647,54 @@ describe('convertSolverCellGroup', () => {
     expect(group.color).toBe(ThemeColor.SELECTED);
   });
 });
+
+describe('presentBoard conflict hint textColor', () => {
+  it('overrides textColor to WARNING for orange source cells in conflict hints', () => {
+    const cells = createTestCells();
+    // Index 0 has given=5, index 4 has given=7 in SAMPLE_PUZZLE
+    const hintStep: HintStep = {
+      title: 'Conflict',
+      text: 'Digit 5 cannot go here',
+      cells: [
+        { index: 0, color: SudokuColor.ORANGE, fill: false }, // source cell (given=5)
+        { index: 4, color: SudokuColor.BLUE, fill: false }, // target cell (given=7)
+      ],
+      links: [
+        { fromIndex: 0, toIndex: 4, type: 'conflict', digit: 5 },
+      ],
+    };
+
+    const states = presentBoard({
+      cells,
+      selectedIndex: null,
+      showErrors: false,
+      hintStep,
+    });
+
+    // Orange source cell should have WARNING textColor
+    expect(states[0].textColor).toBe(ThemeColor.WARNING);
+    // Blue target cell should keep normal textColor (LABEL for given)
+    expect(states[4].textColor).toBe(ThemeColor.LABEL);
+  });
+
+  it('does not override textColor when no conflict links', () => {
+    const cells = createTestCells();
+    const hintStep: HintStep = {
+      title: 'Normal hint',
+      text: 'Some hint',
+      cells: [
+        { index: 1, color: SudokuColor.ORANGE, fill: false },
+      ],
+    };
+
+    const states = presentBoard({
+      cells,
+      selectedIndex: null,
+      showErrors: false,
+      hintStep,
+    });
+
+    // Without conflict links, orange cell should keep LABEL textColor
+    expect(states[1].textColor).toBe(ThemeColor.LABEL);
+  });
+});
