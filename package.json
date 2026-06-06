@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_lib",
-  "version": "0.0.151",
+  "version": "0.0.152",
   "description": "Business logic library for Sudojo app",
   "type": "module",
   "main": "dist/index.js",
@@ -46,8 +46,8 @@
   "author": "Sudobility team",
   "license": "BUSL-1.1",
   "devDependencies": {
-    "@sudobility/di": "^1.5.56",
-    "@sudobility/sudojo_client": "^0.0.111",
+    "@sudobility/di": "^1.5.57",
+    "@sudobility/sudojo_client": "^0.0.112",
     "@sudobility/sudojo_types": "^1.2.56",
     "@sudobility/types": "^1.9.62",
     "@tanstack/react-query": "^5.90.11",
@@ -72,8 +72,8 @@
     "zustand": "^5.0.9"
   },
   "peerDependencies": {
-    "@sudobility/di": "^1.5.56",
-    "@sudobility/sudojo_client": "^0.0.111",
+    "@sudobility/di": "^1.5.57",
+    "@sudobility/sudojo_client": "^0.0.112",
     "@sudobility/sudojo_types": "^1.2.56",
     "@sudobility/types": "^1.9.62",
     "@tanstack/react-query": ">=5.0.0",
