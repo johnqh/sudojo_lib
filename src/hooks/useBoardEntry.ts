@@ -152,12 +152,6 @@ export function useBoardEntry({
 
   // Handle validation result
   useEffect(() => {
-    console.log('[useBoardEntry] validate effect:', {
-      shouldValidate,
-      isValidating,
-      hasData: !!validateData,
-      sameRef: processedDataRef.current === validateData,
-    });
     if (!shouldValidate || isValidating) return;
     if (!validateData) return;
     // Avoid re-processing the same result
@@ -166,7 +160,6 @@ export function useBoardEntry({
 
     // ValidateData has board.solution
     const solution = validateData.data?.board?.solution;
-    console.log('[useBoardEntry] processing result:', { success: validateData.success, hasSolution: !!solution });
     if (validateData.success && solution) {
       setValidatedPuzzle({
         puzzle: puzzleString,
