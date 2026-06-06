@@ -152,6 +152,12 @@ export function useBoardEntry({
 
   // Handle validation result
   useEffect(() => {
+    console.log('[useBoardEntry] validate effect:', {
+      shouldValidate,
+      isValidating,
+      hasData: !!validateData,
+      sameRef: processedDataRef.current === validateData,
+    });
     if (!shouldValidate || isValidating) return;
     if (!validateData) return;
     // Avoid re-processing the same result
@@ -160,6 +166,7 @@ export function useBoardEntry({
 
     // ValidateData has board.solution
     const solution = validateData.data?.board?.solution;
+    console.log('[useBoardEntry] processing result:', { success: validateData.success, hasSolution: !!solution });
     if (validateData.success && solution) {
       setValidatedPuzzle({
         puzzle: puzzleString,
@@ -259,6 +266,9 @@ export function useBoardEntry({
     // Clear previous state and trigger validation
     setValidationError(null);
     setValidatedPuzzle(null);
+    // Clear processed refs so cached React Query results are re-processed
+    processedDataRef.current = null;
+    processedErrorRef.current = null;
     setShouldValidate(true);
   }, [clueCount]);
 
@@ -269,6 +279,8 @@ export function useBoardEntry({
     setValidationError(null);
     setValidatedPuzzle(null);
     setShouldValidate(false);
+    processedDataRef.current = null;
+    processedErrorRef.current = null;
   }, []);
 
   // Set cells from puzzle string
@@ -278,6 +290,8 @@ export function useBoardEntry({
     setValidationError(null);
     setValidatedPuzzle(null);
     setShouldValidate(false);
+    processedDataRef.current = null;
+    processedErrorRef.current = null;
   }, []);
 
   return {
