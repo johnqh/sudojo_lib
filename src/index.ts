@@ -583,6 +583,8 @@ export {
   useTechnique,
   /** Fetch all solving techniques with grouping utilities. */
   useTechniques,
+  /** Fetch communities for a specific language with platform grouping. */
+  useCommunities,
   /** Fetch learning materials with filtering by technique and language. */
   useLearning,
   /** Fetch a single learning item by UUID. */
@@ -680,6 +682,10 @@ export type {
   UseTechniquesOptions,
   /** Result type for useTechniques hook. */
   UseTechniquesResult,
+  /** Options for useCommunities hook. */
+  UseCommunitiesOptions,
+  /** Result type for useCommunities hook. */
+  UseCommunitiesResult,
   /** Options for useLearningItem hook. */
   UseLearningItemOptions,
   /** Result type for useLearningItem hook. */

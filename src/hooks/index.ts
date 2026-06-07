@@ -20,6 +20,13 @@ export type {
   UseTechniquesResult,
 } from './useTechniques';
 
+// Communities hooks
+export { useCommunities } from './useCommunities';
+export type {
+  UseCommunitiesOptions,
+  UseCommunitiesResult,
+} from './useCommunities';
+
 // Learning hooks
 export { useLearning, useLearningItem } from './useLearning';
 export type {
