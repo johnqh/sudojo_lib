@@ -625,6 +625,9 @@ export {
   /** Current game management with Zustand store (daily/play slots). */
   useGamePlay,
 
+  /** Shared "Continue Last Sudoku" logic for web and RN. */
+  useContinueGame,
+
   /** Manual puzzle entry mode with solver validation. */
   useBoardEntry,
 
@@ -754,6 +757,14 @@ export type {
   UseGamePlayOptions,
   /** Result type for useGamePlay hook (current game, start, update, clear). */
   UseGamePlayResult,
+
+  // Continue game hook types
+  /** Options for useContinueGame hook. */
+  UseContinueGameOptions,
+  /** Result type for useContinueGame hook. */
+  UseContinueGameResult,
+  /** Navigation target returned by useContinueGame. */
+  ContinueTarget,
 
   // Board entry hook types
   /** Options for useBoardEntry hook (network client, URL, token). */

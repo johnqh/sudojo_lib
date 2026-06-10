@@ -90,6 +90,14 @@ export type {
 export { useGamePlay } from './useGamePlay';
 export type { UseGamePlayOptions, UseGamePlayResult } from './useGamePlay';
 
+// Continue game hook (shared "Continue Last Sudoku" logic)
+export { useContinueGame } from './useContinueGame';
+export type {
+  UseContinueGameOptions,
+  UseContinueGameResult,
+  ContinueTarget,
+} from './useContinueGame';
+
 // Board entry hook
 export { useBoardEntry } from './useBoardEntry';
 export type {
