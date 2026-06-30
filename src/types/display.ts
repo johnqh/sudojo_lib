@@ -182,6 +182,18 @@ export interface PencilmarkDisplayState {
 // =============================================================================
 // Color Palette
 // =============================================================================
+//
+// DESIGN-TOKEN EXCEPTION (intentional hardcoded color VALUES — do not migrate
+// to @sudobility/design className tokens):
+//
+// The hex literals below are an identity color palette: the source-of-truth iOS
+// UIColor system colors (light + dark). They are consumed as concrete CSS color
+// strings by `themeColorToCSS()`/`getColorPalette()` (see utils/sudokuPresenter)
+// to render the Sudoku board to a <canvas> (fillStyle/strokeStyle) and inline
+// styles. Semantic className tokens (`bg-card`, `text-foreground`, …) cannot be
+// assigned to a canvas context or used by this framework-agnostic business-logic
+// library, which emits no className/Tailwind utilities. These values are kept
+// verbatim, like a chart/category palette.
 
 /**
  * UI color palette - matches UIColorType from sudojo-web
