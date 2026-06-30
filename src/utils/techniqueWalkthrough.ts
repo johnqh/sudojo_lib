@@ -229,8 +229,7 @@ export function buildWalkthroughSteps(
 
   // Steps 1-N: Each hint step with overlay, then apply changes
   let currentBoard = cloneSudokuBoard(initialBoard);
-  for (let i = 0; i < hintData.steps.length; i++) {
-    const hintStep = hintData.steps[i]!;
+  for (const hintStep of hintData.steps) {
     const localized = localizeHintStep(
       hintStep,
       tHints,
