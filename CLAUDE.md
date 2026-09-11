@@ -9,281 +9,172 @@ This file provides context for AI assistants working on this codebase.
 
 ## Project Overview
 
-`@sudobility/sudojo_lib` is the business logic library shared between Sudojo web and mobile apps. It provides the game engine layer between raw API data (`sudojo_client`) and UI rendering (`sudojo_app`, `sudojo_app_rn`):
+`@sudobility/sudojo_lib` (v0.0.192) is the platform-neutral **business-logic layer** for the Sudojo
+apps: React hooks, a Zustand store, pure utilities and types that sit between the API client
+(`sudojo_client`) and the UIs (`sudojo_app` web, `sudojo_app_rn` mobile, `sudojo_ui`, `sudojo_extension`).
+No UI components, no styling. Much of it is a port of the Kotlin Android app
+("renderable" / `HintInteractor`), and comments reference the Kotlin originals.
 
-- **Game state hooks** — `useSudoku` (modern flat 81-cell), `useGame` (legacy 2D, deprecated)
-- **Game feature hooks** — hints, teaching mode, timer, persistence, auto-hint, board entry
-- **Data fetching hooks** — levels, daily games, techniques, learning, practices
-- **Orchestration hooks** — game play slots, game sessions (gamification)
-- **Utility functions** — board scrambling (Kotlin port), display rendering, progress tracking, share URLs
-- **Type definitions** — SudokuCell, SudokuBoard, SudokuPlay, display colors, game persistence
-- **Zustand store** — game play slots with versioned localStorage persistence
+Single package (no workspaces), TypeScript ESM, built with `tsc`, published to the **private** npm
+scope (`publishConfig.access: restricted`), license BUSL-1.1.
 
-Published to npm under `@sudobility` scope.
+## Commands
 
-## Runtime & Package Manager
+**Use Bun** (`bun.lock`). Do not use npm/yarn/pnpm.
 
-**This project uses Bun.** Do not use npm, yarn, or pnpm.
+| Command | What it does | Verified |
+|---|---|---|
+| `bun install` | Install deps (needs npm auth for private `@sudobility/*`) | — |
+| `bun run build` | `tsc -p tsconfig.build.json` → `dist/` | ✅ (to scratch outDir) |
+| `bun run typecheck` | `tsc --noEmit` (strict `tsconfig.json`, **excludes `*.test.ts`**) | ✅ clean |
+| `bun run lint` / `lint:fix` | ESLint 9 flat config incl. `prettier/prettier` rule | ✅ clean |
+| `bun run format` / `format:check` | Prettier on `src/**/*.ts` (not `.tsx`) | ✅ clean |
+| `bun run test:run` | Vitest once (happy-dom) | ✅ 13 files / 275 tests |
+| `bun run test` / `test:watch` | Vitest watch mode | — |
+| `bun run test:coverage` | Vitest + v8 coverage → `coverage/` (gitignored) | ✅ runs; ~38% lines, exit 0 |
+| `bun run check-all` | lint + typecheck + test:run | components ✅ |
+| `bun run quick-check` | lint + typecheck | components ✅ |
+| `bun run dev` = `build:watch` | `tsc --watch` (**uses `tsconfig.json`, not the build config**) | — |
+| `bun run clean` | `rm -rf dist` | — |
 
-```bash
-bun install            # Install dependencies
-bun run build          # Build to dist/ (tsc)
-bun run build:watch    # Build in watch mode
-bun run dev            # Alias for build:watch
-bun run clean          # Remove dist/
-bun run test           # Run tests (vitest, watch mode)
-bun run test:run       # Run tests once
-bun run test:watch     # Run tests in watch mode
-bun run test:coverage  # Run tests with coverage (70% threshold)
-bun run typecheck      # Type-check without emitting
-bun run typecheck:watch # Watch mode type checking
-bun run lint           # Run ESLint
-bun run lint:fix       # ESLint with auto-fix
-bun run format         # Format with Prettier
-bun run format:check   # Check formatting
-bun run check-all      # Run lint + typecheck + tests
-bun run quick-check    # Run lint + typecheck only
+Single test file / name filter: `bun run test:run src/utils/time.test.ts`, `bun run test:run -t "formatTime"`.
+
+## Architecture
+
+```
+sudojo_types (types, TechniqueId, entitlement helpers)
+      │
+sudojo_client (NetworkClient API calls + TanStack Query hooks)
+      │
+sudojo_lib  ◄── this repo: hooks · gamePlayStore · presenter/scrambler · i18n/hint text
+      │
+      ├── sudojo_ui (presentational components; peer dep on lib)
+      ├── sudojo_app (web, Vite)      ├── sudojo_app_rn (React Native, Metro)
+      └── sudojo_extension
+Hints/validation go lib → sudojo_client → sudojo_api → sudojo_solver (C++ engine)
 ```
 
-## Tech Stack
+Hook layers:
 
-- **Runtime**: Bun
-- **Language**: TypeScript (ESM, maximum strictness)
-- **Testing**: Vitest + @testing-library/react + happy-dom
-- **React**: React 18+ (peer dependency)
-- **State**: Zustand 5+ (peer dependency) for game slots
-- **Data Fetching**: @tanstack/react-query 5+ (peer dependency)
-- **DI**: @sudobility/di for dependency injection
+| Layer | Hooks |
+|---|---|
+| Data (TanStack Query via `sudojo_client`) | `useLevels`/`useLevel`, `useTechniques`/`useTechnique`, `useLearning`/`useLearningItem`, `useCommunities`, `useRegeneratePracticeHints` (admin) |
+| Game fetching (auth/subscription status) | `useLevelGame`, `useDailyGame` |
+| Game state | `useSudoku` ⭐ (flat 81 cells, reducer), `useBoardEntry` (manual entry + solver validate), `useGame` (legacy 2D, **deprecated**) |
+| Features | `useHint` ⭐, `useGameTeaching` (legacy), `useGameTimer`, `useGamePersistence`/`useAutoSave`, `useLocalStorage`, `useHintStepTracker`, `useAutoHint`, `useProgressReporter`, `useHintActionListener` |
+| Orchestration / app | `useGamePlay` (+ `useGamePlayStore`), `useContinueGame`, `useGameSession`, `useLevelEnabled`/`useTechniqueEnabled` (+ `EntitlementProvider`), `useDisplayLevel`, `usePuzzleDistribution` |
 
-## Project Structure
+## Repo Map
 
 ```
 src/
-├── index.ts                    # Main exports (~600 lines with JSDoc)
-├── hooks/                      # 26 React hooks (5-tier architecture)
-│   ├── useSudoku.ts           # ⭐ Primary game state (flat 81-cell, reducer pattern)
-│   ├── useGame.ts             # Legacy 2D array board (DEPRECATED)
-│   ├── useHint.ts             # Solver hint integration with step navigation
-│   ├── useGameTeaching.ts      # Step-by-step teaching mode
-│   ├── useLevels.ts           # Fetch difficulty levels
-│   ├── useLevelGame.ts        # Fetch board for level (with entitlement gating)
-│   ├── useDailyGame.ts        # Fetch daily puzzle
-│   ├── useGamePlay.ts         # Zustand-backed game slot management
-│   ├── useGameSession.ts      # Server gamification (start/finish/badges)
-│   ├── useGameTimer.ts        # Non-rendering elapsed time (useRef-based)
-│   ├── useGamePersistence.ts  # localStorage save/restore
-│   ├── useBoardEntry.ts       # Manual puzzle entry mode
-│   ├── useLocalStorage.ts     # Generic typed localStorage hook
-│   ├── useTechniques.ts       # Fetch solving techniques
-│   ├── useLearning.ts         # Fetch learning materials
-│   ├── useEntitlement.ts      # Subscription entitlements
-│   ├── useDisplayLevel.ts     # Display level conversion
-│   ├── usePuzzleDistribution.ts # Puzzle data aggregation
-│   ├── useAutoHint.ts         # Auto-hint orchestration
-│   ├── useHintAction.ts       # Hint action events
-│   ├── useHintStepTracker.ts  # Shared hint step tracking
-│   ├── useProgressReporter.ts # Progress reporting
-│   ├── usePractices.ts        # Practice puzzles
-│   └── [test files]
-├── stores/
-│   └── gamePlayStore.ts        # Zustand store with 2 game slots + localStorage
-├── types/
-│   ├── sudoku.ts              # SudokuCell, SudokuBoard, SudokuPlay (flat 81-cell)
-│   ├── game.ts                # Legacy GameBoard, GameState (2D array)
-│   ├── display.ts             # ThemeColor, SudokuColor, HintStep
-│   ├── progress.ts            # Completion tracking
-│   ├── settings.ts            # App settings
-│   ├── currentGame.ts         # Current game state
-│   ├── gamePersistence.ts     # Persistence types
-│   ├── subscription.ts        # Subscription types
-│   └── index.ts
-├── utils/
-│   ├── sudokuScrambler.ts     # Board scrambling (Kotlin port, seeded RNG)
-│   ├── sudokuPresenter.ts     # Display/rendering logic (Kotlin renderable port)
-│   ├── board.ts               # Board manipulation (legacy 2D)
-│   ├── validation.ts          # Game state validation (legacy 2D)
-│   ├── progress.ts            # Progress calculation, stats, streaks
-│   ├── technique.ts           # Technique utilities
-│   ├── techniqueWalkthrough.ts # Teaching walkthrough
-│   ├── hintExplanation.ts     # Hint explanations
-│   ├── localizedHint.ts       # i18n for hints
-│   ├── digitDisplay.ts        # Display modes (NUMERIC, KANJI, COLORS, EMOJIS)
-│   ├── subscription.ts        # Subscription/entitlement logic
-│   ├── shareUrl.ts            # Share link generation
-│   ├── time.ts                # Time formatting
-│   ├── theme.ts               # Theme utilities
-│   ├── auth.ts                # Auth utilities
-│   ├── i18nKeys.ts            # i18n key constants
-│   └── index.ts
-├── context/
-│   └── EntitlementContext.ts  # Entitlement provider/consumer
-├── config/
-│   └── authProviders.ts       # Auth provider configuration
-├── test/
-│   └── setup.ts               # Vitest + happy-dom mocks
-dist/                           # Built output (git-ignored)
+├── index.ts          # THE public API: every export, with JSDoc (853 lines). Barrels below feed it.
+├── hooks/            # 25 hook files (30 exported hooks) + index.ts barrel; tests: useGame, useSudoku
+├── stores/gamePlayStore.ts   # Zustand persist store, 2 slots (daily/play), key 'sudojo-current-game', v2
+├── types/            # sudoku.ts (flat 81-cell), game.ts (legacy 2D), display.ts (colors, hint display),
+│                     # currentGame, gamePersistence, progress, settings, subscription
+├── utils/            # sudokuScrambler, sudokuPresenter, techniqueWalkthrough, hintExplanation (~1.1k lines),
+│                     # localizedHint, i18nKeys, shareUrl, progress, subscription (RevenueCat), theme, time,
+│                     # digitDisplay, auth, technique (re-export), board + validation (legacy 2D)
+├── context/          # EntitlementContext.ts, EntitlementProvider.tsx (only .tsx file)
+├── config/           # authProviders.ts (DEFAULT_AUTH_PROVIDERS)
+└── test/setup.ts     # Vitest setup: mocks localStorage, window listeners, matchMedia
+docs/API.md           # Full export reference (hook options/results)
+plans/IMPROVEMENTS.md # Improvement backlog (historical; items marked DONE/SKIPPED)
+.github/workflows/ci-cd.yml  # Calls johnqh/workflows unified-cicd.yml (npm-access: restricted)
+dist/                 # Build output (gitignored); package `files` = dist/**/*
 ```
 
-## Hook Architecture (5 Tiers)
+## Public API (summary — full list in `docs/API.md`, source of truth `src/index.ts`)
 
-```
-Tier 1: Data Hooks (fetch from API via sudojo_client)
-├── useLevels / useLevel, useTechniques, useLearning
+| Area | Main exports |
+|---|---|
+| Game state | `useSudoku`, `SudokuCell`/`SudokuBoard`/`SudokuPlay`, `rowOf`/`columnOf`/`blockOf`/`cellIndex`, `getRelatedIndices`, `createEmptyBoard` |
+| Hints | `useHint`, `useAutoHint`, `useHintStepTracker`, `emitHintAction`/`onHintStatus`/`reportHintStatus`/`useHintActionListener`, `generateDetailedExplanation`, `getHintActionSummary`, `getLocalizedHintText`/`Title` |
+| Rendering | `presentBoard`, `calculateCellHints`, `themeColorToCSS`, `getColorPalette`, `convertSolverLink`/`CellGroup`, `sudokuColorToTheme`, `ThemeColor`, `SudokuColor`, `UIColorLight`/`Dark`, `displayDigit` |
+| Puzzles & strings | `Scrambler`, `NonScrambler`, `scrambleSudokuBoard`, `parsePuzzleString`, `cellsTo{Puzzle,State,Input,Pencilmarks}String` |
+| Walkthroughs | `buildWalkthroughSteps`, `parsePracticeBoard`, `parseHintData`, `applyHintStep`, `parsePencilmarksString` |
+| Persistence | `useGamePlay`, `useGamePlayStore`, `useContinueGame`, `useGamePersistence`, `useAutoSave`, `useLocalStorage`, `*_STORAGE_KEY` constants |
+| Server data | `useLevels`, `useTechniques`, `useLearning`, `useCommunities`, `useLevelGame`, `useDailyGame`, `useBoardEntry`, `useGameSession` |
+| Entitlements | `EntitlementProvider`, `useEntitlementContext`, `useLevelEnabled`, `useTechniqueEnabled`, `usePuzzleDistribution`, re-exported `parseEntitlements`/`hasRequiredEntitlement` |
+| Misc | progress stats/streaks, RevenueCat converters, theme, time, i18n keys, share URLs, `isAuthenticatedUser`, `DEFAULT_AUTH_PROVIDERS` |
+| Legacy (deprecated) | `useGame`, `useGameTeaching`, 2D `GameBoard` utils (`createGameBoard`, `validateGameState`, …) |
 
-Tier 2: Game Fetching Hooks (auth-aware puzzle loading)
-├── useLevelGame (with entitlement gating), useDailyGame, useBoardEntry
+## Key Behaviors
 
-Tier 3: Game State Hooks (manage board/input state)
-├── useSudoku ⭐ (modern: flat 81-cell, reducer pattern)
-├── useGame (legacy: 2D array, DEPRECATED)
+- **`useSudoku`** — reducer actions `LOAD_BOARD, SELECT_CELL, DESELECT_CELL, INPUT, TOGGLE_PENCIL_MODE,
+  SET_PENCIL_MODE, UNDO, ERASE, AUTO_PENCILMARKS, UPDATE_APP_SETTINGS, RESET, APPLY_HINT_DATA`; undo
+  stack of previous `SudokuPlay` states. `loadBoard(puzzle, solution, {scramble=true, symmetrical=false, source='LEVEL', levelUuid, boardUuid})`.
+- **Scrambling** — `scrambleSudokuBoard(scrambler, cells, symmetrical) → {cells, digitMapping, reverseDigitMapping}`;
+  deterministic (seed = hash of cells), permutes rows/columns/digits.
+- **`useHint`** — first `getHint()` calls `solverSolve`; later calls advance steps until the puzzle
+  state (`puzzle|userInput|pencilmarks`) changes. `techniqueFilter` → filtered request first, then an
+  unfiltered fallback (`isTargetTechnique` tells which). Without the level's entitlement only
+  `FREE_HINT_STEP_LIMIT = 2` steps are visible, `canApply` is false, and `accessError` is set; a server
+  402 (`HintAccessDeniedError`) also lands in `accessError`. `applyHint()` returns `{user, pencilmarks, autoPencilmarks}` and clears.
+- **`gamePlayStore`** — slots `dailyGame`/`playGame`; persist migrations v0 (single `currentGame`) → v1 (two slots) → v2 (adds `autoPencilmarks`).
 
-Tier 4: Feature Hooks (specific functionality)
-├── useHint, useGameTeaching, useGameTimer, useGamePersistence,
-│   useAutoHint, useHintAction, useLocalStorage
+## Conventions
 
-Tier 5: Orchestration Hooks (combine multiple hooks)
-├── useGamePlay (Zustand game slots), useGameSession (server gamification)
-```
+- Every public symbol is exported from `src/index.ts` with a JSDoc comment; hooks also go through `src/hooks/index.ts`, utils through `src/utils/index.ts`, types through `src/types/index.ts`. Unexported = private.
+- Hooks: `use*`; types `Use*Options` / `Use*Result` (`useBoardEntry` uses `UseBoardEntryReturn`).
+- API-calling hooks take `networkClient` + `baseUrl` (+ `token` where auth applies) as options; nothing is resolved from a DI container.
+- Board strings: 81 chars row-major, `0`/`.` empty; pencilmarks = 81 comma-separated digit groups; `index = row*9 + col`.
+- Pure/immutable utils; reducers for complex state; `useRef` for non-rendering state (`useGameTimer`).
+- Strict TS in `tsconfig.json` (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride`, …).
+- Prettier: single quotes, semicolons, trailing commas es5, width 80, 2 spaces, `arrowParens: avoid`. ESLint enforces `sort-imports` (members only), `prefer-template`, `object-shorthand`; unused vars allowed with `_` prefix.
+- Mark superseded APIs `@deprecated` instead of removing them (consumers pin exact versions, see below).
 
-## Key Patterns
+## Gotchas
 
-### useSudoku (Primary Game State)
+- **`loadBoard` scrambles by default.** Send `getScrambledPuzzle()` (what the user sees) to the solver, not `getOriginalPuzzle()`; input/pencilmark strings are in scrambled space.
+- **Two digit-display types:** `SudokuDisplay` (`'NUMERIC'|'KANJI'|'COLORS'|'EMOJIS'`, useSudoku settings) vs `DigitDisplay` (`'numeric'|'kanji'|'emojis'`, used by `displayDigit`, hint text, consumers). `displayDigit` has no colors mode.
+- **`0.0.x` caret ranges pin exactly:** `^0.0.150` accepts only `0.0.150`. Every `sudojo_client` release forces a lib bump (hence the `git log`), and consumers' `^0.0.192` accepts only this version.
+- **Module-level singletons:** `useGamePlayStore` and the hint-action event bus (`useHintAction.ts`) break silently if a consumer bundles two copies of the lib; keep it deduped.
+- Providers needed by consumers: `QueryClientProvider` (data/fetching hooks, `useLevelGame` calls `useQueryClient`); `EntitlementProvider` (else `useLevelEnabled` sees `[]` and paid levels are disabled).
+- `dist/` is **bundler-only**: emitted ESM has extensionless/directory imports, so `node -e "import('./dist/index.js')"` fails (`ERR_UNSUPPORTED_DIR_IMPORT`). Vite/Metro are fine.
+- `typecheck` skips test files (excluded in `tsconfig.json`); only ESLint parses them (`tsconfig.eslint.json`).
+- `tsconfig.build.json` relaxes `exactOptionalPropertyTypes`/`noUncheckedIndexedAccess` and sets `removeComments: false`; keep the latter or JSDoc disappears from `.d.ts`.
+- `src/test/setup.ts` replaces `localStorage` with `vi.fn()` stubs (nothing persists; `getItem` → `undefined`), so tests needing storage must stub their own.
+- `UIColorLight`/`UIColorDark` hex values are intentional (iOS system palette for `<canvas>` rendering); do not replace with design-system className tokens (see comment in `types/display.ts`).
+- `@sudobility/di` is a peer/dev dependency that `src/` never imports; it is required by `sudojo_client`.
 
-Flat 81-cell board with reducer pattern:
+## Known Issues (not fixed)
 
-```typescript
-interface SudokuCell {
-  index: number;              // 0-80
-  solution: number | null;    // 1-9
-  given: number | null;       // 1-9 (clues)
-  input: number | null;       // 1-9 (user entries)
-  pencilmarks: number[] | null;
-}
+- **No coverage threshold.** `test:coverage` (and the misleadingly named `test:coverage:threshold`) only report (~38% lines). The old 70% threshold was mis-nested under `global:` and never enforced, so it was removed (owner decision, 2026-09-10). `coverage.all` is a removed Vitest option and is ignored.
+- `useGamePersistence` ignores its `autoSave` and `debounceMs` options (only `puzzleKey` is read); use `useAutoSave`.
+- `useDailyGame` ignores `enabled` (destructured as `_enabled`), and computes today's date once per mount.
+- `src/test/setup.ts` is compiled into `dist/test/` and shipped (unreachable via `exports`, imports `vitest`).
+- No tests for most hooks (`useHint`, `useGamePlay`, `useGameSession`, …) or for `hintExplanation`, `localizedHint`, `shareUrl`, `techniqueWalkthrough`.
 
-interface SudokuBoard {
-  cells: SudokuCell[];        // Array of 81
-  completed: boolean;
-  entering: boolean;          // Manual entry mode?
-}
+## Cross-Repo Contracts
 
-interface SudokuPlay {
-  board: SudokuBoard;
-  settings: SudokuPlaySettings;
-  selectedIndex: number | null; // 0-80
-}
-```
+| Sibling | Relationship | Keep in sync |
+|---|---|---|
+| `@sudobility/sudojo_types` ^1.2.67 | peer + dev dep | `SolverHintStep`/`SolverBoard`/`SolverColor` shapes; `TechniqueId` (used by `hintExplanation`, 24 techniques explained, rest fall to default); `hasRequiredEntitlement`, `getBeltForLevel`, `getSubscriptionOfferId` |
+| `@sudobility/sudojo_client` ^0.0.150 | peer + dev dep | `solverSolve` options (`original,user,autoPencilmarks,pencilmarks,techniques`), `HintAccessDeniedError`, `useSudojo*` hooks, `useSolverValidate` |
+| `@sudobility/types` ^1.9.67, `@sudobility/di` ^1.5.65 | peer + dev deps | `NetworkClient`, `BaseResponse` |
+| `sudojo_solver` (via api) | indirect | `SudokuColor` string values must cover the solver's color names; hint areas/cells/links/groups consumed by `calculateCellHints`/`presentBoard` |
+| `sudojo_app` | dep `^0.0.192` (~32 files) | share URLs `/daily` and `/play/puzzle?level&original&user&autopencilmarks&pencilmarks&hint`; `getWebUrl` strips `api.` from the API host |
+| `sudojo_app_rn` | dep `^0.0.192` (~30 files) | shims `localStorage`, then swaps `useGamePlayStore.persist` storage to AsyncStorage, so the store must stay a default Zustand `persist` store named `sudojo-current-game` |
+| `sudojo_ui` | peer + dev `^0.0.192` | presenter/color exports, `displayDigit`, `formatTime`, `DigitDisplay` |
+| `sudojo_extension` | dep `^0.0.192` | `useSudoku`, `useHint`, `useBoardEntry`, `getHintActionSummary` |
+| app i18n files | runtime | keys `belts.N.name`, `belts.N.label`, `levels.N`, `techniques.<path>.title`, and hint `stringKey`s |
 
-**Reducer actions**: LOAD_BOARD, SELECT_CELL, DESELECT_CELL, INPUT, TOGGLE_PENCIL_MODE, UNDO, ERASE, AUTO_PENCILMARKS, APPLY_HINT_DATA, RESET.
+No sibling consumer imports `useGame`, `useGameTeaching`, or the legacy 2D board/validation utilities.
 
-Supports undo stack (stores previous SudokuPlay states).
+## Release Flow (document only; never run unprompted)
 
-### useHint (Solver Integration)
-
-Multi-step hint system with subscription gating:
-
-- First `getHint()` fetches from solver API
-- Subsequent calls advance to next step (or fetch new batch)
-- Manual navigation: `nextStep()`, `previousStep()`
-- `applyHint()` applies last step and clears state
-- FREE_HINT_STEP_LIMIT = 2 (free steps before paywall)
-- Checks userEntitlements vs levelEntitlement
-
-### Game Persistence (Zustand Store)
-
-`gamePlayStore` with two independent slots:
-
-```typescript
-interface GamePlayState {
-  dailyGame: CurrentGame | null;  // Daily puzzle slot
-  playGame: CurrentGame | null;   // Level/entered puzzle slot
-  startGame(slot, source, board, solution)
-  updateProgress(slot, inputString, pencilmarks, ...)
-  clearGame(slot)
-}
-```
-
-Versioned localStorage (v0 → v1 → v2 migrations). Tracks puzzle, solution, inputString, pencilmarks, isPencilMode, autoPencilmarks, elapsedTime, timestamps.
-
-### Board Scrambling (Kotlin Port)
-
-Deterministic scrambling using seeded RNG (hash of original cells):
-
-```typescript
-scrambleBoard(scrambler, cells, symmetrical) → {
-  scrambledCells, digitMapping, reverseDigitMapping
-}
-```
-
-Row, column, digit permutations with optional symmetrical mode.
-
-### Display Rendering (sudokuPresenter.ts)
-
-Color system ported from Kotlin:
-- `SudokuColor` enum: BLUE, GREEN, YELLOW, ORANGE, RED, etc.
-- Maps to `ThemeColor`: SELECTED, SUCCESS, WARNING, ERROR, etc.
-- Light/dark mode variants (UIColorLight, UIColorDark)
-- Hint processing: areas → cell highlights, links → chain visualization
-
-### Digit Display Modes
-
-Four display modes: NUMERIC (1-9), KANJI (一-九), COLORS, EMOJIS. Configured per user.
-
-## Deprecation Notice
-
-**`useGame` is deprecated.** Use `useSudoku` instead. `useGame` uses a legacy 2D array board representation, while `useSudoku` uses a flat 81-cell array consistent with the rest of the codebase.
-
-## Peer Dependencies
-
-Required in the consuming app:
-- `@sudobility/di` ^1.5.56 — Dependency injection
-- `@sudobility/sudojo_client` ^0.0.110 — API client hooks
-- `@sudobility/sudojo_types` ^1.2.55 — Type definitions
-- `@sudobility/types` ^1.9.62 — Common types
-- `@tanstack/react-query` >=5.0.0 — Data fetching
-- `react` >=18.0.0
-- `zustand` >=5.0.0 — State management
-
-## Code Conventions
-
-- Export all public APIs from `src/index.ts` with JSDoc comments
-- Hooks follow `use*` naming; types follow `Use*Options` / `Use*Result`
-- Utility functions are pure/immutable when possible
-- Reducer pattern for complex state (useSudoku, useGame)
-- `useRef` for non-rendering state (useGameTimer)
-- `useMemo`/`useCallback` for optimization
-- TypeScript maximum strictness (`exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitReturns`, `useUnknownInCatchVariables`)
-- Prettier: single quotes, semicolons, trailing commas (es5), 80 chars, 2 spaces, avoid arrow parens
-- Coverage thresholds: 70% (branches, functions, lines, statements)
-
-## Publishing
-
-```bash
-# Bump version in package.json
-bun run prepublishOnly  # Runs clean + build
-npm publish             # Publish to npm
-```
+1. Family release is driven from `sudojo_app/scripts/push_all.sh` (order: types → ocr → api → client → **lib** → ui → app → app_rn → extension → bot; 60 s wait after lib). Per repo it updates `@sudobility` deps, runs typecheck/lint/test/build, bumps the patch version, commits and pushes.
+2. Push to `main` runs `.github/workflows/ci-cd.yml` → `johnqh/workflows` `unified-cicd.yml`: typecheck, lint, test, build, then `npm publish --access restricted` if that `package.json` version is not yet on npm. `develop` and unmerged PRs never publish.
+3. `prepublishOnly` = `clean && build`. There is no manual publish step in normal use.
 
 ## Common Tasks
 
-### Add New Hook
-1. Create hook file in `src/hooks/`
-2. Identify which tier it belongs to (data, fetching, state, feature, orchestration)
-3. Compose with existing hooks where appropriate
-4. Export from `src/index.ts` with JSDoc
-5. Add comprehensive tests
-6. Run `bun run check-all`
-
-### Add New Utility Function
-1. Add function to appropriate file in `src/utils/`
-2. Keep functions pure when possible
-3. Export from `src/utils/index.ts` and `src/index.ts`
-4. Add unit tests
-
-### Debug Tests
-```bash
-bun run test:watch     # Interactive test mode
-bun run test:coverage  # See coverage gaps
-```
+- **Add a hook:** create `src/hooks/useX.ts` with `UseXOptions`/`UseXResult`, export from `src/hooks/index.ts`, then from `src/index.ts` with JSDoc; add a `renderHook` test (`@testing-library/react`); run `bun run check-all`; update `docs/API.md`.
+- **Add a util:** add to `src/utils/<area>.ts`, export via `src/utils/index.ts` and `src/index.ts`, add `*.test.ts` beside it.
+- **Change a public signature:** grep consumers first (`grep -rn "@sudobility/sudojo_lib" ../sudojo_{app,app_rn,ui,extension}/src`), prefer additive changes + `@deprecated`.
+- **Test against a local consumer:** `bun link` here, `bun link @sudobility/sudojo_lib` in the consumer (push_all strips these symlinks).
 
 ## Git Workflow
 

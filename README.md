@@ -8,30 +8,47 @@ Business logic library for Sudojo with React hooks for game state, hints, and Su
 bun add @sudobility/sudojo_lib
 ```
 
+Published with restricted access: installing requires npm credentials for the `@sudobility` scope.
+
 ## Usage
 
 ```typescript
-import { useBoard, useHint, useGameSession } from '@sudobility/sudojo_lib';
+import { useSudoku, useHint, presentBoard } from '@sudobility/sudojo_lib';
 
-function GameComponent() {
-  const { board, setCell, clearCell } = useBoard(initialPuzzle);
-  const { getHint, isLoading } = useHint();
-  const { startGame, endGame, timer } = useGameSession();
+function Game({ puzzle, solution, networkClient, baseUrl, token }) {
+  const sudoku = useSudoku();
+  useEffect(() => sudoku.loadBoard(puzzle, solution), [puzzle, solution]);
+
+  const { hint, getHint, applyHint, isLoading } = useHint({
+    networkClient,
+    baseUrl,
+    token,
+    puzzle: sudoku.getScrambledPuzzle(), // boards are scrambled by default
+    userInput: sudoku.getInputString(),
+    pencilmarks: sudoku.getPencilmarksString(),
+  });
+
+  const cells = presentBoard({
+    cells: sudoku.board?.cells ?? [],
+    selectedIndex: sudoku.selectedIndex,
+    showErrors: true,
+  });
 }
 ```
 
-```typescript
-import { validateBoard, isBoardComplete, getCandidates } from '@sudobility/sudojo_lib';
-
-const isValid = validateBoard(board);
-const candidates = getCandidates(board, row, col);
-```
+Server-data hooks (`useLevels`, `useDailyGame`, `useLevelGame`, `useBoardEntry`, `useGameSession`, ...)
+need a TanStack `QueryClientProvider`; `useLevelEnabled` / `useTechniqueEnabled` read from `EntitlementProvider`.
 
 ## API
 
-- **Hooks**: `useBoard`, `useHint`, `useGameSession`, `useSudoku` (replaces deprecated `useGame`)
-- **Utilities**: `validateBoard`, `isBoardComplete`, `getCandidates`, and more
-- Shared between web (`sudojo_app`) and mobile (`sudojo_app_rn`) apps
+- **Game state**: `useSudoku` (flat 81-cell board; replaces deprecated `useGame`), `useBoardEntry`
+- **Hints**: `useHint`, `useAutoHint`, hint text and technique walkthrough builders
+- **Persistence**: `useGamePlay` / `useGamePlayStore` (Zustand, daily + play slots), `useGameTimer`
+- **Server data**: `useLevels`, `useTechniques`, `useLearning`, `useCommunities`, `useDailyGame`, `useLevelGame`, `useGameSession`
+- **Utilities**: `presentBoard`, scrambler and puzzle-string helpers, progress, time, theme, i18n keys, share URLs
+
+Full reference: [docs/API.md](docs/API.md). Shared by `sudojo_app` (web), `sudojo_app_rn` (mobile),
+`sudojo_ui`, and `sudojo_extension`.
 
 ## Development
 
@@ -47,8 +64,9 @@ bun run check-all    # Lint + typecheck + tests
 ## Related Packages
 
 - `@sudobility/sudojo_client` -- API client hooks (peer dependency)
-- `@sudobility/sudojo_types` -- Type definitions
-- `sudojo_app` / `sudojo_app_rn` -- Consumer apps
+- `@sudobility/sudojo_types` -- Type definitions (peer dependency)
+- `@sudobility/types`, `@sudobility/di`, `@tanstack/react-query`, `react`, `zustand` -- other peer dependencies
+- `sudojo_app` / `sudojo_app_rn` / `sudojo_ui` / `sudojo_extension` -- Consumers
 
 ## License
 

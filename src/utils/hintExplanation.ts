@@ -102,7 +102,8 @@ function findCommonHouse(
 function getSelectCells(
   hint: SolverHintStep
 ): Array<{ row: number; col: number; digit: string }> {
-  return hint.cells
+  // cells is null on the solver's auto-pencilmark hint (technique 0)
+  return (hint.cells ?? [])
     .filter(
       (c: SolverHintCell) =>
         c.actions.select && c.actions.select !== '' && c.actions.select !== '0'
@@ -119,7 +120,8 @@ function getSelectCells(
 function getRemoveCells(
   hint: SolverHintStep
 ): Array<{ row: number; col: number; digits: string }> {
-  return hint.cells
+  // cells is null on the solver's auto-pencilmark hint (technique 0)
+  return (hint.cells ?? [])
     .filter(
       (c: SolverHintCell) =>
         c.actions.remove &&
@@ -138,7 +140,8 @@ function getRemoveCells(
 function getHighlightCells(
   hint: SolverHintStep
 ): Array<{ row: number; col: number; digits: string }> {
-  return hint.cells
+  // cells is null on the solver's auto-pencilmark hint (technique 0)
+  return (hint.cells ?? [])
     .filter(
       (c: SolverHintCell) =>
         c.actions.highlight &&
