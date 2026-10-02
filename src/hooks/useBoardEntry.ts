@@ -11,6 +11,10 @@ import type { NetworkClient } from '@sudobility/types';
 export interface ValidatedPuzzle {
   puzzle: string;
   solution: string;
+  /** Difficulty level (1-12) the solver rated the puzzle at */
+  level?: number;
+  /** Solver's difficulty_score for the puzzle, when the API sends it */
+  difficultyScore?: number | undefined;
 }
 
 export interface UseBoardEntryOptions {
@@ -28,7 +32,7 @@ export interface UseBoardEntryReturn {
   isValidating: boolean;
   /** Validation error message key */
   validationError: string | null;
-  /** Validated puzzle data (puzzle + solution) */
+  /** Validated puzzle data (puzzle + solution + solver rating) */
   validatedPuzzle: ValidatedPuzzle | null;
   /** Select a cell by index */
   selectCell: (index: number) => void;
@@ -159,11 +163,14 @@ export function useBoardEntry({
     processedDataRef.current = validateData;
 
     // ValidateData has board.solution
-    const solution = validateData.data?.board?.solution;
+    const board = validateData.data?.board;
+    const solution = board?.solution;
     if (validateData.success && solution) {
       setValidatedPuzzle({
         puzzle: puzzleString,
         solution,
+        level: board.level,
+        difficultyScore: board.difficulty_score,
       });
       setValidationError(null);
     } else if (validateData.error) {

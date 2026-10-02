@@ -20,6 +20,13 @@ export interface CurrentGameMeta {
   boardUuid?: string;
   /** Techniques bitset for the puzzle */
   techniques?: number | null;
+  /**
+   * For entered puzzles - the level (1-12) the solver rated it at when it
+   * was validated, so a resumed game can still show it without re-validating.
+   */
+  level?: number;
+  /** For entered puzzles - the solver's difficulty_score, kept for the same reason */
+  difficultyScore?: number;
 }
 
 /** Current game state stored in Zustand */
