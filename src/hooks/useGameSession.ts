@@ -18,11 +18,16 @@ import type {
   LocalizedHint,
 } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 
 export interface UseGameSessionOptions {
-  networkClient: NetworkClient;
-  baseUrl: string;
-  token: string | null;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
+  /** Access token; null = signed out (default: SudojoApiProvider) */
+  token?: string | null | undefined;
+  /** Signed-in (non-anonymous) user id, or null */
   userId: string | null;
 }
 
@@ -52,12 +57,12 @@ export interface GameFinishResult {
   totalPointsEarned: number;
 }
 
-export function useGameSession({
-  networkClient,
-  baseUrl,
-  token,
-  userId,
-}: UseGameSessionOptions) {
+export function useGameSession(options: UseGameSessionOptions) {
+  const { userId } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useGameSession'
+  );
   const [isStarting, setIsStarting] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const sessionIdRef = useRef<string | null>(null);

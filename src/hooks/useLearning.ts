@@ -5,16 +5,17 @@
 import { useMemo } from 'react';
 import type { Learning } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 import {
   useSudojoLearning,
   useSudojoLearningItem,
 } from '@sudobility/sudojo_client';
 
 export interface UseLearningOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for public data) */
   token?: string;
   /** Optional technique number to filter learning materials */
@@ -76,14 +77,11 @@ export interface UseLearningResult {
  * ```
  */
 export function useLearning(options: UseLearningOptions): UseLearningResult {
-  const {
-    networkClient,
-    baseUrl,
-    token = '',
-    technique,
-    languageCode,
-    enabled = true,
-  } = options;
+  const { technique, languageCode, enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useLearning'
+  );
 
   const queryParams = useMemo(() => {
     // Only return params if at least one filter is provided
@@ -159,10 +157,10 @@ export function useLearning(options: UseLearningOptions): UseLearningResult {
 }
 
 export interface UseLearningItemOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for public data) */
   token?: string;
   /** Learning item UUID to fetch */
@@ -191,13 +189,11 @@ export interface UseLearningItemResult {
 export function useLearningItem(
   options: UseLearningItemOptions
 ): UseLearningItemResult {
-  const {
-    networkClient,
-    baseUrl,
-    token = '',
-    learningUuid,
-    enabled = true,
-  } = options;
+  const { learningUuid, enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useLearningItem'
+  );
 
   const { data, isLoading, error, refetch } = useSudojoLearningItem(
     networkClient,

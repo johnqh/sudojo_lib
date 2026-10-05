@@ -6,78 +6,22 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Daily } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 import { useSudojoDailyByDate } from '@sudobility/sudojo_client';
-import type { GameFetchStatus } from './useLevelGame';
-
-/** Get today's date in local timezone as YYYY-MM-DD */
-function getLocalDateString(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-/** Extended API response with action field from Sudojo API */
-interface SudojoApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string | null | undefined;
-  message?: string;
-  action?: {
-    type: string;
-    options?: string[];
-  };
-}
-
-/** Check if response indicates auth is required */
-function isAuthRequired(
-  response: SudojoApiResponse<unknown> | undefined,
-  error: unknown
-): boolean {
-  if (
-    response?.success === false &&
-    response.action?.type === 'auth_required'
-  ) {
-    return true;
-  }
-  if (error && typeof error === 'object') {
-    const err = error as { message?: string };
-    if (err.message?.includes('Account required')) return true;
-  }
-  return false;
-}
-
-/** Check if response indicates subscription is required */
-function isSubscriptionRequired(
-  response: SudojoApiResponse<unknown> | undefined,
-  error: unknown
-): boolean {
-  if (
-    response?.success === false &&
-    response.action?.type === 'subscription_required'
-  ) {
-    return true;
-  }
-  if (error && typeof error === 'object') {
-    const err = error as { message?: string };
-    if (
-      err.message?.includes('Daily limit reached') ||
-      err.message?.includes('subscription')
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
+import { getUtcDateString, normalizeDailyDate } from '../utils/date';
+import {
+  type GameFetchResponse,
+  type GameFetchStatus,
+  getGameFetchStatus,
+} from '../utils/gameFetchStatus';
 
 export interface UseDailyGameOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication */
-  token: string;
+  token?: string | undefined;
   /** Whether subscription is currently active */
   subscriptionActive?: boolean;
   /** Whether to enable the query */
@@ -105,6 +49,11 @@ export interface UseDailyGameResult {
  * Automatically refetches when auth token or subscription status changes.
  * Returns status indicating whether auth or subscription is required.
  *
+ * "Today" is the **UTC** date (getUtcDateString), the same day the API's
+ * `/dailies/today` serves, computed once per mount. (It used to be the local
+ * date, which asked for tomorrow's or yesterday's daily near midnight.)
+ * `dailyDate` is the daily's own `YYYY-MM-DD`, never timezone-shifted.
+ *
  * @param options - Hook options
  * @returns Daily puzzle data and status
  *
@@ -128,13 +77,11 @@ export interface UseDailyGameResult {
  * ```
  */
 export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
-  const {
-    networkClient,
-    baseUrl,
-    token,
-    subscriptionActive = false,
-    enabled: _enabled = true,
-  } = options;
+  const { subscriptionActive = false, enabled: _enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useDailyGame'
+  );
 
   // Track previous state to detect changes
   const prevStateRef = useRef({
@@ -142,7 +89,8 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
     subscriptionActive,
   });
 
-  const todayDate = useMemo(() => getLocalDateString(), []);
+  // "Today" is the UTC date, the same day the API's /dailies/today serves.
+  const todayDate = useMemo(() => getUtcDateString(), []);
 
   const { data, isLoading, error, refetch } = useSudojoDailyByDate(
     networkClient,
@@ -152,14 +100,15 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
   );
 
   // Determine status based on response
-  const status = useMemo((): GameFetchStatus => {
-    if (isLoading) return 'loading';
-    if (isAuthRequired(data, error)) return 'auth_required';
-    if (isSubscriptionRequired(data, error)) return 'subscription_required';
-    if (error) return 'error';
-    if (data?.success && data.data) return 'success';
-    return 'loading';
-  }, [isLoading, data, error]);
+  const status = useMemo(
+    (): GameFetchStatus =>
+      getGameFetchStatus({
+        isLoading,
+        response: data as GameFetchResponse | undefined,
+        error,
+      }),
+    [isLoading, data, error]
+  );
 
   const daily = useMemo(() => {
     if (data?.success && data.data) {
@@ -168,16 +117,12 @@ export function useDailyGame(options: UseDailyGameOptions): UseDailyGameResult {
     return null;
   }, [data]);
 
-  const dailyDate = useMemo((): string | null => {
-    if (daily?.date) {
-      const d = new Date(daily.date);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-    return null;
-  }, [daily]);
+  // The daily's calendar date as sent, without a timezone shift
+  // (`new Date('YYYY-MM-DD')` is UTC midnight, the previous day west of UTC).
+  const dailyDate = useMemo(
+    (): string | null => normalizeDailyDate(daily?.date),
+    [daily]
+  );
 
   // Auto-refresh when auth token or subscription status changes
   useEffect(() => {

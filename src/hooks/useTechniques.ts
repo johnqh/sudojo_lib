@@ -5,16 +5,21 @@
 import { useMemo } from 'react';
 import type { Technique } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 import {
   useSudojoTechnique,
   useSudojoTechniques,
 } from '@sudobility/sudojo_client';
+import {
+  groupTechniquesByLevel,
+  sortTechniquesByLevel,
+} from '../utils/technique';
 
 export interface UseTechniquesOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for public data) */
   token?: string;
   /** Optional level number (1-12) to filter techniques */
@@ -70,7 +75,11 @@ export interface UseTechniquesResult {
 export function useTechniques(
   options: UseTechniquesOptions
 ): UseTechniquesResult {
-  const { networkClient, baseUrl, token = '', level, enabled = true } = options;
+  const { level, enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useTechniques'
+  );
 
   const queryParams = useMemo(() => {
     if (level === undefined) return undefined;
@@ -90,31 +99,21 @@ export function useTechniques(
     return data.data;
   }, [data]);
 
-  const sortedTechniques = useMemo(() => {
-    return [...techniques].sort((a, b) => {
-      // First sort by level, then by technique number
-      if (a.level !== b.level) {
-        return (a.level ?? 0) - (b.level ?? 0);
-      }
-      return a.technique - b.technique;
-    });
-  }, [techniques]);
+  // First sort by level, then by technique number
+  const sortedTechniques = useMemo(
+    () => sortTechniquesByLevel(techniques),
+    [techniques]
+  );
 
   const getTechniqueByNumber = useMemo(() => {
     const techniqueMap = new Map(techniques.map(t => [t.technique, t]));
     return (technique: number) => techniqueMap.get(technique);
   }, [techniques]);
 
-  const techniquesByLevel = useMemo(() => {
-    const byLevel = new Map<number, Technique[]>();
-    for (const technique of sortedTechniques) {
-      const key = technique.level ?? 0;
-      const existing = byLevel.get(key) ?? [];
-      existing.push(technique);
-      byLevel.set(key, existing);
-    }
-    return byLevel;
-  }, [sortedTechniques]);
+  const techniquesByLevel = useMemo(
+    () => groupTechniquesByLevel(sortedTechniques),
+    [sortedTechniques]
+  );
 
   return {
     techniques,
@@ -130,10 +129,10 @@ export function useTechniques(
 }
 
 export interface UseTechniqueOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for public data) */
   token?: string;
   /** Technique number to fetch */
@@ -160,13 +159,11 @@ export interface UseTechniqueResult {
  * @returns Technique data
  */
 export function useTechnique(options: UseTechniqueOptions): UseTechniqueResult {
-  const {
-    networkClient,
-    baseUrl,
-    token = '',
-    technique,
-    enabled = true,
-  } = options;
+  const { technique, enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useTechnique'
+  );
 
   const { data, isLoading, error, refetch } = useSudojoTechnique(
     networkClient,

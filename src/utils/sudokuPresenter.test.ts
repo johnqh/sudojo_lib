@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import type { SolverHintStep } from '@sudobility/sudojo_types';
 import type { SudokuCell } from '../types/sudoku';
 import {
   SudokuColor,
@@ -15,11 +16,15 @@ import {
   calculateCellHints,
   computeSelectedDigitCells,
   convertSolverCellGroup,
+  convertSolverHintStep,
   convertSolverLink,
   getCellsWithDigit,
   getColorPalette,
   getSelectedDigit,
+  isConflictHintStep,
+  parseHintDigits,
   presentBoard,
+  solverColorToSudokuColor,
   sudokuColorToTheme,
   themeColorToCSS,
 } from './sudokuPresenter';
@@ -692,5 +697,126 @@ describe('presentBoard conflict hint textColor', () => {
 
     // Without conflict links, orange cell should keep LABEL textColor
     expect(states[1].textColor).toBe(ThemeColor.LABEL);
+  });
+});
+
+describe('solverColorToSudokuColor', () => {
+  it('maps the five hint colors case-insensitively', () => {
+    expect(solverColorToSudokuColor('blue')).toBe(SudokuColor.BLUE);
+    expect(solverColorToSudokuColor('Green')).toBe(SudokuColor.GREEN);
+    expect(solverColorToSudokuColor('YELLOW')).toBe(SudokuColor.YELLOW);
+    expect(solverColorToSudokuColor('orange')).toBe(SudokuColor.ORANGE);
+    expect(solverColorToSudokuColor('red')).toBe(SudokuColor.RED);
+  });
+
+  it('returns null for other or missing colors', () => {
+    expect(solverColorToSudokuColor('gray')).toBeNull();
+    expect(solverColorToSudokuColor('none')).toBeNull();
+    expect(solverColorToSudokuColor('purple')).toBeNull();
+    expect(solverColorToSudokuColor('')).toBeNull();
+    expect(solverColorToSudokuColor(null)).toBeNull();
+    expect(solverColorToSudokuColor(undefined)).toBeNull();
+  });
+});
+
+describe('parseHintDigits', () => {
+  it('parses digits and drops 0 and junk', () => {
+    expect(parseHintDigits('125')).toEqual([1, 2, 5]);
+    expect(parseHintDigits('1x0 9')).toEqual([1, 9]);
+    expect(parseHintDigits('')).toEqual([]);
+    expect(parseHintDigits(null)).toEqual([]);
+  });
+});
+
+describe('convertSolverHintStep', () => {
+  const step = {
+    title: 'Naked Pair',
+    text: 'text',
+    areas: [{ type: 'row', color: 'blue', index: 2 }],
+    cells: [
+      {
+        row: 1,
+        column: 4,
+        color: 'Red',
+        fill: false,
+        actions: {
+          select: '5',
+          unselect: '0',
+          add: '',
+          remove: '37',
+          highlight: '12',
+        },
+      },
+      {
+        row: 8,
+        column: 8,
+        color: 'gray',
+        fill: true,
+        actions: null,
+      },
+    ],
+    links: [
+      { fromRow: 0, fromCol: 0, toRow: 0, toCol: 8, type: 'strong', digit: 4 },
+    ],
+    groups: [{ name: 'ALS A', color: 'green', cells: [[1, 1]] }],
+    digit: 4,
+  } as unknown as SolverHintStep;
+
+  it('returns null for no step', () => {
+    expect(convertSolverHintStep(null)).toBeNull();
+    expect(convertSolverHintStep(undefined)).toBeNull();
+  });
+
+  it('converts areas, cells, actions, links and groups', () => {
+    const result = convertSolverHintStep(step);
+    expect(result).toEqual({
+      title: 'Naked Pair',
+      text: 'text',
+      areas: [{ type: 'row', color: SudokuColor.BLUE, index: 2 }],
+      cells: [
+        {
+          index: 13,
+          color: SudokuColor.RED,
+          fill: false,
+          actions: {
+            select: 5,
+            unselect: null,
+            add: null,
+            remove: [3, 7],
+            highlight: [1, 2],
+          },
+        },
+        { index: 80, color: null, fill: true },
+      ],
+      links: [{ fromIndex: 0, toIndex: 8, type: 'strong', digit: 4 }],
+      groups: [{ name: 'ALS A', color: ThemeColor.SUCCESS, cellIndices: [10] }],
+      digit: 4,
+    });
+  });
+
+  it('turns null areas/cells (autopencil hint) and empty lists into null', () => {
+    const result = convertSolverHintStep({
+      title: 'Pencilmarks',
+      text: '',
+      areas: null,
+      cells: null,
+      links: [],
+    } as unknown as SolverHintStep);
+    expect(result?.areas).toBeNull();
+    expect(result?.cells).toBeNull();
+    expect(result?.links).toBeNull();
+    expect(result?.groups).toBeNull();
+    expect(result?.digit).toBeNull();
+  });
+});
+
+describe('isConflictHintStep', () => {
+  it('detects conflict links', () => {
+    expect(
+      isConflictHintStep({ links: [{ type: 'weak' }, { type: 'conflict' }] })
+    ).toBe(true);
+    expect(isConflictHintStep({ links: [{ type: 'strong' }] })).toBe(false);
+    expect(isConflictHintStep({ links: null })).toBe(false);
+    expect(isConflictHintStep(null)).toBe(false);
   });
 });

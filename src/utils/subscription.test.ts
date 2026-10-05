@@ -4,11 +4,19 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  calculateSavingsPercent,
+  canDeleteAccount,
   convertPackageToProduct,
   getPeriodDisplayName,
+  getPeriodLabel,
+  getPeriodLabelKey,
+  getPuzzleDistribution,
   getRevenueCatErrorMessage,
   isBestValuePlan,
+  isBestValueProduct,
+  isCrossPlatformSubscription,
   parseCustomerInfo,
+  subscriptionPeriodToMonths,
 } from './subscription';
 
 describe('convertPackageToProduct', () => {
@@ -184,5 +192,135 @@ describe('getRevenueCatErrorMessage', () => {
     expect(getRevenueCatErrorMessage(99)).toBe(
       'Purchase failed. Please try again.'
     );
+  });
+});
+
+describe('getPeriodLabelKey / getPeriodLabel', () => {
+  it('maps ISO and named periods to unit keys', () => {
+    expect(getPeriodLabelKey('P1W')).toBe('periods.week');
+    expect(getPeriodLabelKey('P1M')).toBe('periods.month');
+    expect(getPeriodLabelKey('P3M')).toBe('periods.quarter');
+    expect(getPeriodLabelKey('P6M')).toBe('periods.halfYear');
+    expect(getPeriodLabelKey('P1Y')).toBe('periods.year');
+    expect(getPeriodLabelKey('P12M')).toBe('periods.year');
+    expect(getPeriodLabelKey('yearly')).toBe('periods.year');
+    expect(getPeriodLabelKey('monthly')).toBe('periods.month');
+    expect(getPeriodLabelKey('P2Y')).toBeNull();
+    expect(getPeriodLabelKey(undefined)).toBeNull();
+  });
+
+  it('builds the price suffix', () => {
+    const t = (key: string) => key.split('.')[1] ?? key;
+    expect(getPeriodLabel(t, 'P1M')).toBe('/month');
+    expect(getPeriodLabel(t, 'lifetime')).toBe('');
+  });
+});
+
+describe('isBestValueProduct', () => {
+  it('matches annual periods and annual/yearly identifiers', () => {
+    expect(isBestValueProduct({ period: 'P1Y', identifier: 'x' })).toBe(true);
+    expect(isBestValueProduct({ period: 'P12M' })).toBe(true);
+    expect(isBestValueProduct({ period: 'yearly' })).toBe(true);
+    expect(isBestValueProduct({ identifier: 'sudojo_annual' })).toBe(true);
+    expect(isBestValueProduct({ identifier: 'Pro_Yearly' })).toBe(true);
+    expect(isBestValueProduct({ period: 'P1M', identifier: 'monthly' })).toBe(
+      false
+    );
+  });
+});
+
+describe('subscriptionPeriodToMonths', () => {
+  it('handles named and ISO periods', () => {
+    expect(subscriptionPeriodToMonths('weekly')).toBe(0.25);
+    expect(subscriptionPeriodToMonths('monthly')).toBe(1);
+    expect(subscriptionPeriodToMonths('quarterly')).toBe(3);
+    expect(subscriptionPeriodToMonths('yearly')).toBe(12);
+    expect(subscriptionPeriodToMonths('lifetime')).toBe(Infinity);
+    expect(subscriptionPeriodToMonths('P6M')).toBe(6);
+    expect(subscriptionPeriodToMonths('P1Y')).toBe(12);
+    expect(subscriptionPeriodToMonths('P1W')).toBe(0.25);
+    expect(subscriptionPeriodToMonths('bogus')).toBeNull();
+    expect(subscriptionPeriodToMonths(null)).toBeNull();
+  });
+});
+
+describe('calculateSavingsPercent', () => {
+  const monthly = { price: 10, period: 'monthly' };
+  it('computes the monthly saving, rounded', () => {
+    expect(
+      calculateSavingsPercent(monthly, { price: 60, period: 'yearly' })
+    ).toBe(50);
+    expect(
+      calculateSavingsPercent(monthly, { price: 100, period: 'P1Y' })
+    ).toBe(17);
+  });
+
+  it('returns null when not comparable or no saving', () => {
+    expect(calculateSavingsPercent(monthly, monthly)).toBeNull();
+    expect(
+      calculateSavingsPercent(monthly, { price: 200, period: 'yearly' })
+    ).toBeNull();
+    expect(
+      calculateSavingsPercent(monthly, { price: 99, period: 'lifetime' })
+    ).toBeNull();
+    expect(
+      calculateSavingsPercent(
+        { price: 0, period: 'monthly' },
+        {
+          price: 60,
+          period: 'yearly',
+        }
+      )
+    ).toBeNull();
+    expect(calculateSavingsPercent(null, monthly)).toBeNull();
+    expect(
+      calculateSavingsPercent(monthly, { price: 1, period: undefined })
+    ).toBeNull();
+  });
+});
+
+describe('isCrossPlatformSubscription', () => {
+  it('is true only when both platforms are known and differ', () => {
+    expect(isCrossPlatformSubscription('ios', 'android')).toBe(true);
+    expect(isCrossPlatformSubscription('ios', 'ios')).toBe(false);
+    expect(isCrossPlatformSubscription(null, 'ios')).toBe(false);
+    expect(isCrossPlatformSubscription('web', undefined)).toBe(false);
+  });
+});
+
+describe('canDeleteAccount', () => {
+  it('requires a real account and no active subscription', () => {
+    expect(
+      canDeleteAccount({ user: { uid: 'u' }, subscriptionActive: false })
+    ).toEqual({ allowed: true });
+    expect(canDeleteAccount({ user: null, subscriptionActive: false })).toEqual(
+      { allowed: false, reason: 'not_signed_in' }
+    );
+    expect(
+      canDeleteAccount({
+        user: { uid: 'u', isAnonymous: true },
+        subscriptionActive: false,
+      })
+    ).toEqual({ allowed: false, reason: 'anonymous' });
+    expect(
+      canDeleteAccount({ user: { uid: 'u' }, subscriptionActive: true })
+    ).toEqual({ allowed: false, reason: 'active_subscription' });
+  });
+});
+
+describe('getPuzzleDistribution', () => {
+  const levels = [
+    { entitlement: null, percentage: 0.5 },
+    { entitlement: 'blue_belt,red_belt', percentage: 0.3 },
+    { entitlement: 'red_belt', percentage: 0.2 },
+  ];
+  it('sums free levels without an offer', () => {
+    expect(getPuzzleDistribution(levels)).toBeCloseTo(0.5);
+  });
+  it('adds blue belt levels for the blue belt offer', () => {
+    expect(getPuzzleDistribution(levels, '1_blue_belt')).toBeCloseTo(0.8);
+  });
+  it('is 1 for any other offer', () => {
+    expect(getPuzzleDistribution(levels, '2_red_belt')).toBe(1);
   });
 });

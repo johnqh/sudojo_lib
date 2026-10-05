@@ -8,7 +8,9 @@ import {
   cellsToInputString,
   cellsToPencilmarksString,
   cellsToPuzzleString,
+  cellsToSolutionString,
   cellsToStateString,
+  countClues,
   NonScrambler,
   parsePuzzleString,
   scrambleBoard,
@@ -252,5 +254,22 @@ describe('cellsToPencilmarksString', () => {
     const result = cellsToPencilmarksString(cells);
     const parts = result.split(',');
     expect(parts[2]).toBe('147');
+  });
+});
+
+describe('cellsToSolutionString / countClues', () => {
+  it('writes solutions with 0 for unknown cells', () => {
+    const cells = parsePuzzleString(SAMPLE_PUZZLE, SAMPLE_SOLUTION);
+    expect(cellsToSolutionString(cells)).toBe(SAMPLE_SOLUTION);
+    expect(cellsToSolutionString(parsePuzzleString(SAMPLE_PUZZLE))).toBe(
+      '0'.repeat(81)
+    );
+  });
+
+  it('counts givens', () => {
+    expect(countClues(parsePuzzleString(SAMPLE_PUZZLE))).toBe(
+      SAMPLE_PUZZLE.replace(/0/g, '').length
+    );
+    expect(countClues(parsePuzzleString('0'.repeat(81)))).toBe(0);
   });
 });

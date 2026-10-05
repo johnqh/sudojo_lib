@@ -18,8 +18,16 @@ export interface CurrentGameMeta {
   levelTitle?: string;
   /** Board UUID for the puzzle */
   boardUuid?: string;
-  /** Techniques bitset for the puzzle */
+  /**
+   * Techniques bitset for the puzzle. Lossy as a number once any technique
+   * id >= 54 is set; prefer `techniques_bitmask`.
+   */
   techniques?: number | null;
+  /**
+   * Exact base-10 string of the techniques bitmask (see techniqueFieldsOf /
+   * exactTechniqueBitmask). Persisted as-is with the rest of the meta.
+   */
+  techniques_bitmask?: string | null;
   /**
    * For entered puzzles - the level (1-12) the solver rated it at when it
    * was validated, so a resumed game can still show it without re-validating.

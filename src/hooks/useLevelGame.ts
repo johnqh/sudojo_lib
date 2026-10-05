@@ -5,80 +5,26 @@
 
 import { useMemo } from 'react';
 import type { Board } from '@sudobility/sudojo_types';
-import { hasRequiredEntitlement } from '@sudobility/sudojo_types';
+import { hasRequiredEntitlement, isValidLevel } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 import { useSudojoRandomBoard } from '@sudobility/sudojo_client';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  type GameFetchResponse,
+  type GameFetchStatus,
+  getGameFetchStatus,
+} from '../utils/gameFetchStatus';
 
-/** Game fetch status indicating what screen to show */
-export type GameFetchStatus =
-  | 'loading'
-  | 'success'
-  | 'auth_required'
-  | 'subscription_required'
-  | 'entitlement_required'
-  | 'error';
-
-/** Extended API response with action field from Sudojo API */
-interface SudojoApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string | null;
-  message?: string;
-  action?: {
-    type: string;
-    options?: string[];
-  };
-}
-
-/** Check if response indicates auth is required */
-function isAuthRequired(
-  response: SudojoApiResponse<unknown> | undefined,
-  error: unknown
-): boolean {
-  if (
-    response?.success === false &&
-    response.action?.type === 'auth_required'
-  ) {
-    return true;
-  }
-  if (error && typeof error === 'object') {
-    const err = error as { message?: string };
-    if (err.message?.includes('Account required')) return true;
-  }
-  return false;
-}
-
-/** Check if response indicates subscription is required */
-function isSubscriptionRequired(
-  response: SudojoApiResponse<unknown> | undefined,
-  error: unknown
-): boolean {
-  if (
-    response?.success === false &&
-    response.action?.type === 'subscription_required'
-  ) {
-    return true;
-  }
-  if (error && typeof error === 'object') {
-    const err = error as { message?: string };
-    if (
-      err.message?.includes('Daily limit reached') ||
-      err.message?.includes('subscription')
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
+export type { GameFetchStatus } from '../utils/gameFetchStatus';
 
 export interface UseLevelGameOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication */
-  token: string;
+  token?: string | undefined;
   /** Level number (1-12) to fetch game for */
   level: number;
   /** Whether to fetch only symmetrical puzzles */
@@ -141,15 +87,16 @@ export interface UseLevelGameResult {
  */
 export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
   const {
-    networkClient,
-    baseUrl,
-    token,
     level,
     symmetrical,
     userEntitlements,
     levelEntitlement,
     enabled = true,
   } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useLevelGame'
+  );
 
   // Client-side entitlement check before making API call
   const entitlementDenied = useMemo(
@@ -176,23 +123,20 @@ export function useLevelGame(options: UseLevelGameOptions): UseLevelGameResult {
     baseUrl,
     token,
     queryParams,
-    { enabled: enabled && level >= 1 && level <= 12 && !entitlementDenied }
+    { enabled: enabled && isValidLevel(level) && !entitlementDenied }
   );
 
-  // Determine status based on response
-  // Cast to SudojoApiResponse to check for action field
-  const apiResponse = data as SudojoApiResponse<Board> | undefined;
-
-  const status = useMemo((): GameFetchStatus => {
-    if (entitlementDenied) return 'entitlement_required';
-    if (isLoading) return 'loading';
-    if (isAuthRequired(apiResponse, error)) return 'auth_required';
-    if (isSubscriptionRequired(apiResponse, error))
-      return 'subscription_required';
-    if (error) return 'error';
-    if (apiResponse?.success && apiResponse.data) return 'success';
-    return 'loading';
-  }, [entitlementDenied, isLoading, apiResponse, error]);
+  // Determine status based on response (incl. the legacy `action` field)
+  const status = useMemo(
+    (): GameFetchStatus =>
+      getGameFetchStatus({
+        isLoading,
+        response: data as GameFetchResponse | undefined,
+        error,
+        entitlementDenied,
+      }),
+    [entitlementDenied, isLoading, data, error]
+  );
 
   const board = useMemo(() => {
     if (data?.success && data.data) {

@@ -39,3 +39,14 @@ export function isAuthenticatedUser(
 ): boolean {
   return !!user?.uid && !!token && !user.isAnonymous;
 }
+
+/**
+ * Whether a user is a real (signed-in, non-anonymous) account:
+ * `!!user && !user.isAnonymous`. Unlike isAuthenticatedUser it does not need
+ * a token (e.g. for showing account-only UI while the token loads).
+ */
+export function isRealUser(
+  user: Pick<AuthUser, 'isAnonymous'> | null | undefined
+): boolean {
+  return !!user && !user.isAnonymous;
+}

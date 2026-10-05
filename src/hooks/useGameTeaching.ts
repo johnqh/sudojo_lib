@@ -9,8 +9,9 @@ import type {
   SolveData,
   SolverHintStep,
 } from '@sudobility/sudojo_types';
-import { createSudojoClient } from '@sudobility/sudojo_client';
+import { useSolverSolveMutation } from '@sudobility/sudojo_client';
 import type { GameHint, TeachingState } from '../types';
+import { parseHintDigits } from '../utils/sudokuPresenter';
 
 export interface UseGameTeachingOptions {
   /** Network client for API calls */
@@ -64,14 +65,10 @@ function convertHintStep(step: SolverHintStep): GameHint {
           action.select = parseInt(cell.actions.select, 10);
         }
         if (cell.actions.add) {
-          action.addPencilmarks = cell.actions.add
-            .split('')
-            .map(d => parseInt(d, 10));
+          action.addPencilmarks = parseHintDigits(cell.actions.add);
         }
         if (cell.actions.remove) {
-          action.removePencilmarks = cell.actions.remove
-            .split('')
-            .map(d => parseInt(d, 10));
+          action.removePencilmarks = parseHintDigits(cell.actions.remove);
         }
         return {
           row: cell.row,
@@ -159,10 +156,11 @@ export function useGameTeaching(
   // Store all hint steps for multi-step hints
   const [allSteps, setAllSteps] = useState<GameHint[]>([]);
 
-  // Create Sudojo client
-  const client = useMemo(() => {
-    return createSudojoClient(networkClient, baseUrl);
-  }, [networkClient, baseUrl]);
+  // Solver requests go through sudojo_client's mutation hook
+  const { mutateAsync: solverSolve } = useSolverSolveMutation(
+    networkClient,
+    baseUrl
+  );
 
   const getHint = useCallback(
     async (
@@ -192,10 +190,10 @@ export function useGameTeaching(
         if (hintOptions?.pencilmarks !== undefined) {
           solveOptions.pencilmarks = hintOptions.pencilmarks;
         }
-        const response: BaseResponse<SolveData> = await client.solverSolve(
+        const response: BaseResponse<SolveData> = await solverSolve({
           token,
-          solveOptions
-        );
+          options: solveOptions,
+        });
 
         if (!response.success || !response.data?.hints?.steps?.length) {
           const errorMessage =
@@ -254,7 +252,7 @@ export function useGameTeaching(
         setAllSteps([]);
       }
     },
-    [client, token]
+    [solverSolve, token]
   );
 
   const applyHint = useCallback((): GameHint | null => {

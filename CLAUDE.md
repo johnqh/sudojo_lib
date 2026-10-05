@@ -29,7 +29,7 @@ scope (`publishConfig.access: restricted`), license BUSL-1.1.
 | `bun run typecheck` | `tsc --noEmit` (strict `tsconfig.json`, **excludes `*.test.ts`**) | ✅ clean |
 | `bun run lint` / `lint:fix` | ESLint 9 flat config incl. `prettier/prettier` rule | ✅ clean |
 | `bun run format` / `format:check` | Prettier on `src/**/*.ts` (not `.tsx`) | ✅ clean |
-| `bun run test:run` | Vitest once (happy-dom) | ✅ 13 files / 275 tests |
+| `bun run test:run` | Vitest once (happy-dom) | ✅ 41 files / 557 tests (2026-10-05) |
 | `bun run test` / `test:watch` | Vitest watch mode | — |
 | `bun run test:coverage` | Vitest + v8 coverage → `coverage/` (gitignored) | ✅ runs; ~38% lines, exit 0 |
 | `bun run check-all` | lint + typecheck + test:run | components ✅ |
@@ -54,29 +54,48 @@ sudojo_lib  ◄── this repo: hooks · gamePlayStore · presenter/scrambler �
 Hints/validation go lib → sudojo_client → sudojo_api → sudojo_solver (C++ engine)
 ```
 
+**Layering rule (owner's):** the apps (`sudojo_app`, `sudojo_app_rn`, `sudojo_extension`) are UI only; all
+business logic lives here. The lib talks to the API **only through `sudojo_client` hooks** (`useSudojo*`,
+`useSolver*`, incl. mutation hooks such as `useSolverSolveMutation`); it never calls `createSudojoClient`,
+`new SudojoClient` or `fetch`. A missing endpoint hook belongs in `sudojo_client` first.
+
+**API connection:** hooks take `networkClient` / `baseUrl` / `token` as options, but these are optional when the
+app is wrapped in `SudojoApiProvider` (`src/context/SudojoApiContext.ts`). Explicit options win; `token` falls back
+to the provider only when `undefined` (explicit `null`/`''` = no token); with neither, the hook throws an error
+naming `SudojoApiProvider`. New hooks resolve via `useResolvedSudojoApi(options, 'hookName')`.
+
 Hook layers:
 
 | Layer | Hooks |
 |---|---|
-| Data (TanStack Query via `sudojo_client`) | `useLevels`/`useLevel`, `useTechniques`/`useTechnique`, `useLearning`/`useLearningItem`, `useCommunities`, `useRegeneratePracticeHints` (admin) |
-| Game fetching (auth/subscription status) | `useLevelGame`, `useDailyGame` |
-| Game state | `useSudoku` ⭐ (flat 81 cells, reducer), `useBoardEntry` (manual entry + solver validate), `useGame` (legacy 2D, **deprecated**) |
-| Features | `useHint` ⭐, `useGameTeaching` (legacy), `useGameTimer`, `useGamePersistence`/`useAutoSave`, `useLocalStorage`, `useHintStepTracker`, `useAutoHint`, `useProgressReporter`, `useHintActionListener` |
-| Orchestration / app | `useGamePlay` (+ `useGamePlayStore`), `useContinueGame`, `useGameSession`, `useLevelEnabled`/`useTechniqueEnabled` (+ `EntitlementProvider`), `useDisplayLevel`, `usePuzzleDistribution` |
+| Data (TanStack Query via `sudojo_client`) | `useLevels`/`useLevel`, `useTechniques`/`useTechnique`, `useTechniqueByPath` (alias-aware), `useStrategies`, `useLearning`/`useLearningItem`, `useCommunities`, `useTechniqueExample`/`useTechniqueWalkthrough`, `useRegeneratePracticeHints` (admin) |
+| Game fetching (auth/subscription status) | `useLevelGame`, `useDailyGame`, `usePracticeGame` (401→auth, 402→subscription, no_practices) |
+| Account / user | `useIsRealUser`, `useIsSiteAdmin`, `useDeleteAccount` (rule + delete → injected `signOut`; dialogs stay in apps) |
+| Admin (`src/admin/**`, re-exported via `export * from './admin'`) | `useBoardGenerator`, `useTechniqueExtractor`, `useExampleCreator`, `useSingleBoardExtractor`, `useBoardTechniquesUpdater`, `useAdminStats`; framework-agnostic `run*` jobs in `jobs.ts`, network via `useAdminApi` (client mutation hooks) |
+| Game state | `useSudoku` ⭐ (flat 81 cells, reducer), `useBoardEntry` (manual entry + solver validate, entry pencilmarks, `toggleGiven`, `applyScan` → `initialPlayState`), `useBoardScan` (photo → givens, player digits, pencilmarks via `utils/scannedBoard.ts`; shared by web + RN), `useGame` (legacy 2D, **deprecated**) |
+| Features | `useHint` ⭐, `useGameTeaching` (legacy), `useCompletionTrigger` (once per false→true, re-arms), `useGameTimer`, `useGamePersistence`/`useAutoSave`, `useLocalStorage`, `useHintStepTracker`, `useAutoHint`, `useProgressReporter`, `useHintActionListener` |
+| Orchestration / app | `usePuzzleSession` + `useResumeGame` (Daily/Level screens: resume, pin, save, server session, completion, achievements), `useEnteredGameSession` (entered puzzles: save/resume, no server session), `usePuzzleProgress`, `useGamePlay` (+ `useGamePlayStore`), `useContinueGame`, `useGameSession`, `useLevelEnabled`/`useTechniqueEnabled` (+ `EntitlementProvider`), `useDisplayLevel`, `usePuzzleDistribution` |
 
 ## Repo Map
 
 ```
 src/
-├── index.ts          # THE public API: every export, with JSDoc (853 lines). Barrels below feed it.
-├── hooks/            # 25 hook files (30 exported hooks) + index.ts barrel; tests: useGame, useSudoku
+├── index.ts          # THE public API: every export, with JSDoc (~1.36k lines). Barrels below feed it; admin via `export * from './admin'`.
+├── hooks/            # 37 hook files + index.ts barrel; tests for useSudoku, useGame, useHint, useBoardEntry,
+│                     # useBoardScan, useCompletionTrigger, usePuzzleSession, dataHooks (client wrappers)
+├── admin/            # Admin batch jobs + hooks (board generation, technique extraction, examples, stats)
 ├── stores/gamePlayStore.ts   # Zustand persist store, 2 slots (daily/play), key 'sudojo-current-game', v2
 ├── types/            # sudoku.ts (flat 81-cell), game.ts (legacy 2D), display.ts (colors, hint display),
 │                     # currentGame, gamePersistence, progress, settings, subscription
-├── utils/            # sudokuScrambler, sudokuPresenter, techniqueWalkthrough, hintExplanation (~1.1k lines),
-│                     # localizedHint, i18nKeys, shareUrl, progress, subscription (RevenueCat), theme, time,
-│                     # digitDisplay, auth, technique (re-export), board + validation (legacy 2D)
-├── context/          # EntitlementContext.ts, EntitlementProvider.tsx (only .tsx file)
+├── utils/            # sudokuScrambler, sudokuPresenter (+ solver hint → display conversion), techniqueWalkthrough,
+│                     # techniqueExample (walkthrough cards + headings), hintExplanation (~1.1k lines),
+│                     # localizedHint (+ heading tree), entityTranslate (levels, techniques, strategies, belts), i18nKeys, shareUrl,
+│                     # progress (+ applyPuzzleCompletion reducer), subscription (RevenueCat, canDeleteAccount, paywall savings base),
+│                     # technique (paths/aliases, strategies), techniqueBitmask (exact bigint), scannedBoard (OCR),
+│                     # language, community, gamification (badges), hintAccess, date (UTC daily), gameFetchStatus
+│                     # (game + practice status, HTTP status), theme, time, digitDisplay, auth (isRealUser),
+│                     # board + validation (legacy 2D)
+├── context/          # EntitlementContext/Provider, SudojoApiContext/SudojoApiProvider (.tsx files: the two providers)
 ├── config/           # authProviders.ts (DEFAULT_AUTH_PROVIDERS)
 └── test/setup.ts     # Vitest setup: mocks localStorage, window listeners, matchMedia
 docs/API.md           # Full export reference (hook options/results)
@@ -95,9 +114,9 @@ dist/                 # Build output (gitignored); package `files` = dist/**/*
 | Puzzles & strings | `Scrambler`, `NonScrambler`, `scrambleSudokuBoard`, `parsePuzzleString`, `cellsTo{Puzzle,State,Input,Pencilmarks}String` |
 | Walkthroughs | `buildWalkthroughSteps`, `parsePracticeBoard`, `parseHintData`, `applyHintStep`, `parsePencilmarksString` |
 | Persistence | `useGamePlay`, `useGamePlayStore`, `useContinueGame`, `useGamePersistence`, `useAutoSave`, `useLocalStorage`, `*_STORAGE_KEY` constants |
-| Server data | `useLevels`, `useTechniques`, `useLearning`, `useCommunities`, `useLevelGame`, `useDailyGame`, `useBoardEntry`, `useGameSession` |
+| Server data | `SudojoApiProvider`/`useSudojoApi`, `useLevels`, `useTechniques`, `useTechniqueByPath`, `useStrategies`, `useLearning`, `useCommunities`, `useLevelGame`, `useDailyGame`, `usePracticeGame`, `useBoardEntry`, `useBoardScan`, `useGameSession`, `usePuzzleSession`, `useDeleteAccount`, admin hooks |
 | Entitlements | `EntitlementProvider`, `useEntitlementContext`, `useLevelEnabled`, `useTechniqueEnabled`, `usePuzzleDistribution`, re-exported `parseEntitlements`/`hasRequiredEntitlement` |
-| Misc | progress stats/streaks, RevenueCat converters, theme, time, i18n keys, share URLs, `isAuthenticatedUser`, `DEFAULT_AUTH_PROVIDERS` |
+| Misc | progress stats/streaks + `applyPuzzleCompletion`, RevenueCat converters, theme, time, i18n keys, entity translation, languages, communities, badges, hint access, UTC daily dates, share URLs, `isAuthenticatedUser`/`isRealUser`, `DEFAULT_AUTH_PROVIDERS` |
 | Legacy (deprecated) | `useGame`, `useGameTeaching`, 2D `GameBoard` utils (`createGameBoard`, `validateGameState`, …) |
 
 ## Key Behaviors
@@ -107,11 +126,19 @@ dist/                 # Build output (gitignored); package `files` = dist/**/*
   stack of previous `SudokuPlay` states. `loadBoard(puzzle, solution, {scramble=true, symmetrical=false, source='LEVEL', levelUuid, boardUuid})`.
 - **Scrambling** — `scrambleSudokuBoard(scrambler, cells, symmetrical) → {cells, digitMapping, reverseDigitMapping}`;
   deterministic (seed = hash of cells), permutes rows/columns/digits.
-- **`useHint`** — first `getHint()` calls `solverSolve`; later calls advance steps until the puzzle
+- **`useHint`** — first `getHint()` calls the solver via `useSolverSolveMutation`; later calls advance steps until the puzzle
   state (`puzzle|userInput|pencilmarks`) changes. `techniqueFilter` → filtered request first, then an
   unfiltered fallback (`isTargetTechnique` tells which). Without the level's entitlement only
   `FREE_HINT_STEP_LIMIT = 2` steps are visible, `canApply` is false, and `accessError` is set; a server
   402 (`HintAccessDeniedError`) also lands in `accessError`. `applyHint()` returns `{user, pencilmarks, autoPencilmarks}` and clears.
+- **`usePuzzleSession`** — call `useResumeGame` first (to disable the fetch while resuming; RN passes
+  `isStoreHydrated` from its `onStoreReady`), then pass `resume` + the fetched daily/board. Resume is a snapshot per
+  screen; stale (non-UTC-today) dailies are cleared. Fresh puzzles are pinned, saved once per uuid from the scrambled
+  snapshot with full meta, and a server session is started once per uuid for a real user — with the *scrambled* board
+  and solution, because sudojo_api credits a hint (points, `hintUsed`) only when the hint's `original` equals the
+  session board, and `useHint` sends the scrambled puzzle. (Before 2026-10-05 both apps sent the unscrambled board, so
+  hint scoring never fired for scrambled games.) Defaults follow the web;
+  RN differences are options (`startSessionOnResume`, `showEmptyAchievement`).
 - **`gamePlayStore`** — slots `dailyGame`/`playGame`; persist migrations v0 (single `currentGame`) → v1 (two slots) → v2 (adds `autoPencilmarks`).
 
 ## Conventions
@@ -137,6 +164,9 @@ dist/                 # Build output (gitignored); package `files` = dist/**/*
 - `tsconfig.build.json` relaxes `exactOptionalPropertyTypes`/`noUncheckedIndexedAccess` and sets `removeComments: false`; keep the latter or JSDoc disappears from `.d.ts`.
 - `src/test/setup.ts` replaces `localStorage` with `vi.fn()` stubs (nothing persists; `getItem` → `undefined`), so tests needing storage must stub their own.
 - `UIColorLight`/`UIColorDark` hex values are intentional (iOS system palette for `<canvas>` rendering); do not replace with design-system className tokens (see comment in `types/display.ts`).
+- **Vitest `beforeEach(() => fn())` that returns a function registers it as a teardown.** Use a block body
+  (`beforeEach(() => { fn(); })`). Mock `@sudobility/sudojo_client` with `vi.mock`; values the factory needs go in
+  `vi.hoisted` (module-level consts are not initialized yet when the hoisted mock runs).
 - `@sudobility/di` is a peer/dev dependency that `src/` never imports; it is required by `sudojo_client`.
 
 ## Known Issues (not fixed)
@@ -145,7 +175,7 @@ dist/                 # Build output (gitignored); package `files` = dist/**/*
 - `useGamePersistence` ignores its `autoSave` and `debounceMs` options (only `puzzleKey` is read); use `useAutoSave`.
 - `useDailyGame` ignores `enabled` (destructured as `_enabled`), and computes today's date once per mount.
 - `src/test/setup.ts` is compiled into `dist/test/` and shipped (unreachable via `exports`, imports `vitest`).
-- No tests for most hooks (`useHint`, `useGamePlay`, `useGameSession`, …) or for `hintExplanation`, `localizedHint`, `shareUrl`, `techniqueWalkthrough`.
+- No direct tests for `useGamePlay`, `useGameSession` (covered only through `usePuzzleSession`), `hintExplanation`, `techniqueWalkthrough`.
 
 ## Cross-Repo Contracts
 
@@ -171,7 +201,7 @@ No sibling consumer imports `useGame`, `useGameTeaching`, or the legacy 2D board
 
 ## Common Tasks
 
-- **Add a hook:** create `src/hooks/useX.ts` with `UseXOptions`/`UseXResult`, export from `src/hooks/index.ts`, then from `src/index.ts` with JSDoc; add a `renderHook` test (`@testing-library/react`); run `bun run check-all`; update `docs/API.md`.
+- **Add a hook:** create `src/hooks/useX.ts` with `UseXOptions`/`UseXResult` (optional `networkClient`/`baseUrl`/`token` resolved with `useResolvedSudojoApi`; API calls only through `sudojo_client` hooks), export from `src/hooks/index.ts`, then from `src/index.ts` with JSDoc; add a `renderHook` test (`@testing-library/react`); run `bun run check-all`; update `docs/API.md`.
 - **Add a util:** add to `src/utils/<area>.ts`, export via `src/utils/index.ts` and `src/index.ts`, add `*.test.ts` beside it.
 - **Change a public signature:** grep consumers first (`grep -rn "@sudobility/sudojo_lib" ../sudojo_{app,app_rn,ui,extension}/src`), prefer additive changes + `@deprecated`.
 - **Test against a local consumer:** `bun link` here, `bun link @sudobility/sudojo_lib` in the consumer (push_all strips these symlinks).

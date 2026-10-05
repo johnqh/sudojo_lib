@@ -104,7 +104,12 @@ export type {
   UseBoardEntryOptions,
   UseBoardEntryReturn,
   ValidatedPuzzle,
+  BoardEntryPlayState,
 } from './useBoardEntry';
+
+// Board scan (OCR) hook
+export { useBoardScan } from './useBoardScan';
+export type { UseBoardScanOptions, UseBoardScanReturn } from './useBoardScan';
 
 // Game session hook
 export { useGameSession } from './useGameSession';
@@ -154,3 +159,83 @@ export type {
   UseProgressReporterOptions,
   ProgressUpdateCallback,
 } from './useProgressReporter';
+
+// Completion latch (shared across web, RN and extension game components)
+export { useCompletionTrigger } from './useCompletionTrigger';
+
+// Strategies
+export { useStrategies } from './useStrategies';
+export type {
+  UseStrategiesOptions,
+  UseStrategiesResult,
+} from './useStrategies';
+
+// Practice game (random practice with auth/subscription states)
+export { usePracticeGame } from './usePracticeGame';
+export type {
+  UsePracticeGameOptions,
+  UsePracticeGameResult,
+} from './usePracticeGame';
+
+// User status
+export { useIsRealUser, useIsSiteAdmin } from './useIsSiteAdmin';
+export type {
+  UseIsSiteAdminOptions,
+  UseIsSiteAdminResult,
+} from './useIsSiteAdmin';
+
+// Technique lookup and worked example
+export { useTechniqueByPath } from './useTechniqueByPath';
+export type {
+  UseTechniqueByPathOptions,
+  UseTechniqueByPathResult,
+} from './useTechniqueByPath';
+export {
+  useTechniqueExample,
+  useTechniqueWalkthrough,
+} from './useTechniqueExample';
+export type {
+  TechniqueExampleSourceKind,
+  UseTechniqueExampleOptions,
+  UseTechniqueExampleResult,
+} from './useTechniqueExample';
+
+// Puzzle progress (completed puzzles, streak, stats)
+export { usePuzzleProgress } from './usePuzzleProgress';
+export type {
+  UsePuzzleProgressOptions,
+  UsePuzzleProgressResult,
+} from './usePuzzleProgress';
+
+// Account deletion
+export { useDeleteAccount } from './useDeleteAccount';
+export type {
+  DeleteAccountOutcome,
+  DeleteAccountProviderTokens,
+  UseDeleteAccountOptions,
+  UseDeleteAccountResult,
+} from './useDeleteAccount';
+
+// Play screen session orchestration (resume, save, server session, completion)
+export { getResumeGame, useResumeGame } from './useResumeGame';
+export type {
+  PuzzleSessionSource,
+  ResumeGameSource,
+  UseResumeGameOptions,
+  UseResumeGameResult,
+} from './useResumeGame';
+export { usePuzzleSession } from './usePuzzleSession';
+export type {
+  ActivePuzzle,
+  PuzzleGameProps,
+  SessionPuzzleInput,
+  UsePuzzleSessionOptions,
+  UsePuzzleSessionResult,
+} from './usePuzzleSession';
+
+// Entered puzzle save/resume (after useBoardEntry validates)
+export { useEnteredGameSession } from './useEnteredGameSession';
+export type {
+  UseEnteredGameSessionOptions,
+  UseEnteredGameSessionResult,
+} from './useEnteredGameSession';

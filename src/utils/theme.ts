@@ -11,6 +11,9 @@ export type ResolvedTheme = 'light' | 'dark';
 /** Storage key for theme preference */
 export const THEME_STORAGE_KEY = 'sudojo-theme';
 
+/** Storage key for the font size preference (the web ThemeProvider's `fontSizeStorageKey`) */
+export const FONT_SIZE_STORAGE_KEY = 'sudojo-font-size';
+
 /**
  * Detect system color scheme preference
  *

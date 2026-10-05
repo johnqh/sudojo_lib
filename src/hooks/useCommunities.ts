@@ -5,13 +5,15 @@
 import { useMemo } from 'react';
 import type { Community } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 import { useSudojoCommunities } from '@sudobility/sudojo_client';
+import { sortCommunityPlatforms } from '../utils/community';
 
 export interface UseCommunitiesOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for this public endpoint) */
   token?: string;
   /** Language code to filter communities (e.g., "en", "ja") */
@@ -31,6 +33,8 @@ export interface UseCommunitiesResult {
   refetch: () => void;
   /** Communities grouped by platform type */
   communitiesByPlatform: Map<string, Community[]>;
+  /** Platform ids present in communitiesByPlatform, in display order (sortCommunityPlatforms) */
+  sortedPlatforms: string[];
 }
 
 /**
@@ -46,13 +50,11 @@ export interface UseCommunitiesResult {
 export function useCommunities(
   options: UseCommunitiesOptions
 ): UseCommunitiesResult {
-  const {
-    networkClient,
-    baseUrl,
-    token = '',
-    language,
-    enabled = true,
-  } = options;
+  const { language, enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useCommunities'
+  );
 
   const queryParams = useMemo(() => {
     if (language === undefined) return undefined;
@@ -83,6 +85,11 @@ export function useCommunities(
     return byPlatform;
   }, [communities]);
 
+  const sortedPlatforms = useMemo(
+    () => sortCommunityPlatforms(communitiesByPlatform.keys()),
+    [communitiesByPlatform]
+  );
+
   return {
     communities,
     isLoading,
@@ -91,5 +98,6 @@ export function useCommunities(
       refetch();
     },
     communitiesByPlatform,
+    sortedPlatforms,
   };
 }

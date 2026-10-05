@@ -9,12 +9,18 @@
  * - Pencilmark coloring
  */
 
+import type {
+  SolverHintArea,
+  SolverHintCell,
+  SolverHintStep,
+} from '@sudobility/sudojo_types';
 import type { SudokuCell } from '../types/sudoku';
 import { blockOf, columnOf, rowOf } from '../types/sudoku';
 import {
   type CellDisplayState,
   type DisplayCellGroup,
   type DisplayLink,
+  type HintArea,
   type HintCell,
   type HintStep,
   type PencilmarkDisplayState,
@@ -428,8 +434,7 @@ export function presentBoard(options: PresentBoardOptions): CellDisplayState[] {
   } = options;
 
   // Detect conflict hint (has links with type 'conflict')
-  const isConflictHint =
-    hintStep?.links?.some(link => link.type === 'conflict') ?? false;
+  const isConflictHint = isConflictHintStep(hintStep);
 
   // Calculate hint cell map
   const cellHints = calculateCellHints(hintStep);
@@ -631,6 +636,129 @@ export function convertSolverCellGroup(group: {
       ThemeColor.SELECTED,
     cellIndices: group.cells.map(cell => (cell[0] ?? 0) * 9 + (cell[1] ?? 0)),
   };
+}
+
+// =============================================================================
+// Solver Hint Step Conversion
+// =============================================================================
+
+/**
+ * Map a solver color string to a SudokuColor, case-insensitively.
+ *
+ * Only the five hint colors the solver uses for highlighting are mapped
+ * (`blue`, `green`, `yellow`, `orange`, `red`); anything else, including
+ * `none`, `clear`, `gray`, `white` and `black`, returns null.
+ *
+ * This is sudojo_app_rn's validated mapping (`hintConversion.ts`). sudojo_ui's
+ * canvas instead cast the raw string, so `gray` became `SudokuColor.GRAY` there
+ * (a gray border on unfilled cells). With null, presentBoard falls back to its
+ * defaults: no fill override, and a blue border for an unfilled cell.
+ */
+export function solverColorToSudokuColor(
+  color: string | null | undefined
+): SudokuColor | null {
+  if (!color) return null;
+  switch (color.toLowerCase()) {
+    case 'blue':
+      return SudokuColor.BLUE;
+    case 'green':
+      return SudokuColor.GREEN;
+    case 'yellow':
+      return SudokuColor.YELLOW;
+    case 'orange':
+      return SudokuColor.ORANGE;
+    case 'red':
+      return SudokuColor.RED;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Parse a solver digit string (e.g. `"125"`) into digits, dropping anything
+ * that is not 1-9. Used for the `add` / `remove` / `highlight` cell actions.
+ */
+export function parseHintDigits(value: string | null | undefined): number[] {
+  if (!value) return [];
+  return value
+    .split('')
+    .map(d => parseInt(d, 10))
+    .filter(n => !isNaN(n) && n !== 0);
+}
+
+/** Parse a single-digit action (`select` / `unselect`); 0 or junk → null. */
+function parseHintDigit(value: string | null | undefined): number | null {
+  if (!value) return null;
+  return parseInt(value, 10) || null;
+}
+
+function convertSolverHintArea(area: SolverHintArea): HintArea {
+  return {
+    type: area.type as HintArea['type'],
+    color: solverColorToSudokuColor(area.color),
+    index: area.index,
+  };
+}
+
+function convertSolverHintCell(cell: SolverHintCell): HintCell {
+  const result: HintCell = {
+    index: cell.row * 9 + cell.column,
+    color: solverColorToSudokuColor(cell.color),
+    fill: cell.fill,
+  };
+  if (cell.actions) {
+    // Matches Kotlin: select = if (select != 0) select else null
+    result.actions = {
+      select: parseHintDigit(cell.actions.select),
+      unselect: parseHintDigit(cell.actions.unselect),
+      add: cell.actions.add ? parseHintDigits(cell.actions.add) : null,
+      remove: cell.actions.remove ? parseHintDigits(cell.actions.remove) : null,
+      highlight: cell.actions.highlight
+        ? parseHintDigits(cell.actions.highlight)
+        : null,
+    };
+  }
+  return result;
+}
+
+/**
+ * Convert a solver hint step (string actions, row/column cells) into the
+ * display format presentBoard takes (flat indices, digit arrays, SudokuColor).
+ *
+ * - Colors go through {@link solverColorToSudokuColor}.
+ * - Links and groups are converted with convertSolverLink /
+ *   convertSolverCellGroup; empty lists become null.
+ * - `areas` / `cells` may be null on the wire (the autopencil hint); they
+ *   become null here too.
+ *
+ * Shared by the web (sudojo_ui) and RN canvases.
+ */
+export function convertSolverHintStep(
+  step: SolverHintStep | null | undefined
+): HintStep | null {
+  if (!step) return null;
+  return {
+    title: step.title,
+    text: step.text,
+    areas: step.areas?.map(convertSolverHintArea) ?? null,
+    cells: step.cells?.map(convertSolverHintCell) ?? null,
+    links: step.links?.length ? step.links.map(convertSolverLink) : null,
+    groups: step.groups?.length
+      ? step.groups.map(convertSolverCellGroup)
+      : null,
+    digit: step.digit ?? null,
+  };
+}
+
+/**
+ * Whether a hint step is a conflict hint (any link of type `'conflict'`).
+ * Accepts either a display step or a raw solver step. presentBoard uses it to
+ * color the orange source cells' digits as warnings.
+ */
+export function isConflictHintStep(
+  step: { links?: ReadonlyArray<{ type: string }> | null } | null | undefined
+): boolean {
+  return step?.links?.some(link => link.type === 'conflict') ?? false;
 }
 
 /**

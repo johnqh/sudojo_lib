@@ -757,3 +757,35 @@ describe('useSudoku', () => {
     });
   });
 });
+
+describe('useSudoku getScrambledSolution', () => {
+  it('is empty before a board loads', () => {
+    const { result } = renderHook(() => useSudoku());
+    expect(result.current.getScrambledSolution()).toBe('');
+  });
+
+  it('pairs with getScrambledPuzzle in the same digit space', () => {
+    const { result } = renderHook(() => useSudoku());
+    act(() => {
+      result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+        scramble: true,
+      });
+    });
+    const puzzle = result.current.getScrambledPuzzle();
+    const solution = result.current.getScrambledSolution();
+    expect(solution).toHaveLength(81);
+    for (let i = 0; i < 81; i++) {
+      if (puzzle[i] !== '0') expect(solution[i]).toBe(puzzle[i]);
+    }
+  });
+
+  it('equals the solution when not scrambled', () => {
+    const { result } = renderHook(() => useSudoku());
+    act(() => {
+      result.current.loadBoard(SAMPLE_PUZZLE, SAMPLE_SOLUTION, {
+        scramble: false,
+      });
+    });
+    expect(result.current.getScrambledSolution()).toBe(SAMPLE_SOLUTION);
+  });
+});

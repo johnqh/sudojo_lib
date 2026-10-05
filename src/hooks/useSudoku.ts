@@ -31,6 +31,7 @@ import {
   cellsToInputString,
   cellsToPencilmarksString,
   cellsToPuzzleString,
+  cellsToSolutionString,
   cellsToStateString,
   NonScrambler,
   parsePuzzleString,
@@ -699,6 +700,11 @@ export interface UseSudokuResult {
   getOriginalPuzzle: () => string;
   /** Get scrambled puzzle string (what the user is playing) - use this for solver API */
   getScrambledPuzzle: () => string;
+  /**
+   * Get scrambled solution string (same digit space as getScrambledPuzzle;
+   * '0' where unknown) - pair it with getScrambledPuzzle when saving a game
+   */
+  getScrambledSolution: () => string;
   /** Get input string (user entries only) */
   getInputString: () => string;
   /** Get pencilmarks string */
@@ -906,6 +912,11 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
     return cellsToPuzzleString(board.cells);
   }, [board]);
 
+  const getScrambledSolution = useCallback(() => {
+    if (!board) return '';
+    return cellsToSolutionString(board.cells);
+  }, [board]);
+
   const getInputString = useCallback(() => {
     if (!board) return '';
     return cellsToInputString(board.cells);
@@ -955,6 +966,7 @@ export function useSudoku(options: UseSudokuOptions = {}): UseSudokuResult {
     getBoardString,
     getOriginalPuzzle,
     getScrambledPuzzle,
+    getScrambledSolution,
     getInputString,
     getPencilmarksString,
   };

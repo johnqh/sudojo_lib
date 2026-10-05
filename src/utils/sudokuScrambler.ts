@@ -268,6 +268,20 @@ export function cellsToStateString(cells: SudokuCell[]): string {
 }
 
 /**
+ * Convert cells to solution string ('0' where a cell has no solution)
+ */
+export function cellsToSolutionString(cells: SudokuCell[]): string {
+  return cells.map(cell => cell.solution?.toString() ?? '0').join('');
+}
+
+/**
+ * Count the givens (clues) on a board.
+ */
+export function countClues(cells: SudokuCell[]): number {
+  return cells.filter(cell => cell.given !== null).length;
+}
+
+/**
  * Convert cells to input-only string
  */
 export function cellsToInputString(cells: SudokuCell[]): string {

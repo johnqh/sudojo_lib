@@ -4,14 +4,16 @@
 
 import { useMemo } from 'react';
 import type { Level } from '@sudobility/sudojo_types';
+import { isValidLevel } from '@sudobility/sudojo_types';
 import type { NetworkClient } from '@sudobility/types';
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
 import { useSudojoLevel, useSudojoLevels } from '@sudobility/sudojo_client';
 
 export interface UseLevelsOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for public data) */
   token?: string;
   /** Whether to enable the query */
@@ -64,7 +66,11 @@ export interface UseLevelsResult {
  * ```
  */
 export function useLevels(options: UseLevelsOptions): UseLevelsResult {
-  const { networkClient, baseUrl, token = '', enabled = true } = options;
+  const { enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useLevels'
+  );
 
   const { data, isLoading, error, refetch } = useSudojoLevels(
     networkClient,
@@ -110,10 +116,10 @@ export function useLevels(options: UseLevelsOptions): UseLevelsResult {
 }
 
 export interface UseLevelOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
   /** Access token for authentication (optional for public data) */
   token?: string;
   /** Level number (1-12) to fetch */
@@ -140,7 +146,11 @@ export interface UseLevelResult {
  * @returns Level data
  */
 export function useLevel(options: UseLevelOptions): UseLevelResult {
-  const { networkClient, baseUrl, token = '', level, enabled = true } = options;
+  const { level, enabled = true } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useLevel'
+  );
 
   const { data, isLoading, error, refetch } = useSudojoLevel(
     networkClient,
@@ -148,7 +158,7 @@ export function useLevel(options: UseLevelOptions): UseLevelResult {
     token,
     level,
     {
-      enabled: enabled && level >= 1 && level <= 12,
+      enabled: enabled && isValidLevel(level),
     }
   );
 

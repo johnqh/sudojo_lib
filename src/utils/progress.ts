@@ -2,7 +2,11 @@
  * Progress calculation utilities
  */
 
-import type { CompletedPuzzle, GameStats } from '../types/progress';
+import type {
+  CompletedPuzzle,
+  GameStats,
+  UserProgress,
+} from '../types/progress';
 
 /**
  * Calculate game statistics from completed puzzles
@@ -139,4 +143,39 @@ export function getCompletedDailyDates(
   completedPuzzles: CompletedPuzzle[]
 ): string[] {
   return completedPuzzles.filter(p => p.type === 'daily').map(p => p.id);
+}
+
+/** A puzzle completion to record (completedAt is stamped on apply). */
+export type PuzzleCompletion = Omit<CompletedPuzzle, 'completedAt'>;
+
+/**
+ * Record a puzzle completion (the web ProgressProvider's markCompleted
+ * reducer). Returns `progress` unchanged when the puzzle was already
+ * completed; otherwise appends it with `completedAt`, sets lastDailyDate for a
+ * daily (its id is the date), and recomputes the streak, total and stats.
+ */
+export function applyPuzzleCompletion(
+  progress: UserProgress,
+  puzzle: PuzzleCompletion,
+  now: Date = new Date()
+): UserProgress {
+  if (isPuzzleCompleted(progress.completedPuzzles, puzzle.type, puzzle.id)) {
+    return progress;
+  }
+
+  const completedPuzzle: CompletedPuzzle = {
+    ...puzzle,
+    completedAt: now.toISOString(),
+  };
+  const completedPuzzles = [...progress.completedPuzzles, completedPuzzle];
+  const lastDailyDate =
+    puzzle.type === 'daily' ? puzzle.id : progress.lastDailyDate;
+
+  return {
+    completedPuzzles,
+    dailyStreak: calculateStreak(completedPuzzles, lastDailyDate),
+    lastDailyDate,
+    totalCompleted: progress.totalCompleted + 1,
+    stats: calculateStats(completedPuzzles, puzzle.timeSeconds),
+  };
 }

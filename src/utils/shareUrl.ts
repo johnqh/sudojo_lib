@@ -1,35 +1,64 @@
 /**
- * Share URL builder and parser for Sudojo puzzle sharing.
+ * Share URL builder and parser for Sudojo sharing.
  *
- * - Daily puzzles share just `/daily`
- * - Level/enter puzzles share `/play/puzzle?level=...&original=...&user=...&autopencilmarks=...&pencilmarks=...&hint=...`
+ * Paths match the web app's routes (the RN app's deep-link config accepts the
+ * same paths):
+ *
+ * | type         | URL                                                     |
+ * |--------------|---------------------------------------------------------|
+ * | `daily`      | `/play/daily` (bare `/daily` has no web route)        |
+ * | `puzzle`     | `/play/puzzle?level=&original=&user=&autopencilmarks=&pencilmarks=&hint=` |
+ * | `levels`     | `/play` (the level list)                                |
+ * | `play`       | `/play/<level>`, or `/play` without a level             |
+ * | `enter`      | `/play/enter`                                           |
+ * | `techniques` | `/techniques`                                           |
+ * | `technique`  | `/techniques/<canonical path>[?hint=<step>]`            |
  *
  * Pencilmarks are appended as a raw comma-separated string (not URL-encoded)
  * to keep URLs readable.
  */
 
+import { isValidLevel } from '@sudobility/sudojo_types';
+import { toCanonicalTechniquePath } from './technique';
+
 const DEFAULT_DOMAIN = 'https://sudojo.com';
 
+/** An empty 81-cell input string. */
+const EMPTY_INPUT = '0'.repeat(81);
+
+/** What a share URL points at. */
+export type ShareUrlType =
+  | 'daily'
+  | 'puzzle'
+  | 'levels'
+  | 'play'
+  | 'enter'
+  | 'techniques'
+  | 'technique';
+
 export interface ShareUrlParams {
-  type: 'daily' | 'puzzle';
-  /** 81-char original puzzle string */
+  type: ShareUrlType;
+  /** 81-char original puzzle string (`puzzle`) */
   original?: string;
-  /** 81-char user input string */
+  /** 81-char user input string (`puzzle`) */
   user?: string;
-  /** Comma-separated pencilmarks string (81 cells, 80 commas) */
+  /** Comma-separated pencilmarks string, 81 cells, 80 commas (`puzzle`) */
   pencilmarks?: string;
-  /** Whether auto-pencilmarks are enabled */
+  /** Whether auto-pencilmarks are enabled (`puzzle`) */
   autopencilmarks?: boolean;
-  /** Difficulty level (1-based) */
+  /** Difficulty level, 1-based (`puzzle`, `play`) */
   level?: number;
-  /** Hint step index (0-based). Only included when hint is active. */
+  /** Hint step index, 0-based. Only included when a hint is active (`puzzle`, `technique`). */
   hint?: number;
+  /** Technique path, API or canonical; shared as the canonical slug (`technique`) */
+  path?: string;
   /** Base domain (default: https://sudojo.com) */
   domain?: string;
 }
 
 export interface ParsedShareParams {
   original: string;
+  /** Player input; 81 zeros when the URL has none (a bare puzzle share). */
   user: string;
   pencilmarks: string;
   autopencilmarks: boolean;
@@ -37,19 +66,12 @@ export interface ParsedShareParams {
   hint?: number;
 }
 
-/**
- * Build a share URL from game state.
- *
- * Pencilmarks are appended directly to the URL (without URLSearchParams
- * encoding) so commas remain as literal commas.
- */
-export function buildShareUrl(params: ShareUrlParams): string {
-  const domain = params.domain ?? DEFAULT_DOMAIN;
+/** Query values from URLSearchParams or a plain object (RN route params). */
+export type ShareParamsSource =
+  | URLSearchParams
+  | Record<string, string | null | undefined>;
 
-  if (params.type === 'daily') {
-    return `${domain}/daily`;
-  }
-
+function buildPuzzleUrl(domain: string, params: ShareUrlParams): string {
   const searchParams = new URLSearchParams();
   if (params.level != null) {
     searchParams.set('level', String(params.level));
@@ -79,34 +101,80 @@ export function buildShareUrl(params: ShareUrlParams): string {
 }
 
 /**
+ * Build a share URL. See the table at the top of this file for each type.
+ *
+ * For `puzzle`, pencilmarks are appended directly to the URL (without
+ * URLSearchParams encoding) so commas remain as literal commas.
+ */
+export function buildShareUrl(params: ShareUrlParams): string {
+  const domain = params.domain ?? DEFAULT_DOMAIN;
+
+  switch (params.type) {
+    case 'daily':
+      return `${domain}/play/daily`;
+    case 'levels':
+      return `${domain}/play`;
+    case 'play':
+      return params.level != null
+        ? `${domain}/play/${params.level}`
+        : `${domain}/play`;
+    case 'enter':
+      return `${domain}/play/enter`;
+    case 'techniques':
+      return `${domain}/techniques`;
+    case 'technique': {
+      const slug = toCanonicalTechniquePath(params.path);
+      if (!slug) return `${domain}/techniques`;
+      const hint = params.hint != null ? `?hint=${params.hint}` : '';
+      return `${domain}/techniques/${encodeURIComponent(slug)}${hint}`;
+    }
+    case 'puzzle':
+      return buildPuzzleUrl(domain, params);
+  }
+}
+
+function readParam(source: ShareParamsSource, name: string): string | null {
+  if (source instanceof URLSearchParams) return source.get(name);
+  return source[name] ?? null;
+}
+
+/**
  * Parse share URL query parameters into game state.
- * Returns null if required params (original, user) are missing.
+ *
+ * Accepts URLSearchParams (web) or a plain object of strings (RN route
+ * params). Returns null if `original` is missing. A missing `user` (a bare
+ * puzzle share, e.g. a freshly entered puzzle) becomes 81 zeros.
+ * `level` is kept only when it is a valid level (1-12); `hint` only when it
+ * is a non-negative integer. When `level` is absent, callers fall back to the
+ * level the solver rates the puzzle at (`parsed.level ?? validatedLevel`).
  */
 export function parseShareParams(
-  params: URLSearchParams
+  params: ShareParamsSource
 ): ParsedShareParams | null {
-  const original = params.get('original');
-  const user = params.get('user');
+  const original = readParam(params, 'original');
 
-  if (!original || !user) {
+  if (!original) {
     return null;
   }
 
-  const levelStr = params.get('level');
-  const hintStr = params.get('hint');
+  const levelStr = readParam(params, 'level');
+  const hintStr = readParam(params, 'hint');
 
   const result: ParsedShareParams = {
     original,
-    user,
-    pencilmarks: params.get('pencilmarks') ?? '',
-    autopencilmarks: params.get('autopencilmarks') === 'true',
+    user: readParam(params, 'user') || EMPTY_INPUT,
+    pencilmarks: readParam(params, 'pencilmarks') ?? '',
+    autopencilmarks: readParam(params, 'autopencilmarks') === 'true',
   };
   if (levelStr) {
-    result.level = Number(levelStr);
+    const level = Number(levelStr);
+    if (isValidLevel(level)) {
+      result.level = level;
+    }
   }
-  if (hintStr != null) {
+  if (hintStr) {
     const hintNum = Number(hintStr);
-    if (!isNaN(hintNum) && hintNum >= 0) {
+    if (Number.isInteger(hintNum) && hintNum >= 0) {
       result.hint = hintNum;
     }
   }

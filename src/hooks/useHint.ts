@@ -23,13 +23,12 @@ import {
   parseEntitlements,
 } from '@sudobility/sudojo_types';
 import {
-  createSudojoClient,
   HintAccessDeniedError,
+  useSolverSolveMutation,
 } from '@sudobility/sudojo_client';
 import type { NetworkClient } from '@sudobility/types';
-
-/** Number of hint steps shown for free before paywall */
-const FREE_HINT_STEP_LIMIT = 2;
+import { useResolvedSudojoApi } from '../context/SudojoApiContext';
+import { FREE_HINT_STEP_LIMIT } from '../utils/hintAccess';
 
 /** Board data returned when applying a hint */
 export interface HintBoardData {
@@ -66,12 +65,12 @@ export interface HintAccessError {
 }
 
 export interface UseHintOptions {
-  /** Network client for API calls */
-  networkClient: NetworkClient;
-  /** Base URL for the Sudojo API */
-  baseUrl: string;
-  /** Access token for authentication */
-  token: string;
+  /** Network client for API calls (default: SudojoApiProvider) */
+  networkClient?: NetworkClient | undefined;
+  /** Base URL for the Sudojo API (default: SudojoApiProvider) */
+  baseUrl?: string | undefined;
+  /** Access token for authentication (default: SudojoApiProvider) */
+  token?: string | null | undefined;
   /** Original puzzle string (81 chars) */
   puzzle: string;
   /** Current user input string (81 chars) */
@@ -181,19 +180,27 @@ export interface UseHintResult {
  * };
  * ```
  */
-export function useHint({
-  networkClient,
-  baseUrl,
-  token,
-  puzzle,
-  userInput,
-  pencilmarks,
-  autoPencilmarks = false,
-  techniqueFilter,
-  onHintReceived,
-  userEntitlements,
-  levelEntitlement,
-}: UseHintOptions): UseHintResult {
+export function useHint(options: UseHintOptions): UseHintResult {
+  const {
+    puzzle,
+    userInput,
+    pencilmarks,
+    autoPencilmarks = false,
+    techniqueFilter,
+    onHintReceived,
+    userEntitlements,
+    levelEntitlement,
+  } = options;
+  const { networkClient, baseUrl, token } = useResolvedSudojoApi(
+    options,
+    'useHint'
+  );
+  // Solver requests go through sudojo_client's mutation hook; it rejects
+  // with HintAccessDeniedError on a 402, like SudojoClient.solverSolve.
+  const { mutateAsync: solverSolve } = useSolverSolveMutation(
+    networkClient,
+    baseUrl
+  );
   const [hints, setHints] = useState<SolverHintStep[] | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -304,8 +311,6 @@ export function useHint({
     setIsTargetTechnique(false);
 
     try {
-      const client = createSudojoClient(networkClient, baseUrl);
-
       // Phase 1: If techniqueFilter is set, first try to find that specific technique
       if (techniqueFilter !== undefined) {
         const filteredOptions = {
@@ -316,10 +321,10 @@ export function useHint({
           techniques: techniqueFilter.toString(),
         };
 
-        const filteredResponse = await client.solverSolve(
+        const filteredResponse = await solverSolve({
           token,
-          filteredOptions
-        );
+          options: filteredOptions,
+        });
 
         // If we found hints for the target technique, use them
         if (processHintResponse(filteredResponse, true)) {
@@ -336,10 +341,10 @@ export function useHint({
         autoPencilmarks,
         ...(pencilmarks !== undefined && { pencilmarks }),
       };
-      const response: BaseResponse<SolveData> = await client.solverSolve(
+      const response: BaseResponse<SolveData> = await solverSolve({
         token,
-        solveOptions
-      );
+        options: solveOptions,
+      });
 
       if (processHintResponse(response, false)) {
         // Successfully got hints (not the target technique)
@@ -370,8 +375,7 @@ export function useHint({
       setIsLoading(false);
     }
   }, [
-    networkClient,
-    baseUrl,
+    solverSolve,
     token,
     puzzle,
     userInput,
