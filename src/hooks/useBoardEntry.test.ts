@@ -85,38 +85,54 @@ describe('useBoardEntry', () => {
     expect(result.current.canValidate).toBe(true);
   });
 
-  it('applyScan loads givens, pencilmarks and the scanned input; reset clears it', () => {
+  it('applyScan merges the player digits into the givens and keeps pencilmarks', () => {
     const user = `00000500${'0'.repeat(73)}`;
+    const puzzle = `${ORIGINAL.slice(0, 5)}5${ORIGINAL.slice(6)}`;
     const marks = Array.from({ length: 81 }, (_, i) => (i === 0 ? '93' : ''));
     const scanned: ScannedBoard = {
+      puzzle,
       original: ORIGINAL,
       user,
       pencilmarks: marks.join(','),
       autopencil: true,
-      clueCount: 17,
+      clueCount: 18,
       confidence: 99,
     };
     const { result } = render();
     act(() => result.current.applyScan(scanned));
-    expect(result.current.getPuzzleString()).toBe(ORIGINAL);
+    expect(result.current.getPuzzleString()).toBe(puzzle);
+    expect(result.current.cells[5]?.given).toBe(5);
+    expect(result.current.clueCount).toBe(18);
+    expect(result.current.displayCells[5]?.input).toBeNull();
     expect(result.current.pencilmarks[0]).toEqual([3, 9]);
     expect(result.current.autopencil).toBe(true);
-    expect(result.current.scannedInput).toBe(user);
+    expect(result.current.scannedInput).toBeNull();
     expect(result.current.initialPlayState).toEqual({
-      input: user,
+      input: '0'.repeat(81),
       pencilmarks: `39${','.repeat(80)}`,
       autopencil: true,
     });
 
-    // A given entered over a scanned digit wins
-    act(() => result.current.selectCell(5));
-    act(() => result.current.setGiven(1));
-    expect(result.current.initialPlayState?.input?.[5]).toBe('0');
-
     act(() => result.current.reset());
-    expect(result.current.scannedInput).toBeNull();
     expect(result.current.hasPencilmarks).toBe(false);
     expect(result.current.autopencil).toBe(false);
+    expect(result.current.initialPlayState).toBeUndefined();
+  });
+
+  it('applyScan without pencilmarks restores nothing', () => {
+    const { result } = render();
+    act(() =>
+      result.current.applyScan({
+        puzzle: ORIGINAL,
+        original: ORIGINAL,
+        user: '0'.repeat(81),
+        pencilmarks: '',
+        autopencil: false,
+        clueCount: 17,
+        confidence: 90,
+      })
+    );
+    expect(result.current.clueCount).toBe(17);
     expect(result.current.initialPlayState).toBeUndefined();
   });
 

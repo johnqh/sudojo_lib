@@ -57,6 +57,7 @@ describe('useBoardScan', () => {
       source: 'camera',
     });
     expect(board.original).toBe(ORIGINAL);
+    expect(board.puzzle).toBe(USER);
     expect(board.user[5]).toBe('5');
     expect(board.user[4]).toBe('0');
   });

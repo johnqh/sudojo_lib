@@ -48,7 +48,9 @@ describe('toScannedBoard', () => {
     const board = toScannedBoard(ocr({ user: USER }, { engine: 'ml' }));
     expect(board.original).toBe(ORIGINAL);
     expect(board.user).toBe(PLAYER);
-    expect(board.clueCount).toBe(17);
+    // The merged board (givens + player digits) is what gets entered
+    expect(board.puzzle).toBe(USER);
+    expect(board.clueCount).toBe(USER.replace(/0/g, '').length);
     expect(board.confidence).toBe(98);
     expect(board.engine).toBe('ml');
     expect(hasScannedInput(board)).toBe(true);
@@ -172,5 +174,28 @@ describe('scannedBoardFromResponse', () => {
     expect(error).toBeInstanceOf(ScanBoardError);
     expect((error as ScanBoardError).code).toBe('TOO_FEW_CLUES');
     expect((error as ScanBoardError).board?.clueCount).toBe(MIN_SCAN_CLUES - 1);
+  });
+
+  it('counts the merged board for TOO_FEW_CLUES', () => {
+    // 16 printed givens + 1 player digit = 17: enough to validate
+    const sparse =
+      '1'.repeat(MIN_SCAN_CLUES - 1) + '0'.repeat(82 - MIN_SCAN_CLUES);
+    const user = `${sparse.slice(0, 80)}2`;
+    const board = scannedBoardFromResponse(
+      response(ocr({ original: sparse, user }))
+    );
+    expect(board.clueCount).toBe(MIN_SCAN_CLUES);
+    expect(board.puzzle).toBe(user);
+    expect(board.original).toBe(sparse);
+    expect(board.user).toBe(`${'0'.repeat(80)}2`);
+  });
+});
+
+describe('toScannedBoard puzzle', () => {
+  it('equals the givens when there are no player digits', () => {
+    const board = toScannedBoard(ocr({}));
+    expect(board.puzzle).toBe(ORIGINAL);
+    expect(board.clueCount).toBe(17);
+    expect(hasScannedInput(board)).toBe(false);
   });
 });

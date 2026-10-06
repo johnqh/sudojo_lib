@@ -23,19 +23,25 @@ const BOARD_PATTERN = /^[0-9]{81}$/;
 
 /** A scanned board, normalized and ready to load into entry or play. */
 export interface ScannedBoard {
-  /** The givens, 81 chars, '0' = empty. Goes into the entry grid. */
+  /**
+   * The board to enter and validate: the printed givens with the player's
+   * digits merged in (81 chars, '0' = empty). Goes into the entry grid as
+   * givens: the photo need not be a game in progress, and entry/validate only
+   * knows givens.
+   */
+  puzzle: string;
+  /** The printed givens as read, 81 chars, '0' = empty (diagnostics). */
   original: string;
   /**
-   * Digits the player had entered, 81 chars, '0' = no input. Given cells are
-   * always '0', the same shape as the game's input string, so it can be passed
-   * straight to `initialInput` / `applyHintData`.
+   * Digits the player had entered, 81 chars, '0' = no input; given cells are
+   * always '0' (diagnostics; already merged into `puzzle`).
    */
   user: string;
   /** 81 comma-separated pencilmark entries (e.g. "126"), or '' when none. */
   pencilmarks: string;
   /** Whether the pencilmarks were auto-filled in the scanned game. */
   autopencil: boolean;
-  /** Number of givens in `original`. */
+  /** Number of givens in `puzzle` (the merged board that will be validated). */
   clueCount: number;
   /** OCR confidence, 0-100. */
   confidence: number;
@@ -114,19 +120,27 @@ export function toScannedBoard(
     }
   }
 
+  const puzzle = Array.from(original, (ch, i) =>
+    ch !== '0' ? ch : (user[i] ?? '0')
+  ).join('');
+
   const result: ScannedBoard = {
+    puzzle,
     original,
     user,
     pencilmarks,
     autopencil: pencilmarks !== '' && board.pencilmark?.autopencil === true,
-    clueCount: original.replace(/0/g, '').length,
+    clueCount: puzzle.replace(/0/g, '').length,
     confidence: data?.confidence ?? 0,
   };
   if (data?.engine) result.engine = data.engine;
   return result;
 }
 
-/** Whether the scan recorded any player digits. */
+/**
+ * Whether the scan recorded any player digits. Informational only: the digits
+ * are already merged into `puzzle`, so nothing needs restoring.
+ */
 export function hasScannedInput(board: ScannedBoard): boolean {
   return /[1-9]/.test(board.user);
 }

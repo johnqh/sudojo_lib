@@ -1211,7 +1211,7 @@ export type {
   HintActionStatus,
 
   // Board entry play state
-  /** What a validated entered puzzle should apply (scanned input, pencilmarks). */
+  /** What a validated entered puzzle should apply (entry pencilmarks). */
   BoardEntryPlayState,
 
   // Strategies hook types

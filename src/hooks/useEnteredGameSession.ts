@@ -15,7 +15,7 @@ import { useResumeGame, type UseResumeGameResult } from './useResumeGame';
 export interface UseEnteredGameSessionOptions {
   /** useBoardEntry's validatedPuzzle (null until Validate succeeds) */
   validatedPuzzle: ValidatedPuzzle | null | undefined;
-  /** useBoardEntry's initialPlayState (scanned input / entry pencilmarks) */
+  /** useBoardEntry's initialPlayState (entry pencilmarks) */
   initialPlayState?: BoardEntryPlayState | undefined;
   /** The resume decision (default: useResumeGame({ source: 'entered' })) */
   resume?: UseResumeGameResult | undefined;

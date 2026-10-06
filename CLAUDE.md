@@ -29,7 +29,7 @@ scope (`publishConfig.access: restricted`), license BUSL-1.1.
 | `bun run typecheck` | `tsc --noEmit` (strict `tsconfig.json`, **excludes `*.test.ts`**) | ✅ clean |
 | `bun run lint` / `lint:fix` | ESLint 9 flat config incl. `prettier/prettier` rule | ✅ clean |
 | `bun run format` / `format:check` | Prettier on `src/**/*.ts` (not `.tsx`) | ✅ clean |
-| `bun run test:run` | Vitest once (happy-dom) | ✅ 41 files / 557 tests (2026-10-05) |
+| `bun run test:run` | Vitest once (happy-dom) | ✅ 41 files / 560 tests (2026-10-05) |
 | `bun run test` / `test:watch` | Vitest watch mode | — |
 | `bun run test:coverage` | Vitest + v8 coverage → `coverage/` (gitignored) | ✅ runs; ~38% lines, exit 0 |
 | `bun run check-all` | lint + typecheck + test:run | components ✅ |
@@ -72,7 +72,7 @@ Hook layers:
 | Game fetching (auth/subscription status) | `useLevelGame`, `useDailyGame`, `usePracticeGame` (401→auth, 402→subscription, no_practices) |
 | Account / user | `useIsRealUser`, `useIsSiteAdmin`, `useDeleteAccount` (rule + delete → injected `signOut`; dialogs stay in apps) |
 | Admin (`src/admin/**`, re-exported via `export * from './admin'`) | `useBoardGenerator`, `useTechniqueExtractor`, `useExampleCreator`, `useSingleBoardExtractor`, `useBoardTechniquesUpdater`, `useAdminStats`; framework-agnostic `run*` jobs in `jobs.ts`, network via `useAdminApi` (client mutation hooks) |
-| Game state | `useSudoku` ⭐ (flat 81 cells, reducer), `useBoardEntry` (manual entry + solver validate, entry pencilmarks, `toggleGiven`, `applyScan` → `initialPlayState`), `useBoardScan` (photo → givens, player digits, pencilmarks via `utils/scannedBoard.ts`; shared by web + RN), `useGame` (legacy 2D, **deprecated**) |
+| Game state | `useSudoku` ⭐ (flat 81 cells, reducer), `useBoardEntry` (manual entry + solver validate, entry pencilmarks, `toggleGiven`, `applyScan` → `initialPlayState`), `useBoardScan` (photo → `ScannedBoard` via `utils/scannedBoard.ts`; the player's digits are merged into the givens as `puzzle`, which `applyScan` enters and validate checks; only pencilmarks are restored after validation; shared by web + RN), `useGame` (legacy 2D, **deprecated**) |
 | Features | `useHint` ⭐, `useGameTeaching` (legacy), `useCompletionTrigger` (once per false→true, re-arms), `useGameTimer`, `useGamePersistence`/`useAutoSave`, `useLocalStorage`, `useHintStepTracker`, `useAutoHint`, `useProgressReporter`, `useHintActionListener` |
 | Orchestration / app | `usePuzzleSession` + `useResumeGame` (Daily/Level screens: resume, pin, save, server session, completion, achievements), `useEnteredGameSession` (entered puzzles: save/resume, no server session), `usePuzzleProgress`, `useGamePlay` (+ `useGamePlayStore`), `useContinueGame`, `useGameSession`, `useLevelEnabled`/`useTechniqueEnabled` (+ `EntitlementProvider`), `useDisplayLevel`, `usePuzzleDistribution` |
 

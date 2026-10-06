@@ -11,7 +11,7 @@ import { MIN_CLUES } from '@sudobility/sudojo_types';
 import { cellsToPuzzleString, countClues } from '../utils/sudokuScrambler';
 import type { NetworkClient } from '@sudobility/types';
 import { useResolvedSudojoApi } from '../context/SudojoApiContext';
-import { hasScannedInput, type ScannedBoard } from '../utils/scannedBoard';
+import type { ScannedBoard } from '../utils/scannedBoard';
 import {
   parsePencilmarksString,
   pencilmarksToString,
@@ -37,12 +37,12 @@ export interface UseBoardEntryOptions {
 
 /**
  * What the game should apply once the entered puzzle is validated: the
- * scanned player digits and/or the entry pencilmarks. Pass the fields to the
+ * entry pencilmarks (a scan's player digits are already givens). Pass the fields to the
  * game as initialInput / initialPencilmarks / initialAutoPencilmarks (or to
  * useSudoku's applyHintData).
  */
 export interface BoardEntryPlayState {
-  /** 81-char player input ('0' = none). '0'.repeat(81) when only pencilmarks exist */
+  /** 81-char player input; always '0'.repeat(81) (only pencilmarks are restored) */
   input?: string;
   /** 81 comma-separated pencilmark entries */
   pencilmarks?: string;
@@ -75,7 +75,7 @@ export interface UseBoardEntryReturn {
   reset: () => void;
   /** Number of clues entered */
   clueCount: number;
-  /** Set cells from an 81-character puzzle string (clears pencilmarks and scanned input) */
+  /** Set cells from an 81-character puzzle string (clears pencilmarks) */
   setCellsFromPuzzle: (puzzle: string) => void;
 
   // --- Entry pencilmarks ---------------------------------------------------
@@ -114,15 +114,18 @@ export interface UseBoardEntryReturn {
 
   // --- Scans ---------------------------------------------------------------
   /**
-   * Load a scanned board: givens from `original`, pencilmarks and autopencil
-   * from the scan, and the player's digits as `scannedInput`.
+   * Load a scanned board: givens from `puzzle` (the printed givens merged
+   * with the player's digits), plus the scan's pencilmarks and autopencil.
    */
   applyScan: (scanned: ScannedBoard) => void;
-  /** The scanned player digits (81 chars), or null when the scan had none */
-  scannedInput: string | null;
   /**
-   * What the game should apply once validated (scanned input and/or entry
-   * pencilmarks), or undefined when there is nothing to restore.
+   * @deprecated Always null. A scan's player digits are merged into the
+   * givens (applyScan uses `ScannedBoard.puzzle`), not restored as input.
+   */
+  scannedInput: null;
+  /**
+   * What the game should apply once validated (the entry pencilmarks), or
+   * undefined when there are none.
    */
   initialPlayState: BoardEntryPlayState | undefined;
 }
@@ -190,7 +193,6 @@ export function useBoardEntry(
     createEmptyPencilmarks
   );
   const [autopencil, setAutopencil] = useState(false);
-  const [scannedInput, setScannedInput] = useState<string | null>(null);
   const [isPencilMode, setIsPencilMode] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -352,7 +354,6 @@ export function useBoardEntry(
     setCells(createEmptyCells());
     setPencilmarks(createEmptyPencilmarks());
     setAutopencil(false);
-    setScannedInput(null);
     setIsPencilMode(false);
     setSelectedIndex(null);
     setValidationError(null);
@@ -367,7 +368,6 @@ export function useBoardEntry(
     setCells(puzzleStringToCells(puzzle));
     setPencilmarks(createEmptyPencilmarks());
     setAutopencil(false);
-    setScannedInput(null);
     setSelectedIndex(null);
     setValidationError(null);
     setValidatedPuzzle(null);
@@ -423,10 +423,11 @@ export function useBoardEntry(
     [selectedIndex, cells, erase, setGiven]
   );
 
-  // Load a scanned board (givens, pencilmarks, player digits)
+  // Load a scanned board: the merged board (givens + the player's digits)
+  // becomes the givens; pencilmarks carry over
   const applyScan = useCallback(
     (scanned: ScannedBoard) => {
-      setCellsFromPuzzle(scanned.original);
+      setCellsFromPuzzle(scanned.puzzle);
       const parsed = parsePencilmarksString(scanned.pencilmarks);
       setPencilmarks(
         parsed.length === 81
@@ -434,7 +435,6 @@ export function useBoardEntry(
           : createEmptyPencilmarks()
       );
       setAutopencil(scanned.autopencil);
-      setScannedInput(hasScannedInput(scanned) ? scanned.user : null);
     },
     [setCellsFromPuzzle]
   );
@@ -460,21 +460,17 @@ export function useBoardEntry(
     [pencilmarks]
   );
 
-  const initialPlayState = useMemo((): BoardEntryPlayState | undefined => {
-    if (!scannedInput && !hasPencilmarks) return undefined;
-    // A given corrected after the scan wins over a scanned digit there.
-    const input = scannedInput
-      ? Array.from(scannedInput, (ch, i) =>
-          cells[i]?.given !== null ? '0' : ch
-        ).join('')
-      : EMPTY_INPUT;
-    const state: BoardEntryPlayState = { input };
-    if (hasPencilmarks) {
-      state.pencilmarks = pencilmarksString;
-      state.autopencil = autopencil;
-    }
-    return state;
-  }, [scannedInput, hasPencilmarks, pencilmarksString, autopencil, cells]);
+  const initialPlayState = useMemo(
+    (): BoardEntryPlayState | undefined =>
+      hasPencilmarks
+        ? {
+            input: EMPTY_INPUT,
+            pencilmarks: pencilmarksString,
+            autopencil,
+          }
+        : undefined,
+    [hasPencilmarks, pencilmarksString, autopencil]
+  );
 
   const canValidate = clueCount >= MIN_CLUES && !isValidating;
 
@@ -505,7 +501,7 @@ export function useBoardEntry(
     toggleGiven,
     canValidate,
     applyScan,
-    scannedInput,
+    scannedInput: null,
     initialPlayState,
   };
 }
