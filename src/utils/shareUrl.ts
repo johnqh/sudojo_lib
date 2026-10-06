@@ -187,14 +187,19 @@ export function parseShareParams(
  * - Localhost: kept as-is (web app and API share the same server in dev)
  * - Production: strips the `api.` subdomain
  *   (e.g. `https://api.sudojo.com` → `https://sudojo.com`)
+ *
+ * Built from the URL's parts rather than by assigning `url.hostname`: React
+ * Native's `URL` has no setters, and the assignment did nothing there, so
+ * every share link from the app pointed at the API (`https://api.sudojo.com/play`).
  */
 export function getWebUrl(apiBaseUrl: string): string {
   try {
     const url = new URL(apiBaseUrl);
-    if (url.hostname !== 'localhost' && url.hostname.startsWith('api.')) {
-      url.hostname = url.hostname.replace(/^api\./, '');
-    }
-    return url.origin;
+    const host =
+      url.hostname !== 'localhost' && url.hostname.startsWith('api.')
+        ? url.hostname.slice('api.'.length)
+        : url.hostname;
+    return `${url.protocol}//${host}${url.port ? `:${url.port}` : ''}`;
   } catch {
     return DEFAULT_DOMAIN;
   }

@@ -114,4 +114,29 @@ describe('getWebUrl', () => {
     expect(getWebUrl('http://localhost:3000')).toBe('http://localhost:3000');
     expect(getWebUrl('not a url')).toBe(D);
   });
+
+  it('keeps a port', () => {
+    expect(getWebUrl('https://api.sudojo.com:8443')).toBe(
+      'https://sudojo.com:8443'
+    );
+  });
+
+  it("works with React Native's URL, which has no setters", () => {
+    // RN's URL ignores `url.hostname = …`; the api subdomain must still go.
+    const NativeURL = globalThis.URL;
+    class SetterlessURL extends NativeURL {
+      override get hostname() {
+        return super.hostname;
+      }
+      override set hostname(_value: string) {
+        // ignored, as in React Native
+      }
+    }
+    globalThis.URL = SetterlessURL as typeof URL;
+    try {
+      expect(getWebUrl('https://api.sudojo.com')).toBe('https://sudojo.com');
+    } finally {
+      globalThis.URL = NativeURL;
+    }
+  });
 });
